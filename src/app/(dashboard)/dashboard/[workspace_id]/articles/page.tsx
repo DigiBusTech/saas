@@ -1,0 +1,14 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { BookOpen, Plus } from 'lucide-react';
+import { createArticle, getWorkspaceArticles } from './actions';
+
+export default function ArticlesPage() {
+  const workspaceId = useState(() => (typeof window === 'undefined' ? '' : window.location.pathname.split('/')[2] ?? ''))[0];
+  const [articles, setArticles] = useState<any[]>([]);
+  const [message, setMessage] = useState('');
+  useEffect(() => { if (workspaceId) getWorkspaceArticles(workspaceId).then((result) => setArticles(result.data)); }, [workspaceId]);
+  async function submit(formData: FormData) { const result = await createArticle(workspaceId, formData); setMessage(result.error ?? 'Article added and queued for the knowledge base.'); if (!result.error) { const latest = await getWorkspaceArticles(workspaceId); setArticles(latest.data); (document.getElementById('article-form') as HTMLFormElement)?.reset(); } }
+  return <div className="max-w-5xl space-y-6"><div><div className="flex items-center gap-2"><BookOpen className="h-5 w-5 text-cyan-400" /><h1 className="text-xl font-semibold text-white">Articles</h1></div><p className="mt-1 text-xs text-gray-500">Publish business stories and automatically add them to your AI knowledge base.</p></div><form id="article-form" action={submit} className="grid gap-3 rounded-2xl border border-white/10 bg-zinc-900/50 p-5"><input name="title" required placeholder="Article title" className="field" /><input name="excerpt" placeholder="Short excerpt" className="field" /><input name="cover_image_url" placeholder="Cover image URL" className="field" /><textarea name="content" required rows={7} placeholder="Write the article or business update..." className="field resize-none" /><div className="flex flex-wrap gap-4 text-xs text-gray-400"><label><input name="is_published" value="true" type="checkbox" className="mr-2 accent-cyan-400" />Published</label><label><input name="show_on_sabibio" value="true" type="checkbox" className="mr-2 accent-cyan-400" />Show on SabiBio</label></div><button className="flex w-fit items-center gap-2 rounded-lg bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950"><Plus className="h-3.5 w-3.5" /> Add article</button>{message && <p className="text-xs text-cyan-300">{message}</p>}</form><div className="grid gap-3 md:grid-cols-2">{articles.map((article) => <article key={article.id} className="rounded-xl border border-white/10 bg-zinc-900/50 p-4"><h2 className="text-sm font-semibold text-white">{article.title}</h2><p className="mt-2 text-xs text-gray-500">{article.excerpt || article.content.slice(0, 140)}</p><div className="mt-3 flex gap-2 text-[10px] text-cyan-300">{article.is_published ? 'Published' : 'Draft'} {article.show_on_sabibio ? '· On SabiBio' : ''}</div></article>)}</div></div>;
+}

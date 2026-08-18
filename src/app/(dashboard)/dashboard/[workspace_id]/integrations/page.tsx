@@ -1,0 +1,28 @@
+import { getWorkspaceById, getWorkspaceIntegrationStatus } from '../../workspaces/actions';
+import { WorkspaceIntegrationsClient } from './integrations-client';
+
+export default async function WorkspaceIntegrationsPage({
+  params,
+}: {
+  params: Promise<{ workspace_id: string }>;
+}) {
+  const { workspace_id } = await params;
+  const { data: workspace } = await getWorkspaceById(workspace_id);
+
+  if (!workspace) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-gray-500 text-sm">Workspace not found.</p>
+      </div>
+    );
+  }
+
+  const integrationStatus = await getWorkspaceIntegrationStatus(workspace_id);
+
+  return (
+    <WorkspaceIntegrationsClient
+      workspace={workspace}
+      integrationStatus={integrationStatus}
+    />
+  );
+}
