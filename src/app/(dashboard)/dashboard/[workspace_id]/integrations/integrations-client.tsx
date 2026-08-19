@@ -60,14 +60,20 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
     const fd = new FormData(e.currentTarget);
     fd.set('platform', activeTab);
 
-    const result = await saveWorkspaceIntegration(workspace.id, fd);
-    setSaving(false);
-
-    if (result.error) {
-      setError(result.error);
-    } else {
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+    try {
+      const result = await Promise.race([
+        saveWorkspaceIntegration(workspace.id, fd),
+        new Promise<{ error: string }>((resolve) => window.setTimeout(() => resolve({ error: 'Integration save timed out. Check the deployment URL, Supabase, and encryption configuration.' }), 15000)),
+      ]);
+      if (result.error) setError(result.error);
+      else {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Could not save integration settings.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -308,6 +314,9 @@ function TelegramConfig({
           </ol>
           <div className="mt-3 rounded-lg border border-sky-500/20 bg-sky-500/5 p-3 text-[10px] text-sky-200">
             Example: <code>https://api.telegram.org/botBOT_TOKEN/setWebhook?url=WEBHOOK_URL&amp;secret_token=YOUR_RANDOM_SECRET</code>
+          </div>
+          <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-[10px] text-gray-400">
+            After saving, SabiBio registers this webhook automatically when <code className="text-sky-300">NEXT_PUBLIC_APP_URL</code> is configured. You can verify Telegram&apos;s current target with <code className="text-sky-300">getWebhookInfo</code>; the URL must match the generated URL above and Telegram must report no pending errors.
           </div>
           <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
             <li>Copy the auto-generated webhook URL above</li>

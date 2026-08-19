@@ -62,22 +62,26 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized webhook' }, { status: 401 });
   }
 
-  // Dispatch to Inngest with workspace context
-  await sendInngestEvent({
-    name: 'chat/message.received',
-    data: {
-      tenantId: workspace.tenant_id,
-      workspaceId: workspace.id,
-      platform: 'telegram' as const,
-      chatId,
-      contactName,
-      messageText,
-      integrationId: workspace.id, // workspace acts as integration source
-      botPersona: workspace.bot_persona,
-      agentMode: workspace.agent_mode,
-      externalMessageId: `tg_${message.chat.id}_${message.message_id}`,
-    },
-  });
+  try {
+    await sendInngestEvent({
+      name: 'chat/message.received',
+      data: {
+        tenantId: workspace.tenant_id,
+        workspaceId: workspace.id,
+        platform: 'telegram' as const,
+        chatId,
+        contactName,
+        messageText,
+        integrationId: workspace.id,
+        botPersona: workspace.bot_persona,
+        agentMode: workspace.agent_mode,
+        externalMessageId: `tg_${message.chat.id}_${message.message_id}`,
+      },
+    });
+  } catch (error) {
+    console.error('[telegram-webhook] Inngest dispatch failed:', error);
+    return NextResponse.json({ error: 'Telegram received the message, but SabiBio could not queue it. Configure INNGEST_EVENT_KEY in Super Admin Configs.' }, { status: 503 });
+  }
 
   return NextResponse.json({ status: 'ok' }, { status: 200 });
 }

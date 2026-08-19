@@ -3,6 +3,7 @@
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { encrypt, decrypt, maskSecret } from '@/lib/encryption';
+import { getPublicAppUrl } from '@/lib/app-url';
 
 // ---------- Workspace CRUD ----------
 
@@ -157,17 +158,18 @@ export async function updateWorkspace(workspaceId: string, formData: FormData) {
 // ---------- Workspace Integration Credentials ----------
 
 export async function saveWorkspaceIntegration(workspaceId: string, formData: FormData) {
-  const platform = formData.get('platform') as string;
-  const supabase = await createClient();
+  try {
+    const platform = formData.get('platform') as string;
+    const supabase = await createClient();
 
-  const update: Record<string, any> = { updated_at: new Date().toISOString() };
+    const update: Record<string, any> = { updated_at: new Date().toISOString() };
 
-  if (platform === 'telegram') {
+    if (platform === 'telegram') {
     const token = formData.get('telegram_bot_token') as string;
     const webhookSecret = formData.get('telegram_webhook_secret') as string;
     if (token) update.telegram_bot_token = encrypt(token);
     if (webhookSecret) update.telegram_webhook_secret = encrypt(webhookSecret);
-  } else if (platform === 'whatsapp') {
+    } else if (platform === 'whatsapp') {
     const phoneId = formData.get('whatsapp_phone_number_id') as string;
     const accessToken = formData.get('whatsapp_access_token') as string;
     const verifyToken = formData.get('whatsapp_verify_token') as string;
@@ -176,15 +178,30 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
     if (verifyToken) update.whatsapp_verify_token = encrypt(verifyToken);
   }
 
-  const { error } = await supabase
-    .from('workspaces')
-    .update(update)
-    .eq('id', workspaceId);
+    const { error } = await supabase
+      .from('workspaces')
+      .update(update)
+      .eq('id', workspaceId);
 
-  if (error) return { error: error.message };
+    if (error) return { error: error.message };
 
-  revalidatePath(`/dashboard/${workspaceId}/integrations`);
-  return { error: null };
+    if (platform === 'telegram') {
+      const token = formData.get('telegram_bot_token') as string;
+      const secret = formData.get('telegram_webhook_secret') as string;
+      const publicUrl = await getPublicAppUrl();
+      if (token && secret && publicUrl) {
+        const webhookUrl = `${publicUrl}/api/webhooks/telegram/${workspaceId}`;
+        const response = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${encodeURIComponent(secret)}`, { method: 'POST' });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok !== true) return { error: `Credentials saved, but Telegram webhook setup failed: ${result.description ?? response.statusText}` };
+      }
+    }
+
+    revalidatePath(`/dashboard/${workspaceId}/integrations`);
+    return { error: null };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Could not save integration settings' };
+  }
 }
 
 export async function getWorkspaceIntegrationStatus(workspaceId: string) {
