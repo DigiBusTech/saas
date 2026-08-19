@@ -26,7 +26,12 @@ export async function POST(
   const { workspace_id } = await params;
 
   // Parse incoming Telegram update
-  const raw = await request.json();
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return NextResponse.json({ status: 'ok' }, { status: 200 });
+  }
   const parsed = telegramUpdateSchema.safeParse(raw);
 
   if (!parsed.success || !parsed.data.message?.text) {

@@ -91,7 +91,12 @@ export async function POST(
 ) {
   const { workspace_id } = await params;
 
-  const raw = await request.json();
+  let raw: unknown;
+  try {
+    raw = await request.json();
+  } catch {
+    return NextResponse.json({ status: 'ok' }, { status: 200 });
+  }
   const parsed = whatsappWebhookSchema.safeParse(raw);
 
   if (!parsed.success) {

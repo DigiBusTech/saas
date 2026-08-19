@@ -19,6 +19,7 @@ export const processChatMessage = inngest.createFunction(
 
     const db = createServiceClient();
 
+    try {
     // Step 0: Idempotency guard — webhook providers retry deliveries, and a
     // duplicate would otherwise create a second AI reply for the same message.
     if (externalMessageId) {
@@ -93,18 +94,7 @@ export const processChatMessage = inngest.createFunction(
         .select('id')
         .single();
 
-      if (error) {
-        await logTelemetry({
-          severity: 'error',
-          source: 'inngest_job',
-          endpoint: 'process-chat-message/upsert-conversation',
-          message: `Failed to create conversation: ${error.message}`,
-          workspaceId,
-          tenantId,
-          metadata: { code: error.code, platform, chatId },
-        });
-        throw new Error(`Failed to create conversation: ${error.message} (${error.code ?? 'unknown'})`);
-      }
+      if (error) throw new Error(`Failed to create conversation: ${error.message} (${error.code ?? 'unknown'})`);
       if (!created) throw new Error('Failed to create conversation: database returned no record');
       return created;
     });
@@ -194,18 +184,7 @@ export const processChatMessage = inngest.createFunction(
           }).select('id, ai_status').single());
         }
 
-        if (error) {
-          await logTelemetry({
-            severity: 'error',
-            source: 'inngest_job',
-            endpoint: 'process-chat-message/upsert-crm-record',
-            message: `Failed to create CRM record: ${error.message}`,
-            workspaceId,
-            tenantId,
-            metadata: { code: error.code, platform, chatId },
-          });
-          throw new Error(`Failed to create CRM record: ${error.message} (${error.code ?? 'unknown'})`);
-        }
+        if (error) throw new Error(`Failed to create CRM record: ${error.message} (${error.code ?? 'unknown'})`);
         if (!created) throw new Error('Failed to create CRM record: database returned no record');
         return { id: created.id, ai_status: created.ai_status ?? 'active' };
       });
@@ -415,6 +394,20 @@ Respond helpfully and concisely to the customer's message. If products are avail
     });
 
     return { status: 'sent', conversationId: conversation.id, intent };
+    } catch (error) {
+      const normalized = normalizeError(error);
+      await logTelemetry({
+        severity: 'error',
+        source: 'inngest_job',
+        endpoint: 'process-chat-message',
+        message: normalized.message,
+        stackTrace: normalized.stack,
+        workspaceId,
+        tenantId,
+        metadata: { platform, chatId, externalMessageId },
+      });
+      throw error;
+    }
   }
 );
 

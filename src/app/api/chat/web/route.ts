@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendInngestEvent } from '@/lib/inngest/dynamic';
+import { logTelemetry } from '@/lib/telemetry';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -40,7 +41,13 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = requestSchema.safeParse(await request.json());
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+  const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: 'Invalid chat request' }, { status: 400 });
 
   const { workspaceId, sessionId, content, visitorName, visitorEmail } = parsed.data;
@@ -78,6 +85,14 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error('[web-chat] Inngest dispatch failed:', error);
+    await logTelemetry({
+      severity: 'error',
+      source: 'api',
+      endpoint: '/api/chat/web',
+      message: error instanceof Error ? error.message : 'Inngest dispatch failed',
+      workspaceId,
+      tenantId: workspace.tenant_id,
+    });
     return NextResponse.json({ error: 'Web chat is not connected. Configure the Inngest event key and run migration_016_web_chat.sql.' }, { status: 503 });
   }
 
