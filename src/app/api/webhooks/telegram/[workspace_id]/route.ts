@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { decrypt } from '@/lib/encryption';
+import { logTelemetry, normalizeError } from '@/lib/telemetry';
 import { z } from 'zod';
 
 const telegramUpdateSchema = z.object({
@@ -80,6 +81,17 @@ export async function POST(
     });
   } catch (error) {
     console.error('[telegram-webhook] Inngest dispatch failed:', error);
+    const normalized = normalizeError(error);
+    await logTelemetry({
+      severity: 'error',
+      source: 'webhook_telegram',
+      endpoint: `/api/webhooks/telegram/${workspace_id}`,
+      message: normalized.message,
+      stackTrace: normalized.stack,
+      workspaceId: workspace.id,
+      tenantId: workspace.tenant_id,
+      metadata: { phase: 'inngest_dispatch' },
+    });
     return NextResponse.json({ error: 'Telegram received the message, but SabiBio could not queue it. Configure INNGEST_EVENT_KEY in Super Admin Configs.' }, { status: 503 });
   }
 
