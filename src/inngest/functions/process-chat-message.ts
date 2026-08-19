@@ -77,7 +77,7 @@ export const processChatMessage = inngest.createFunction(
         return existing;
       }
 
-      const { data: created } = await db
+      const { data: created, error } = await db
         .from('conversations')
         .insert({
           tenant_id: tenantId,
@@ -91,7 +91,20 @@ export const processChatMessage = inngest.createFunction(
         .select('id')
         .single();
 
-      return created!;
+      if (error) {
+        await logTelemetry({
+          severity: 'error',
+          source: 'inngest_job',
+          endpoint: 'process-chat-message/upsert-conversation',
+          message: `Failed to create conversation: ${error.message}`,
+          workspaceId,
+          tenantId,
+          metadata: { code: error.code, platform, chatId },
+        });
+        throw new Error(`Failed to create conversation: ${error.message} (${error.code ?? 'unknown'})`);
+      }
+      if (!created) throw new Error('Failed to create conversation: database returned no record');
+      return created;
     });
 
     // Step 2: Save incoming user message
@@ -143,7 +156,7 @@ export const processChatMessage = inngest.createFunction(
           return { id: existingCrm.id, ai_status: existingCrm.ai_status ?? 'active' };
         }
 
-        const { data: created } = await db.from('workspace_crm').insert({
+        const { data: created, error } = await db.from('workspace_crm').insert({
           workspace_id: workspaceId,
           platform,
           platform_user_id: chatId,
@@ -153,7 +166,20 @@ export const processChatMessage = inngest.createFunction(
           tags: ['New Lead'],
         }).select('id, ai_status').single();
 
-        return { id: created!.id, ai_status: created!.ai_status ?? 'active' };
+        if (error) {
+          await logTelemetry({
+            severity: 'error',
+            source: 'inngest_job',
+            endpoint: 'process-chat-message/upsert-crm-record',
+            message: `Failed to create CRM record: ${error.message}`,
+            workspaceId,
+            tenantId,
+            metadata: { code: error.code, platform, chatId },
+          });
+          throw new Error(`Failed to create CRM record: ${error.message} (${error.code ?? 'unknown'})`);
+        }
+        if (!created) throw new Error('Failed to create CRM record: database returned no record');
+        return { id: created.id, ai_status: created.ai_status ?? 'active' };
       });
 
       // Log the inbound user message to chat_messages (for the Unified Inbox)

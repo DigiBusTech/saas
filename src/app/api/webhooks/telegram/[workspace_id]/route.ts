@@ -73,7 +73,9 @@ export async function POST(
         chatId,
         contactName,
         messageText,
-        integrationId: workspace.id,
+        // Workspace credentials are stored on workspaces; integration_id is a
+        // legacy foreign key to the separate integrations table.
+        integrationId: null,
         botPersona: workspace.bot_persona,
         agentMode: workspace.agent_mode,
         externalMessageId: `tg_${message.chat.id}_${message.message_id}`,
