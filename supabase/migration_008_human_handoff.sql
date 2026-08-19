@@ -22,8 +22,9 @@ CREATE INDEX IF NOT EXISTS idx_chat_messages_workspace ON public.chat_messages(w
 
 -- 3. Enable RLS
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Chat Messages RLS" ON public.chat_messages;
 CREATE POLICY "Chat Messages RLS" ON public.chat_messages FOR ALL USING (
-    EXISTS (SELECT 1 FROM public.workspaces WHERE id = chat_messages.workspace_id AND tenant_id = auth.uid())
+    EXISTS (SELECT 1 FROM public.workspaces WHERE id = chat_messages.workspace_id AND tenant_id = public.get_my_tenant_id())
 );
 
 -- 4. Turn on Supabase Realtime for the new table so the UI updates instantly

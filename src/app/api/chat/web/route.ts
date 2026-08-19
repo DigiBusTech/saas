@@ -77,5 +77,8 @@ export async function POST(request: Request) {
     if (reply) return NextResponse.json({ reply: reply.content });
   }
 
-  return NextResponse.json({ reply: 'Thanks for your message. I am preparing a response now.' });
+  const queuedReply = workspace.agent_mode === 'copilot'
+    ? 'Thank you for reaching out. We have received your message and our team is reviewing the best response. Please stay with us; we will be right back.'
+    : 'Thank you for reaching out. We have received your message and our assistant is preparing a helpful response. Please stay with us; we will be right back.';
+  return NextResponse.json({ reply: queuedReply });
 }

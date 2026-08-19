@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getChatMessages, setAIStatus, sendManualMessage } from './actions';
+import { getChatMessages, getInboxConversations, setAIStatus, sendManualMessage } from './actions';
 import type { WorkspaceCRM, ChatMessage } from '@/lib/types/database';
 import { Send, Bot, User, Loader2, MessageSquare, Search } from 'lucide-react';
 
@@ -17,6 +17,13 @@ function PlatformIcon({ platform }: { platform: string }) {
     return (
       <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] font-bold" title="WhatsApp">
         W
+      </span>
+    );
+  }
+  if (platform === 'web') {
+    return (
+      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-violet-500/20 text-violet-400 text-[9px] font-bold" title="Web chat">
+        C
       </span>
     );
   }
@@ -46,6 +53,8 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
   const [search, setSearch] = useState('');
   const [isSending, startSending] = useTransition();
   const [isToggling, startToggling] = useTransition();
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
 
   const supabase = useRef(createClient());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -53,6 +62,16 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
   activeIdRef.current = activeId;
 
   const activeContact = conversations.find((c) => c.id === activeId) ?? null;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) setNotificationPermission(Notification.permission);
+  }, []);
+
+  const enableNotifications = async () => {
+    if (!('Notification' in window)) return;
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+  };
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -93,10 +112,22 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
             });
             scrollToBottom();
           }
+          if (msg.sender_type === 'user') {
+            setUnreadCount((count) => count + 1);
+            if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+              new Notification('New message in SabiBio Inbox', {
+                body: msg.content,
+                tag: `inbox-${msg.crm_id}`,
+              });
+            }
+          }
           // Bump the conversation to the top of the list
           setConversations((prev) => {
             const idx = prev.findIndex((c) => c.id === msg.crm_id);
-            if (idx === -1) return prev;
+            if (idx === -1) {
+              void getInboxConversations(workspaceId).then((latest) => setConversations(latest));
+              return prev;
+            }
             const updated = { ...prev[idx], last_interaction: msg.created_at };
             const rest = prev.filter((c) => c.id !== msg.crm_id);
             return [updated, ...rest];
@@ -163,7 +194,13 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
         <div className="p-4 border-b border-white/10">
           <h1 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
             <MessageSquare className="w-4 h-4 text-indigo-400" /> Unified Inbox
+            {unreadCount > 0 && <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[9px] text-white">{unreadCount}</span>}
           </h1>
+          {notificationPermission === 'default' && (
+            <button type="button" onClick={enableNotifications} className="mb-3 text-[10px] text-indigo-300 hover:text-indigo-200">
+              Enable browser notifications
+            </button>
+          )}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-600" />
             <input
@@ -182,11 +219,11 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
               <button
                 key={c.id}
                 onClick={() => selectConversation(c.id)}
-                className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/[0.03] transition flex items-start gap-3 ${
-                  activeId === c.id ? 'bg-white/[0.05]' : ''
+                className={`w-full text-left px-4 py-3 border-b border-white/5 hover:bg-white/3 transition flex items-start gap-3 ${
+                  activeId === c.id ? 'bg-white/5' : ''
                 }`}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white shrink-0">
                   {(c.customer_name ?? c.platform_user_id ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
@@ -197,7 +234,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
                         {c.customer_name ?? c.platform_user_id}
                       </span>
                     </div>
-                    <span className="text-[9px] text-gray-600 flex-shrink-0">{formatTime(c.last_interaction)}</span>
+                    <span className="text-[9px] text-gray-600 shrink-0">{formatTime(c.last_interaction)}</span>
                   </div>
                   <div className="flex items-center gap-1.5 mt-1">
                     {c.ai_status === 'paused' ? (
@@ -228,7 +265,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white">
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white">
                   {(activeContact.customer_name ?? activeContact.platform_user_id ?? '?').charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -238,6 +275,9 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
                       {activeContact.customer_name ?? activeContact.platform_user_id}
                     </span>
                   </div>
+                  <span className="text-[10px] text-gray-500">
+                    {activeContact.platform === 'web' ? 'Web chat' : activeContact.platform === 'telegram' ? 'Telegram' : 'WhatsApp'}
+                  </span>
                   <span className="text-[10px] text-gray-500">
                     {activeContact.phone_number ?? activeContact.platform_user_id}
                   </span>
@@ -300,7 +340,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
                             </span>
                           </div>
                         )}
-                        <p className="text-xs whitespace-pre-wrap break-words">{m.content}</p>
+                        <p className="text-xs whitespace-pre-wrap wrap-break-word">{m.content}</p>
                         <span className="block text-[9px] opacity-60 mt-1 text-right">{formatTime(m.created_at)}</span>
                       </div>
                     </div>
@@ -321,7 +361,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
               <button
                 type="submit"
                 disabled={isSending || !composer.trim()}
-                className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white disabled:opacity-40 hover:from-indigo-400 hover:to-purple-500 transition"
+                className="w-10 h-10 rounded-full bg-linear-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white disabled:opacity-40 hover:from-indigo-400 hover:to-purple-500 transition"
               >
                 {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
               </button>
