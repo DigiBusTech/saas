@@ -81,10 +81,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Web chat is not connected. Configure the Inngest event key and run migration_016_web_chat.sql.' }, { status: 503 });
   }
 
-  // Give the background job a short window to return an answer for the drawer.
-  // If it takes longer, the drawer still receives a graceful queued response.
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 500));
+  // Give the background job a brief window to answer inline. The client
+  // polls the GET endpoint for the rest — this must stay well under the
+  // platform's serverless function timeout (Vercel Hobby caps at 10s).
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 400));
     const { data: conversation } = await db
       .from('conversations')
       .select('id')
