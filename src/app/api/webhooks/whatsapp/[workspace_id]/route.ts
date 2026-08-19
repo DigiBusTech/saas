@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { inngest } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { decrypt } from '@/lib/encryption';
 import { z } from 'zod';
 
@@ -142,7 +142,7 @@ export async function POST(
   }
 
   // Dispatch to Inngest with workspace context
-  await inngest.send({
+  await sendInngestEvent({
     name: 'chat/message.received',
     data: {
       tenantId: workspace.tenant_id,

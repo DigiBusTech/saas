@@ -98,7 +98,7 @@ export default async function PublicPage({ params }: PageParams) {
 
   const { data: workspace } = await db
     .from('workspaces')
-    .select('id, name, slug, logo_url, is_active, telegram_bot_token, whatsapp_phone_number_id, whatsapp_access_token, sabibio_enabled, sabibio_template_id, sabibio_branding, sabibio_links, sabibio_channels, sabibio_socials, sabibio_products, workspace_products(*), workspace_services(*), workspace_articles(*)')
+    .select('id, name, slug, logo_url, is_active, telegram_bot_token, whatsapp_phone_number_id, whatsapp_access_token, sabibio_enabled, sabibio_template_id, sabibio_branding, sabibio_links, sabibio_channels, sabibio_socials, sabibio_products, payment_options, workspace_products(*), workspace_services(*), workspace_articles(*)')
     .eq('slug', slug)
     .eq('is_active', true)
     .maybeSingle();

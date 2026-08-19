@@ -1,7 +1,7 @@
 'use server';
 
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { inngest } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { revalidatePath } from 'next/cache';
 
 export async function getWorkspaceArticles(workspaceId: string) {
@@ -22,7 +22,7 @@ export async function createArticle(workspaceId: string, formData: FormData) {
   if (error || !article) return { error: error?.message ?? 'Could not create article' };
   const service = createServiceClient();
   const { data: knowledge } = await service.from('knowledge_bases').insert({ tenant_id: workspace.tenant_id, workspace_id: workspaceId, title, content, status: 'PENDING' }).select('id').single();
-  if (knowledge) { await db.from('workspace_articles').update({ knowledge_id: knowledge.id }).eq('id', article.id); await inngest.send({ name: 'knowledge.vectorize', data: { knowledgeId: knowledge.id, tenantId: workspace.tenant_id, workspaceId } }); }
+  if (knowledge) { await db.from('workspace_articles').update({ knowledge_id: knowledge.id }).eq('id', article.id); await sendInngestEvent({ name: 'knowledge.vectorize', data: { knowledgeId: knowledge.id, tenantId: workspace.tenant_id, workspaceId } }); }
   revalidatePath(`/dashboard/${workspaceId}/articles`);
   revalidatePath(`/dashboard/${workspaceId}/knowledge`);
   return { error: null };

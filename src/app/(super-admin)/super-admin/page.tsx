@@ -1,103 +1,18 @@
-import { createServiceClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+import { Activity, ArrowUpRight, Building2, CreditCard, Database, Gauge, Settings2, Users, type LucideIcon } from 'lucide-react';
+import { getAnalyticsStats } from './analytics/actions';
+
+export const dynamic = 'force-dynamic';
+
+type Stat = { label: string; value: string | number; icon: LucideIcon; color: string };
 
 export default async function SuperAdminPage() {
-  const supabase = createServiceClient();
-
-  // Fetch ALL tenants — using service client to bypass RLS
-  const { data: tenants, error } = await supabase
-    .from('tenants')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    return (
-      <div className="p-8 text-center text-rose-400 text-sm">
-        Failed to load tenants: {error.message}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-bold text-white">All Tenants</h2>
-        <span className="text-xs text-gray-500 font-mono">{tenants?.length ?? 0} registered</span>
-      </div>
-
-      <div className="bg-[#0F1219] border border-gray-800 rounded-lg overflow-x-auto">
-        <table className="w-full text-xs min-w-[900px]">
-          <thead>
-            <tr className="border-b border-gray-800 bg-[#0B0E14]">
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Business</th>
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Plan</th>
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Status</th>
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Billing</th>
-              <th className="text-right p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Tokens Used</th>
-              <th className="text-right p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Messages</th>
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Setup</th>
-              <th className="text-left p-3 text-[9px] uppercase font-bold tracking-wider text-gray-500">Created</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-800/40">
-            {(!tenants || tenants.length === 0) ? (
-              <tr>
-                <td colSpan={8} className="p-8 text-center text-gray-500">
-                  No tenants registered yet.
-                </td>
-              </tr>
-            ) : (
-              tenants.map((t: any) => (
-                <tr key={t.id} className="hover:bg-gray-900/40 transition">
-                  <td className="p-3 text-white font-medium">{t.name}</td>
-                  <td className="p-3">
-                    <span className="px-1.5 py-0.5 bg-indigo-950/40 text-indigo-400 border border-indigo-900/30 rounded text-[8px] font-bold uppercase">
-                      {t.plan_type}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                      t.status === 'active'
-                        ? 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30'
-                        : t.status === 'expired'
-                        ? 'bg-amber-950/40 text-amber-400 border border-amber-900/30'
-                        : 'bg-rose-950/40 text-rose-400 border border-rose-900/30'
-                    }`}>
-                      {t.status}
-                    </span>
-                  </td>
-                  <td className="p-3">
-                    <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase ${
-                      t.billing_provider === 'stripe'
-                        ? 'bg-purple-950/40 text-purple-400 border border-purple-900/30'
-                        : t.billing_provider === 'flutterwave'
-                        ? 'bg-orange-950/40 text-orange-400 border border-orange-900/30'
-                        : 'bg-gray-900 text-gray-500 border border-gray-800'
-                    }`}>
-                      {t.billing_provider ?? 'none'} {t.currency ? `(${t.currency})` : ''}
-                    </span>
-                  </td>
-                  <td className="p-3 text-right font-mono text-gray-400">
-                    {(t.token_usage ?? 0).toLocaleString()}
-                  </td>
-                  <td className="p-3 text-right font-mono text-gray-400">
-                    {(t.message_usage ?? 0).toLocaleString()}
-                  </td>
-                  <td className="p-3">
-                    {t.setup_fee_paid ? (
-                      <span className="text-emerald-400 text-[8px] font-bold">PAID</span>
-                    ) : (
-                      <span className="text-gray-600 text-[8px] font-bold">NO</span>
-                    )}
-                  </td>
-                  <td className="p-3 text-gray-500 font-mono">
-                    {new Date(t.created_at).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+  const { stats, error } = await getAnalyticsStats();
+  const statCards: Stat[] = [
+    { label: 'Tenants', value: stats.tenants, icon: Building2, color: 'text-cyan-300' },
+    { label: 'Active tenants', value: stats.activeTenants, icon: Users, color: 'text-emerald-300' },
+    { label: 'Workspaces', value: stats.workspaces, icon: Database, color: 'text-sky-300' },
+    { label: 'Estimated MRR', value: `$${stats.mrrUsd.toLocaleString()}`, icon: CreditCard, color: 'text-amber-300' },
+  ];
+  return <div className="space-y-8 p-6"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-rose-400">SabiBio control plane</p><h1 className="mt-2 text-2xl font-semibold tracking-tight text-white">Platform command center</h1><p className="mt-2 max-w-xl text-xs leading-5 text-gray-500">Monitor tenants, workspaces, billing, AI providers, configuration, and production health from one operational view.</p></div><Link href="/super-admin/observability" className="flex items-center gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-500/20"><Activity className="h-3.5 w-3.5" /> Open observability</Link></div>{error && <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">Analytics query failed: {error}</div>}<div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{statCards.map(({ label, value, icon: Icon, color }) => <div key={label} className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5"><Icon className={`h-4 w-4 ${color}`} /><p className="mt-5 text-[10px] uppercase tracking-wider text-gray-500">{label}</p><p className={`mt-1 text-2xl font-semibold ${color}`}>{value}</p></div>)}</div><section className="grid gap-4 lg:grid-cols-2"><div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5"><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Operations</h2><p className="mt-1 text-xs text-gray-500">Authoritative admin areas.</p></div><Gauge className="h-5 w-5 text-rose-300" /></div><div className="mt-5 grid gap-2 sm:grid-cols-2">{[['/super-admin/tenants', 'Tenant management', 'Plans, suspension, usage, export'], ['/super-admin/analytics', 'Analytics', 'Usage, MRR and plan distribution'], ['/super-admin/observability', 'Observability', 'Errors, webhooks and diagnosis'], ['/super-admin/configs', 'System configs', 'Inngest, SMTP and platform secrets']].map(([href, title, desc]) => <Link key={href} href={href} className="group rounded-xl border border-white/10 p-3 hover:border-rose-400/40 hover:bg-white/[0.03]"><div className="flex items-center justify-between"><span className="text-xs font-semibold text-white">{title}</span><ArrowUpRight className="h-3.5 w-3.5 text-gray-600 group-hover:text-rose-300" /></div><p className="mt-1 text-[10px] text-gray-500">{desc}</p></Link>)}</div></div><div className="rounded-2xl border border-white/10 bg-zinc-900/50 p-5"><div className="flex items-center justify-between"><div><h2 className="text-sm font-semibold text-white">Configuration health</h2><p className="mt-1 text-xs text-gray-500">Keep runtime services connected.</p></div><Settings2 className="h-5 w-5 text-cyan-300" /></div><div className="mt-5 space-y-3 text-xs"><div className="flex items-center justify-between rounded-lg bg-black/20 p-3"><span className="text-gray-400">AI provider routing</span><Link href="/super-admin/ai-providers" className="text-cyan-300">Manage</Link></div><div className="flex items-center justify-between rounded-lg bg-black/20 p-3"><span className="text-gray-400">Inngest event key</span><Link href="/super-admin/configs" className="text-cyan-300">Configure</Link></div><div className="flex items-center justify-between rounded-lg bg-black/20 p-3"><span className="text-gray-400">Billing plans</span><Link href="/super-admin/plans" className="text-cyan-300">Manage</Link></div></div></div></section></div>;
 }

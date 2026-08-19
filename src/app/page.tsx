@@ -6,9 +6,12 @@ import { MarketingNav, MarketingFooter } from './(marketing)/marketing-nav';
 export const dynamic = 'force-dynamic';
 
 const features = [
-  ['01', 'Meet customers where they are', 'Connect WhatsApp and Telegram to one workspace-specific inbox.'],
-  ['02', 'Ground every answer', 'Upload FAQs, product details, and policies so replies stay on brand.'],
-  ['03', 'Keep humans in control', 'Pause automation, take over a conversation, and send from the same thread.'],
+  ['01', 'One tenant, many businesses', 'Create isolated workspaces for every brand, branch, or client with its own CRM, products, integrations, AI persona, and SabiBio page.'],
+  ['02', 'AI grounded in your business', 'Upload knowledge, publish articles, connect products and services, and let the multi-provider AI router answer with your context.'],
+  ['03', 'Conversations that never lose the human', 'Use Autopilot, Copilot, or Manual mode, with realtime inboxes, escalation alerts, and human handoff when urgency matters.'],
+  ['04', 'Automations that follow through', 'Send personalized new-lead, post-purchase, renewal, expiry, flash-sale, and broadcast reminders in the customer’s familiar language.'],
+  ['05', 'Turn attention into action', 'Publish a SabiBio link hub with products, services, articles, social channels, checkout options, receipts, and web chat.'],
+  ['06', 'Operate with control', 'Manage plans, providers, encrypted configs, telemetry, tenant exports, billing, and platform health from the Super Admin console.'],
 ];
 
 interface PlanRow {
@@ -49,7 +52,7 @@ export default async function Home() {
         <div className="max-w-3xl">
           <p className="mb-6 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">AI customer operations, without the black box</p>
           <h1 className="text-5xl font-semibold leading-[1.02] tracking-[-0.04em] text-white sm:text-7xl">Turn every customer conversation into momentum.</h1>
-          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-400">SabiBio gives your team a live AI assistant, shared inbox, CRM, and automation layer for WhatsApp and Telegram.</p>
+          <p className="mt-7 max-w-2xl text-lg leading-8 text-slate-400">SabiBio gives every business a live AI assistant, shared inbox, CRM, automation engine, public SabiBio page, payment-ready catalog, and a human team that can take over at any moment.</p>
           <div className="mt-9 flex flex-wrap items-center gap-4">
             <Link href="/signup" className="rounded-full bg-cyan-300 px-6 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Create your workspace</Link>
             <a href="#how-it-works" className="rounded-full border border-slate-700 px-6 py-3 text-sm font-semibold text-slate-200 hover:border-slate-500">See how it works</a>

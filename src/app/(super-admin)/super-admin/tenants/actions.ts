@@ -5,9 +5,11 @@ import { requireSuperAdmin } from '@/lib/auth/guards';
 import { revalidatePath } from 'next/cache';
 
 export async function getTenants() {
+  const guard = await requireSuperAdmin();
+  if ('error' in guard) return { tenants: [], error: guard.error };
   const supabase = createServiceClient();
 
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from('tenants')
     .select(`
       id, name, status, plan_type, plan_id, is_suspended,
@@ -15,6 +17,15 @@ export async function getTenants() {
       created_at
     `)
     .order('created_at', { ascending: false });
+
+  if (error?.message.includes('is_suspended')) {
+    const fallback = await supabase
+      .from('tenants')
+      .select('id, name, status, plan_type, plan_id, message_usage, token_usage, created_at')
+      .order('created_at', { ascending: false });
+    data = (fallback.data ?? []).map((tenant) => ({ ...tenant, is_suspended: false }));
+    error = fallback.error;
+  }
 
   if (error) return { tenants: [], error: error.message };
 
@@ -32,7 +43,7 @@ export async function getTenants() {
         .eq('tenant_id', tenant.id)
         .eq('role', 'owner')
         .limit(1)
-        .single();
+        .maybeSingle();
 
       // Fallback: if no 'owner' role found, try 'tenant_admin'
       let ownerEmail = owner?.email;
@@ -44,7 +55,7 @@ export async function getTenants() {
           .eq('tenant_id', tenant.id)
           .eq('role', 'tenant_admin')
           .limit(1)
-          .single();
+          .maybeSingle();
         ownerEmail = admin?.email;
         ownerName = admin?.full_name;
       }
@@ -62,6 +73,8 @@ export async function getTenants() {
 }
 
 export async function getPlansForDropdown() {
+  const guard = await requireSuperAdmin();
+  if ('error' in guard) return [];
   const supabase = createServiceClient();
   const { data } = await supabase
     .from('subscription_plans')

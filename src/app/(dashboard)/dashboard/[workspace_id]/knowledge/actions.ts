@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { chunkText } from '@/lib/chunker';
-import { inngest } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { logTelemetry, normalizeError } from '@/lib/telemetry';
 import { z } from 'zod';
 
@@ -86,7 +86,7 @@ export async function addKnowledgeDocument(formData: FormData) {
 
     // Fire the vectorization job for each created chunk.
     for (const knowledgeId of createdIds) {
-      await inngest.send({
+      await sendInngestEvent({
         name: 'knowledge.vectorize',
         data: { knowledgeId, tenantId: profile.tenant_id, workspaceId },
       });
@@ -150,7 +150,7 @@ export async function updateKnowledgeDocument(formData: FormData) {
     if (error) return { error: error.message };
 
     // Re-trigger vectorization.
-    await inngest.send({
+    await sendInngestEvent({
       name: 'knowledge.vectorize',
       data: { knowledgeId: id, tenantId: profile.tenant_id, workspaceId },
     });

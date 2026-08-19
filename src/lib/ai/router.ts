@@ -58,6 +58,12 @@ function buildChatCompletionsUrl(baseUrl: string): string {
   return `${url}/chat/completions`;
 }
 
+function normalizeGroqModel(providerName: string, modelName: string): string {
+  if (!providerName.toLowerCase().includes('groq')) return modelName;
+  if (modelName === 'llama-3.3-70b-versatile') return 'llama-3.1-8b-instant';
+  return modelName;
+}
+
 /**
  * Execute a single OpenAI-compatible chat completion against one provider.
  */
@@ -67,6 +73,7 @@ async function executeSingleProvider(
 ): Promise<LLMResult> {
   const apiKey = resolveApiKey(provider.api_key_encrypted);
   const endpoint = buildChatCompletionsUrl(provider.base_url);
+  const modelName = normalizeGroqModel(provider.provider_name, provider.model_name);
 
   const messages = [];
   if (options.systemInstruction) {
@@ -85,7 +92,7 @@ async function executeSingleProvider(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: provider.model_name,
+        model: modelName,
         messages,
         temperature: options.temperature ?? 0.5,
         max_tokens: options.maxTokens ?? 1000,
@@ -111,7 +118,7 @@ async function executeSingleProvider(
     return {
       text,
       provider: provider.provider_name,
-      model: provider.model_name,
+      model: modelName,
       tokensUsed,
     };
   } finally {
@@ -147,14 +154,20 @@ export async function executeLLMRequest(options: LLMRequestOptions): Promise<LLM
   const active = (providers ?? []) as ProviderConfig[];
 
   if (active.length === 0) {
-    // Graceful degradation: fall back to the legacy GROQ_API_KEY env if present.
-    if (process.env.GROQ_API_KEY) {
+    let configuredGroqKey = process.env.GROQ_API_KEY || '';
+    const { data: groqConfig } = await db.from('system_configs').select('config_value, is_secret').eq('config_key', 'GROQ_API_KEY').maybeSingle();
+    if (groqConfig?.config_value) {
+      try { configuredGroqKey = groqConfig.is_secret ? decrypt(groqConfig.config_value) : groqConfig.config_value; } catch { configuredGroqKey = groqConfig.config_value; }
+    }
+
+    // Graceful degradation: fall back to the Super Admin-managed Groq key or environment key.
+    if (configuredGroqKey) {
       const legacyProvider: ProviderConfig = {
         id: 'env-groq',
         provider_name: 'Groq (env fallback)',
         base_url: 'https://api.groq.com/openai/v1',
-        model_name: 'llama-3.3-70b-versatile',
-        api_key_encrypted: process.env.GROQ_API_KEY,
+        model_name: 'llama-3.1-8b-instant',
+        api_key_encrypted: configuredGroqKey,
         priority: 999,
         is_primary: true,
         is_fallback: false,

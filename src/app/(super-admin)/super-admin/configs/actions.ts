@@ -6,6 +6,8 @@ import { requireSuperAdmin } from '@/lib/auth/guards';
 import { revalidatePath } from 'next/cache';
 
 export async function getConfigs() {
+  const guard = await requireSuperAdmin();
+  if ('error' in guard) return { configs: [], error: guard.error };
   const supabase = createServiceClient();
   const { data, error } = await supabase
     .from('system_configs')
@@ -15,12 +17,13 @@ export async function getConfigs() {
   if (error) return { configs: [], error: error.message };
 
   // Mask secret values for display
-  const masked = (data ?? []).map((c: any) => ({
-    ...c,
-    display_value: c.is_secret && c.config_value
-      ? maskSecret(decrypt(c.config_value))
-      : c.config_value || '',
-  }));
+  const masked = (data ?? []).map((c: any) => {
+    let displayValue = c.config_value || '';
+    if (c.is_secret && c.config_value) {
+      try { displayValue = maskSecret(decrypt(c.config_value)); } catch { displayValue = maskSecret(c.config_value); }
+    }
+    return { ...c, display_value: displayValue };
+  });
 
   return { configs: masked, error: null };
 }

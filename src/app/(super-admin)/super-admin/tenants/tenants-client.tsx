@@ -29,9 +29,10 @@ interface Plan {
 interface Props {
   tenants: Tenant[];
   plans: Plan[];
+  loadError: string | null;
 }
 
-export function TenantsClient({ tenants, plans }: Props) {
+export function TenantsClient({ tenants, plans, loadError }: Props) {
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -96,6 +97,8 @@ export function TenantsClient({ tenants, plans }: Props) {
           {tenants.length} Tenants
         </div>
       </div>
+
+      {loadError && <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300">Tenant query failed: {loadError}</div>}
 
       {/* Search */}
       <input

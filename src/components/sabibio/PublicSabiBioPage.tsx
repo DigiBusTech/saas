@@ -1,6 +1,6 @@
 import { ExternalLink, MessageCircle, Send, ShieldCheck } from 'lucide-react';
 import { siFacebook, siInstagram, siTiktok, siX, siYoutube } from 'simple-icons/icons';
-import type { SabiBioTemplate, SabiBioLink } from '@/lib/sabibio/templates';
+import { getTemplateLogoDefaults, type SabiBioTemplate, type SabiBioLink } from '@/lib/sabibio/templates';
 import { WebChatDrawer } from './WebChatDrawer';
 import { ProductCollection } from './ProductCollection';
 
@@ -29,8 +29,10 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
   const isGridTemplate = ['property-grid', 'retail-drop', 'food-table', 'creative-canvas'].includes(template.id);
   const isEditorialTemplate = ['beauty-glow', 'travel-atlas', 'creator-studio', 'event-night'].includes(template.id);
   const isCompactTemplate = template.density === 'compact';
-  const logoShape = String(branding.logo_shape ?? (template.id === 'developer-portfolio' || template.id === 'property-grid' ? 'square' : 'circle'));
-  const logoPosition = String(branding.logo_position ?? (template.id === 'consulting-ledger' ? 'left' : 'center'));
+  const logoDefaults = getTemplateLogoDefaults(template.id);
+  const logoShape = String(branding.logo_shape ?? logoDefaults.shape);
+  const logoPosition = String(branding.logo_position ?? logoDefaults.position);
+  const coverOverlap = branding.cover_overlap === undefined ? logoDefaults.overlap : Boolean(branding.cover_overlap);
   const logoRadius = logoShape === 'circle' ? '9999px' : logoShape === 'rounded' ? template.radius : '0.5rem';
   const logoAlign = logoPosition === 'left' ? 'items-start text-left' : logoPosition === 'right' ? 'items-end text-right' : 'items-center text-center';
   const phone = String(channels.whatsapp_number ?? '').replace(/\D/g, '');
@@ -50,7 +52,7 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
       <div className={`mx-auto ${isGridTemplate ? 'max-w-2xl' : isCompactTemplate ? 'max-w-md' : 'max-w-xl'}`}>
         <header className={`relative flex flex-col overflow-hidden ${logoAlign}`} style={{ borderRadius: template.radius, boxShadow: template.shadow }}>
           {branding.cover_url && <div className="h-32 w-full bg-cover bg-center" style={{ backgroundImage: `url(${String(branding.cover_url)})` }} />}
-          <div className={`w-full ${branding.cover_url ? 'px-4 pb-4 pt-0' : ''} ${logoPosition === 'cover-overlap' ? '-mt-12 px-4 pb-4' : ''}`}>
+          <div className={`w-full ${branding.cover_url ? 'px-4 pb-4 pt-0' : ''} ${coverOverlap && branding.cover_url ? '-mt-12 px-4 pb-4' : ''}`}>
           <div className={`flex h-24 w-24 items-center justify-center overflow-hidden border-2 ${logoPosition === 'right' ? 'ml-auto' : logoPosition === 'left' ? 'mr-auto' : 'mx-auto'}`} style={{ borderColor: primary, background: `${primary}22`, borderRadius: logoRadius }}>
             {workspace.logo_url || branding.avatar_url ? <img src={String(workspace.logo_url || branding.avatar_url)} alt="" className="h-full w-full object-cover" /> : <span className="text-3xl font-bold" style={{ color: primary }}>{workspace.name.slice(0, 1).toUpperCase()}</span>}
           </div>
@@ -64,7 +66,7 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
           {activeLinks.map((link) => <a key={link.id} href={link.url} target="_blank" rel="noreferrer" className={`group flex items-center justify-between border px-5 py-4 text-sm font-semibold transition hover:-translate-y-0.5 ${isEditorialTemplate ? 'text-center justify-center' : ''}`} style={{ borderColor: link.is_featured ? primary : `${primary}55`, background: `${primary}${link.is_featured ? '2c' : '15'}`, borderRadius: template.radius, boxShadow: link.is_featured ? template.shadow : 'none' }}><span>{link.icon && <span className="mr-2">{link.icon}</span>}{link.title}</span><ExternalLink className="h-4 w-4 text-white/40 transition group-hover:text-white" /></a>)}
         </section>
 
-        {products.length > 0 && <ProductCollection products={products} primary={primary} radius={template.radius} grid={isGridTemplate} />}
+        {products.length > 0 && <ProductCollection products={products} primary={primary} radius={template.radius} grid={isGridTemplate} workspaceId={workspace.id} paymentOptions={workspace.payment_options ?? { methods: [], checkout_fields: [] }} />}
 
         {services.length > 0 && <section className="mt-8"><h2 className="mb-3 text-sm font-semibold" style={{ color: primary }}>Services</h2><div className="space-y-3">{services.map((service: { id: string; name: string; description: string | null; price: number | null; currency: string; image_url: string | null; payment_link: string | null }) => <a key={service.id} href={service.payment_link || '#'} target={service.payment_link ? '_blank' : undefined} rel="noreferrer" className="block overflow-hidden border p-4 transition hover:-translate-y-0.5" style={{ borderColor: `${primary}55`, background: `${primary}12`, borderRadius: template.radius }}>{service.image_url && <img src={service.image_url} alt="" className="mb-3 h-24 w-full rounded object-cover" />}<p className="text-xs font-semibold">{service.name}</p><p className="mt-1 text-[10px] text-white/55">{service.description}</p>{service.price !== null && <p className="mt-2 text-xs font-bold" style={{ color: primary }}>{service.currency} {service.price}</p>}</a>)}</div></section>}
 
@@ -76,6 +78,7 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
           {channels.telegram_enabled && telegram && <a href={`https://t.me/${telegram}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-sky-400 px-4 py-2.5 text-xs font-bold text-black transition hover:bg-sky-300"><Send className="h-4 w-4" /> Telegram</a>}
         </footer>
         <div className="mt-10 flex flex-wrap justify-center gap-3 text-[10px] text-white/40">{(['privacy_policy', 'terms_of_service', 'disclaimer', 'cookie_policy'] as const).map((key) => legal[key] ? <a key={key} href={`#${key}`} className="hover:text-white">{key.replaceAll('_', ' ')}</a> : null)}</div>
+        <div className="mt-6 space-y-4 text-left">{(['privacy_policy', 'terms_of_service', 'disclaimer', 'cookie_policy'] as const).map((key) => legal[key] ? <section key={key} id={key} className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4"><h2 className="text-xs font-semibold capitalize text-white">{key.replaceAll('_', ' ')}</h2><p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal[key])}</p></section> : null)}</div>
         <p className="mt-4 text-center text-[10px] text-white/30">Powered by SabiBio · Sabi AI Technologies Ltd.</p>
       </div>
     </main>

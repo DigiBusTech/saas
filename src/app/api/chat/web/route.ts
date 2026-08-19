@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createServiceClient } from '@/lib/supabase/server';
-import { inngest } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 
 const requestSchema = z.object({
   workspaceId: z.string().uuid(),
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const externalMessageId = `web_${sessionId}_${crypto.randomUUID()}`;
   const requestStartedAt = new Date().toISOString();
   try {
-    await inngest.send({
+    await sendInngestEvent({
       name: 'chat/message.received',
       data: {
         tenantId: workspace.tenant_id,

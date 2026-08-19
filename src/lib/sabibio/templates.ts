@@ -12,6 +12,18 @@ export interface SabiBioTemplate {
   density: 'compact' | 'balanced' | 'airy';
 }
 
+export function getTemplateLogoDefaults(templateId: string) {
+  const defaults: Record<string, { shape: 'circle' | 'square' | 'rounded'; position: 'left' | 'center' | 'right'; overlap: boolean }> = {
+    'developer-portfolio': { shape: 'square', position: 'left', overlap: false },
+    'property-grid': { shape: 'rounded', position: 'left', overlap: true },
+    'consulting-ledger': { shape: 'square', position: 'left', overlap: false },
+    'beauty-glow': { shape: 'circle', position: 'center', overlap: true },
+    'creator-studio': { shape: 'circle', position: 'right', overlap: true },
+    'event-night': { shape: 'rounded', position: 'center', overlap: true },
+  };
+  return defaults[templateId] ?? { shape: 'circle', position: 'center', overlap: false };
+}
+
 export const SABIBIO_TEMPLATES: SabiBioTemplate[] = [
   { id: 'tech-minimal', name: 'Tech Minimal', category: 'Tech / IT / Software', description: 'Crisp, focused and product-led.', primary: '#06b6d4', background: '#07131c', accent: '#164e63', font: 'geist', radius: '0.75rem', shadow: '0 20px 60px rgba(6,182,212,.12)', density: 'balanced' },
   { id: 'developer-portfolio', name: 'Developer Portfolio', category: 'Developer / Personal Portfolio', description: 'A sharp canvas for projects and expertise.', primary: '#a78bfa', background: '#100d1b', accent: '#4c1d95', font: 'mono', radius: '0.5rem', shadow: '0 20px 60px rgba(167,139,250,.12)', density: 'compact' },

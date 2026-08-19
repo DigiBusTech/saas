@@ -12,7 +12,8 @@ const TRIGGER_TYPES = [
   { value: 'new_lead', label: 'New Lead Welcome' },
   { value: 'subscription_expiring', label: 'Subscription Expiring in X Days' },
   { value: 'post_purchase', label: 'Post-Purchase Follow-up' },
-  { value: 'broadcast', label: 'Custom Broadcast' },
+  { value: 'subscription_renewal', label: 'Subscription Renewal Reminder' },
+  { value: 'product_flash_sale', label: 'Product Flash Sale' },
 ];
 
 const VARIABLE_TAGS = ['{customer_name}', '{product_name}', '{expiry_date}'];

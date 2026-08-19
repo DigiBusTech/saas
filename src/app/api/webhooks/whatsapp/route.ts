@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { inngest } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { z } from 'zod';
 
 const whatsappWebhookSchema = z.object({
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
   }
 
   // Dispatch to Inngest and return 200 immediately
-  await inngest.send({
+  await sendInngestEvent({
     name: 'chat/message.received',
     data: {
       tenantId: integration.tenant_id,

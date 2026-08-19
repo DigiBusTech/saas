@@ -14,7 +14,7 @@ export type AIStatus = 'active' | 'paused';
 export type ChatDirection = 'inbound' | 'outbound';
 export type ChatSenderType = 'user' | 'ai_agent' | 'human_agent';
 
-export type AutomationTrigger = 'new_lead' | 'subscription_expiring' | 'post_purchase' | 'broadcast';
+export type AutomationTrigger = 'new_lead' | 'subscription_expiring' | 'post_purchase' | 'broadcast' | 'subscription_renewal' | 'product_flash_sale';
 export type MessageApprovalStatus = 'sent' | 'pending_approval' | 'discarded';
 
 export interface SystemConfig {

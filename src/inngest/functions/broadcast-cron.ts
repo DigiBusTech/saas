@@ -66,6 +66,20 @@ export const broadcastCron = inngest.createFunction(
               return data ?? [];
             }
 
+            if (automation.trigger_type === 'subscription_renewal') {
+              const targetDate = new Date();
+              targetDate.setDate(targetDate.getDate() + (automation.trigger_days_before || 7));
+              const startOfDay = new Date(targetDate); startOfDay.setHours(0, 0, 0, 0);
+              const endOfDay = new Date(targetDate); endOfDay.setHours(23, 59, 59, 999);
+              const { data } = await db.from('workspace_crm').select('*').eq('workspace_id', workspace.id).eq('subscription_status', 'subscriber').gte('subscription_expiry', startOfDay.toISOString()).lte('subscription_expiry', endOfDay.toISOString());
+              return data ?? [];
+            }
+
+            if (automation.trigger_type === 'product_flash_sale') {
+              const { data } = await db.from('workspace_crm').select('*').eq('workspace_id', workspace.id).contains('tags', ['Sales Interest']);
+              return data ?? [];
+            }
+
             if (automation.trigger_type === 'new_lead') {
               const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
               const { data } = await db

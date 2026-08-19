@@ -59,6 +59,7 @@ export default async function DashboardLayout({
     { href: `${wsPrefix}/products`, label: 'Products', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
     { href: `${wsPrefix}/services`, label: 'Services', icon: 'M20 7h-9m9 0a2 2 0 012 2v9a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2h2m11 0V5a2 2 0 00-2-2h-7a2 2 0 00-2 2v2' },
     { href: `${wsPrefix}/articles`, label: 'Articles', icon: 'M4 19.5A2.5 2.5 0 016.5 17H20V3H6.5A2.5 2.5 0 004 5.5v14zM6.5 17H20' },
+    { href: `${wsPrefix}/payments`, label: 'Payments', icon: 'M2 7h20M4 5h16a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V7a2 2 0 012-2zm3 9h3' },
     { href: `${wsPrefix}/crm`, label: 'CRM', icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75' },
     { href: `${wsPrefix}/automations`, label: 'Automations', icon: 'M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' },
       { href: `${wsPrefix}/sabibio`, label: 'SabiBio Page', icon: 'M12 3v18m9-9H3m14.5-6.5L6.5 17.5m0-11l11 11' },
