@@ -23,14 +23,14 @@ export const processChatMessage = inngest.createFunction(
     // duplicate would otherwise create a second AI reply for the same message.
     if (externalMessageId) {
       const alreadyProcessed = await step.run('idempotency-check', async () => {
-        const { data: existing } = await db
+        let lookup = db
           .from('conversations')
           .select('id')
           .eq('tenant_id', tenantId)
-          .eq('workspace_id', workspaceId || null)
           .eq('platform_chat_id', chatId)
-          .eq('platform', platform)
-          .single();
+          .eq('platform', platform);
+        lookup = workspaceId ? lookup.eq('workspace_id', workspaceId) : lookup.is('workspace_id', null);
+        const { data: existing } = await lookup.single();
         if (!existing) return false;
         const { data: dup } = await db
           .from('messages')
@@ -61,14 +61,14 @@ export const processChatMessage = inngest.createFunction(
 
     // Step 1: Upsert conversation record
     const conversation = await step.run('upsert-conversation', async () => {
-      const { data: existing } = await db
+      let conversationLookup = db
         .from('conversations')
         .select('id')
         .eq('tenant_id', tenantId)
-        .eq('workspace_id', workspaceId || null)
         .eq('platform_chat_id', chatId)
-        .eq('platform', platform)
-        .single();
+        .eq('platform', platform);
+      conversationLookup = workspaceId ? conversationLookup.eq('workspace_id', workspaceId) : conversationLookup.is('workspace_id', null);
+      const { data: existing } = await conversationLookup.single();
 
       if (existing) {
         await db.from('conversations').update({
@@ -111,16 +111,19 @@ export const processChatMessage = inngest.createFunction(
 
     // Step 2: Save incoming user message
     const inboundMessageSaved = await step.run('save-user-message', async () => {
-      const { data, error } = await db.from('messages').upsert({
+      const { error } = await db.from('messages').insert({
         conversation_id: conversation.id,
         sender_type: 'user',
         sender_name: contactName,
         content: messageText,
         approval_status: 'sent',
         external_message_id: externalMessageId ?? null,
-      }, { onConflict: 'conversation_id,external_message_id', ignoreDuplicates: true }).select('id').maybeSingle();
-      if (error) throw new Error(`Failed to save inbound message: ${error.message} (${error.code ?? 'unknown'})`);
-      return Boolean(data);
+      });
+      if (error) {
+        if (error.code === '23505') return false; // duplicate webhook delivery, already recorded
+        throw new Error(`Failed to save inbound message: ${error.message} (${error.code ?? 'unknown'})`);
+      }
+      return true;
     });
     if (!inboundMessageSaved && externalMessageId) return { status: 'duplicate_skipped', externalMessageId };
 
