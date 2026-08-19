@@ -223,13 +223,27 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
 export async function verifyTelegramWebhook(workspaceId: string) {
   try {
     const supabase = await createClient();
-    const { data: stored } = await supabase.from('workspaces').select('telegram_bot_token').eq('id', workspaceId).single();
+    const { data: stored } = await supabase.from('workspaces').select('telegram_bot_token, telegram_webhook_secret').eq('id', workspaceId).single();
     if (!stored?.telegram_bot_token) return { error: 'No Telegram bot token is saved.' };
     let token: string;
     try { token = decrypt(stored.telegram_bot_token); } catch { token = stored.telegram_bot_token; }
     const response = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`, { signal: AbortSignal.timeout(10000) });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || result.ok !== true) return { error: result.description ?? `Telegram returned HTTP ${response.status}` };
+
+    const publicUrl = await getPublicAppUrl();
+    let secret = '';
+    if (stored.telegram_webhook_secret) {
+      try { secret = decrypt(stored.telegram_webhook_secret); } catch { secret = stored.telegram_webhook_secret; }
+    }
+    const expectedUrl = publicUrl ? `${publicUrl}/api/webhooks/telegram/${workspaceId}` : '';
+    if (expectedUrl && secret && result.result?.url !== expectedUrl) {
+      const updateResponse = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(expectedUrl)}&secret_token=${encodeURIComponent(secret)}`, { method: 'POST', signal: AbortSignal.timeout(10000) });
+      const updateResult = await updateResponse.json().catch(() => ({}));
+      if (!updateResponse.ok || updateResult.ok !== true) return { error: `Telegram webhook repair failed: ${updateResult.description ?? updateResponse.statusText}` };
+      return { data: { ...result.result, url: expectedUrl, last_error_message: undefined } };
+    }
+
     return { data: result.result };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not verify Telegram webhook' };
