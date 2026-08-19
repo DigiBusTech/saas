@@ -3,6 +3,34 @@ import { z } from 'zod';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendInngestEvent } from '@/lib/inngest/dynamic';
 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const workspaceId = searchParams.get('workspaceId');
+  const sessionId = searchParams.get('sessionId');
+  const since = searchParams.get('since');
+  if (!workspaceId || !sessionId) return NextResponse.json({ error: 'Missing chat identity' }, { status: 400 });
+
+  const db = createServiceClient();
+  const { data: conversation } = await db
+    .from('conversations')
+    .select('id')
+    .eq('workspace_id', workspaceId)
+    .eq('platform', 'web')
+    .eq('platform_chat_id', `web_${sessionId}`)
+    .maybeSingle();
+  if (!conversation) return NextResponse.json({ status: 'pending' });
+
+  const query = db
+    .from('messages')
+    .select('content, created_at')
+    .eq('conversation_id', conversation.id)
+    .eq('sender_type', 'bot')
+    .order('created_at', { ascending: false })
+    .limit(1);
+  const { data: reply } = since ? await query.gt('created_at', since).maybeSingle() : await query.maybeSingle();
+  return reply ? NextResponse.json({ status: 'complete', reply: reply.content, createdAt: reply.created_at }) : NextResponse.json({ status: 'pending' });
+}
+
 const requestSchema = z.object({
   workspaceId: z.string().uuid(),
   sessionId: z.string().min(12).max(100),
@@ -74,11 +102,11 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (reply) return NextResponse.json({ reply: reply.content });
+    if (reply) return NextResponse.json({ reply: reply.content, since: requestStartedAt });
   }
 
   const queuedReply = workspace.agent_mode === 'copilot'
     ? 'Thank you for reaching out. We have received your message and our team is reviewing the best response. Please stay with us; we will be right back.'
     : 'Thank you for reaching out. We have received your message and our assistant is preparing a helpful response. Please stay with us; we will be right back.';
-  return NextResponse.json({ reply: queuedReply });
+  return NextResponse.json({ reply: queuedReply, since: requestStartedAt, queued: true });
 }

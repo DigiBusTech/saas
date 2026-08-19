@@ -63,6 +63,7 @@ export async function sendManualMessage(workspaceId: string, crmId: string, cont
     .single();
 
   if (contactError || !contact) return { error: 'Contact not found' };
+  if (contact.platform === 'web') return { error: 'Web Chat replies are sent by the assistant through the public chat. Use the conversation view to review the thread.' };
 
   // 1. Insert the human agent message into chat_messages
   const { error: insertError } = await supabase.from('chat_messages').insert({

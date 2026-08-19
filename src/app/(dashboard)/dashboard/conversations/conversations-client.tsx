@@ -157,8 +157,8 @@ export function ConversationsClient({ conversations: initialConversations, tenan
                     {c.contact_name ?? c.platform_chat_id}
                   </span>
                   <span className={`text-[7px] px-1 py-0.5 rounded font-bold uppercase ${
-                    c.platform === 'telegram' ? 'bg-sky-950/40 text-sky-400 border border-sky-900/30' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30'
-                  }`}>{c.platform === 'telegram' ? 'TG' : 'WA'}</span>
+                    c.platform === 'telegram' ? 'bg-sky-950/40 text-sky-400 border border-sky-900/30' : c.platform === 'web' ? 'bg-violet-950/40 text-violet-400 border border-violet-900/30' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30'
+                  }`}>{c.platform === 'telegram' ? 'TG' : c.platform === 'web' ? 'WEB' : 'WA'}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   {c.status === 'human_handoff' ? (
@@ -198,8 +198,8 @@ export function ConversationsClient({ conversations: initialConversations, tenan
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-bold text-white">{selected.contact_name ?? selected.platform_chat_id}</h3>
                   <span className={`text-[7px] px-1 py-0.5 rounded font-bold uppercase ${
-                    selected.platform === 'telegram' ? 'bg-sky-950/40 text-sky-400 border border-sky-900/30' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30'
-                  }`}>{selected.platform}</span>
+                    selected.platform === 'telegram' ? 'bg-sky-950/40 text-sky-400 border border-sky-900/30' : selected.platform === 'web' ? 'bg-violet-950/40 text-violet-400 border border-violet-900/30' : 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/30'
+                  }`}>{selected.platform === 'web' ? 'Web Chat' : selected.platform}</span>
                 </div>
                 {isHandoff && (
                   <p className="text-[9px] text-amber-400 mt-0.5 font-semibold">⚠ AI paused — Human operator mode active</p>

@@ -2,7 +2,7 @@ import { inngest } from '../client';
 import { createServiceClient } from '@/lib/supabase/server';
 import { decrypt } from '@/lib/encryption';
 import { executeLLMRequest } from '@/lib/ai/router';
-import { logTelemetry } from '@/lib/telemetry';
+import { logTelemetry, normalizeError } from '@/lib/telemetry';
 import { sendEmail } from '@/lib/email';
 
 // Multi-Agent Orchestration Pipeline with Copilot Support
@@ -27,6 +27,7 @@ export const processChatMessage = inngest.createFunction(
           .from('conversations')
           .select('id')
           .eq('tenant_id', tenantId)
+          .eq('workspace_id', workspaceId || null)
           .eq('platform_chat_id', chatId)
           .eq('platform', platform)
           .single();
@@ -64,6 +65,7 @@ export const processChatMessage = inngest.createFunction(
         .from('conversations')
         .select('id')
         .eq('tenant_id', tenantId)
+        .eq('workspace_id', workspaceId || null)
         .eq('platform_chat_id', chatId)
         .eq('platform', platform)
         .single();
@@ -108,16 +110,19 @@ export const processChatMessage = inngest.createFunction(
     });
 
     // Step 2: Save incoming user message
-    await step.run('save-user-message', async () => {
-      await db.from('messages').insert({
+    const inboundMessageSaved = await step.run('save-user-message', async () => {
+      const { data, error } = await db.from('messages').upsert({
         conversation_id: conversation.id,
         sender_type: 'user',
         sender_name: contactName,
         content: messageText,
         approval_status: 'sent',
         external_message_id: externalMessageId ?? null,
-      });
+      }, { onConflict: 'conversation_id,external_message_id', ignoreDuplicates: true }).select('id').maybeSingle();
+      if (error) throw new Error(`Failed to save inbound message: ${error.message} (${error.code ?? 'unknown'})`);
+      return Boolean(data);
     });
+    if (!inboundMessageSaved && externalMessageId) return { status: 'duplicate_skipped', externalMessageId };
 
     // If usage limits are exhausted, notify the customer once and stop before calling the LLM.
     if (usageBlocked) {
@@ -205,7 +210,7 @@ export const processChatMessage = inngest.createFunction(
       // Log the inbound user message to chat_messages (for the Unified Inbox)
       if (crmRecord) {
         await step.run('log-inbound-chat-message', async () => {
-          await db.from('chat_messages').insert({
+          const { error } = await db.from('chat_messages').insert({
             workspace_id: workspaceId,
             crm_id: crmRecord!.id,
             direction: 'inbound',
@@ -213,6 +218,7 @@ export const processChatMessage = inngest.createFunction(
             content: messageText,
             platform,
           });
+          if (error) throw new Error(`Failed to log inbound inbox message: ${error.message} (${error.code ?? 'unknown'})`);
         });
       }
     }
@@ -342,6 +348,17 @@ Respond helpfully and concisely to the customer's message. If products are avail
 
         return { reply, tokensUsed };
       } catch (err) {
+        const normalized = normalizeError(err);
+        await logTelemetry({
+          severity: 'error',
+          source: 'llm_router',
+          endpoint: 'process-chat-message/generate-ai-response',
+          message: normalized.message,
+          stackTrace: normalized.stack,
+          workspaceId,
+          tenantId,
+          metadata: { platform, chatId, intent },
+        });
         return { reply: 'I apologize, I am experiencing technical difficulties. Please try again shortly.', tokensUsed: 0 };
       }
     });
@@ -375,7 +392,7 @@ Respond helpfully and concisely to the customer's message. If products are avail
 
       // Log the AI agent response to chat_messages (for the Unified Inbox)
       if (crmRecord) {
-        await db.from('chat_messages').insert({
+        const { error } = await db.from('chat_messages').insert({
           workspace_id: workspaceId,
           crm_id: crmRecord.id,
           direction: 'outbound',
@@ -383,6 +400,7 @@ Respond helpfully and concisely to the customer's message. If products are avail
           content: aiResponse.reply,
           platform,
         });
+        if (error) throw new Error(`Failed to log outbound inbox message: ${error.message} (${error.code ?? 'unknown'})`);
       }
 
       // Send via platform API

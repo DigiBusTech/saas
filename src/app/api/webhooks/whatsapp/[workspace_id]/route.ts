@@ -151,7 +151,7 @@ export async function POST(
       chatId: senderPhone,
       contactName,
       messageText,
-      integrationId: workspace.id, // workspace acts as integration source
+      integrationId: null,
       botPersona: workspace.bot_persona,
       agentMode: workspace.agent_mode,
       externalMessageId: messageData.id,

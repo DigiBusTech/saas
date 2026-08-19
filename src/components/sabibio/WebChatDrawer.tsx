@@ -49,7 +49,21 @@ export function WebChatDrawer({ workspaceId, welcomeMessage, primary }: Props) {
       const response = await fetch('/api/chat/web', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ workspaceId, sessionId, content, visitorName: visitor.name, visitorEmail: visitor.email }) });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || 'The chat service is unavailable.');
-      setMessages((current) => [...current, { role: 'assistant', content: data.reply || 'Your message is queued for the team.' }]);
+      const queuedReply = data.reply || 'Thank you for reaching out. We have received your message and our assistant is preparing a helpful response. Please stay with us; we will be right back.';
+      const queuedIndex = messages.length + 1;
+      setMessages((current) => [...current, { role: 'assistant', content: queuedReply }]);
+      if (!data.queued) return;
+
+      const since = data.since || new Date().toISOString();
+      for (let attempt = 0; attempt < 20; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+        const statusResponse = await fetch(`/api/chat/web?workspaceId=${encodeURIComponent(workspaceId)}&sessionId=${encodeURIComponent(sessionId)}&since=${encodeURIComponent(since)}`, { cache: 'no-store' });
+        const status = await statusResponse.json().catch(() => ({}));
+        if (status.status === 'complete' && status.reply) {
+          setMessages((current) => current.map((message, index) => index === queuedIndex ? { ...message, content: status.reply } : message));
+          break;
+        }
+      }
     } catch (caught) {
       setMessages((current) => [...current, { role: 'assistant', content: caught instanceof Error ? caught.message : 'The chat service is unavailable.' }]);
     } finally { setSending(false); }
