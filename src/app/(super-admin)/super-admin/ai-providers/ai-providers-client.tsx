@@ -131,7 +131,7 @@ export function AiProvidersClient({ providers }: Props) {
 
             <div>
               <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">Model Name</label>
-              <input name="model_name" defaultValue={editing.model_name} placeholder="llama-3.3-70b-versatile" required
+              <input name="model_name" defaultValue={editing.model_name} placeholder="llama-3.1-8b-instant or openai/gpt-oss-20b" required
                 className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-white font-mono outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
 

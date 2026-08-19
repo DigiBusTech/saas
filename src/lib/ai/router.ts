@@ -60,8 +60,32 @@ function buildChatCompletionsUrl(baseUrl: string): string {
 
 function normalizeGroqModel(providerName: string, modelName: string): string {
   if (!providerName.toLowerCase().includes('groq')) return modelName;
-  if (modelName === 'llama-3.3-70b-versatile') return 'llama-3.1-8b-instant';
   return modelName;
+}
+
+const GROQ_MODEL_PREFERENCES = [
+  'llama-3.1-8b-instant',
+  'openai/gpt-oss-20b',
+  'llama-3.3-70b-versatile',
+  'meta-llama/llama-4-scout-17b-16e-instruct',
+];
+let groqModelCache: { apiKey: string; model: string; expiresAt: number } | null = null;
+
+async function resolveAccessibleGroqModel(apiKey: string, requestedModel: string): Promise<string> {
+  if (groqModelCache?.apiKey === apiKey && groqModelCache.expiresAt > Date.now()) return groqModelCache.model;
+
+  const response = await fetch('https://api.groq.com/openai/v1/models', {
+    headers: { Authorization: `Bearer ${apiKey}` },
+  });
+  if (!response.ok) return requestedModel;
+
+  const payload = await response.json();
+  const available = new Set<string>((payload.data ?? []).map((model: { id: string }) => model.id));
+  const model = [requestedModel, ...GROQ_MODEL_PREFERENCES].find((candidate) => available.has(candidate));
+  if (!model) return requestedModel;
+
+  groqModelCache = { apiKey, model, expiresAt: Date.now() + 15 * 60 * 1000 };
+  return model;
 }
 
 /**
@@ -73,7 +97,10 @@ async function executeSingleProvider(
 ): Promise<LLMResult> {
   const apiKey = resolveApiKey(provider.api_key_encrypted);
   const endpoint = buildChatCompletionsUrl(provider.base_url);
-  const modelName = normalizeGroqModel(provider.provider_name, provider.model_name);
+  let modelName = normalizeGroqModel(provider.provider_name, provider.model_name);
+  if (provider.provider_name.toLowerCase().includes('groq')) {
+    modelName = await resolveAccessibleGroqModel(apiKey, modelName);
+  }
 
   const messages = [];
   if (options.systemInstruction) {
