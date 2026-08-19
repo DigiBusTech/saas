@@ -3,12 +3,14 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { decrypt } from '@/lib/encryption';
 
 async function getEventKey() {
+  if (process.env.INNGEST_EVENT_KEY?.trim()) return process.env.INNGEST_EVENT_KEY.trim();
+
   const db = createServiceClient();
   const { data } = await db.from('system_configs').select('config_value, is_secret').eq('config_key', 'INNGEST_EVENT_KEY').maybeSingle();
   if (data?.config_value) {
-    try { return data.is_secret ? decrypt(data.config_value) : data.config_value; } catch { return data.config_value; }
+    try { return data.is_secret ? decrypt(data.config_value) : data.config_value; } catch { return ''; }
   }
-  return process.env.INNGEST_EVENT_KEY || '';
+  return '';
 }
 
 export async function sendInngestEvent(event: { name: string; data: Record<string, unknown> }) {
