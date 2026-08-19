@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
@@ -10,6 +10,7 @@ const checkoutSchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    const stripe = getStripeClient();
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -103,6 +104,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error('Stripe checkout error:', err);
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Failed to create checkout session';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

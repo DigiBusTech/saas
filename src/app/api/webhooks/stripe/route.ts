@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
-import { stripe } from '@/lib/stripe';
+import { getStripeClient } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/server';
 import type Stripe from 'stripe';
 
 export async function POST(request: Request) {
+  let stripe: ReturnType<typeof getStripeClient>;
+  try {
+    stripe = getStripeClient();
+  } catch (error) {
+    console.error('Stripe webhook configuration error:', error);
+    return NextResponse.json({ error: 'Stripe webhook is not configured' }, { status: 503 });
+  }
   const body = await request.text();
   const signature = request.headers.get('stripe-signature');
 
