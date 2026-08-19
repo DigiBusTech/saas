@@ -148,15 +148,24 @@ export const processChatMessage = inngest.createFunction(
           .single();
 
         if (existingCrm) {
-          await db.from('workspace_crm').update({
+          const updatePayload = {
             customer_name: contactName,
             email: visitorEmail || undefined,
             last_interaction: new Date().toISOString(),
-          }).eq('id', existingCrm.id);
+          };
+          const updateResult = await db.from('workspace_crm').update(updatePayload).eq('id', existingCrm.id);
+          if (updateResult.error?.code === 'PGRST204') {
+            await db.from('workspace_crm').update({
+              customer_name: contactName,
+              last_interaction: updatePayload.last_interaction,
+            }).eq('id', existingCrm.id);
+          } else if (updateResult.error) {
+            throw new Error(`Failed to update CRM record: ${updateResult.error.message} (${updateResult.error.code ?? 'unknown'})`);
+          }
           return { id: existingCrm.id, ai_status: existingCrm.ai_status ?? 'active' };
         }
 
-        const { data: created, error } = await db.from('workspace_crm').insert({
+        const crmPayload = {
           workspace_id: workspaceId,
           platform,
           platform_user_id: chatId,
@@ -164,7 +173,18 @@ export const processChatMessage = inngest.createFunction(
           email: visitorEmail || null,
           lead_score: 10,
           tags: ['New Lead'],
-        }).select('id, ai_status').single();
+        };
+        let { data: created, error } = await db.from('workspace_crm').insert(crmPayload).select('id, ai_status').single();
+        if (error?.code === 'PGRST204') {
+          ({ data: created, error } = await db.from('workspace_crm').insert({
+            workspace_id: workspaceId,
+            platform,
+            platform_user_id: chatId,
+            customer_name: contactName,
+            lead_score: 10,
+            tags: ['New Lead'],
+          }).select('id, ai_status').single());
+        }
 
         if (error) {
           await logTelemetry({
