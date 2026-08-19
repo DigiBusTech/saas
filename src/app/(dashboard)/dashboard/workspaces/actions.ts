@@ -172,8 +172,8 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
     const update: Record<string, any> = { updated_at: new Date().toISOString() };
 
     if (platform === 'telegram') {
-    const token = formData.get('telegram_bot_token') as string;
-    const webhookSecret = formData.get('telegram_webhook_secret') as string;
+    const token = String(formData.get('telegram_bot_token') ?? '').trim();
+    const webhookSecret = String(formData.get('telegram_webhook_secret') ?? '').trim();
     if (token) update.telegram_bot_token = encrypt(token);
     if (webhookSecret) update.telegram_webhook_secret = encrypt(webhookSecret);
     } else if (platform === 'whatsapp') {
@@ -193,13 +193,21 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
     if (error) return { error: error.message };
 
     if (platform === 'telegram') {
-      const token = formData.get('telegram_bot_token') as string;
-      const secret = formData.get('telegram_webhook_secret') as string;
+      const { data: stored } = await supabase
+        .from('workspaces')
+        .select('telegram_bot_token, telegram_webhook_secret')
+        .eq('id', workspaceId)
+        .single();
+      let token = String(formData.get('telegram_bot_token') ?? '').trim();
+      let secret = String(formData.get('telegram_webhook_secret') ?? '').trim();
+      try { if (!token && stored?.telegram_bot_token) token = decrypt(stored.telegram_bot_token); } catch { return { error: 'Stored Telegram bot token cannot be decrypted. Re-enter it and verify ENCRYPTION_KEY.' }; }
+      try { if (!secret && stored?.telegram_webhook_secret) secret = decrypt(stored.telegram_webhook_secret); } catch { return { error: 'Stored Telegram webhook secret cannot be decrypted. Re-enter it and verify ENCRYPTION_KEY.' }; }
       const publicUrl = await getPublicAppUrl();
-      if (token && secret && !publicUrl) return { error: 'Credentials were not saved: set NEXT_PUBLIC_APP_URL in Vercel or Super Admin Configs before registering Telegram.' };
+      if (!token || !secret) return { error: 'Telegram bot token and webhook secret are required.' };
+      if (!publicUrl) return { error: 'Credentials were not saved: set NEXT_PUBLIC_APP_URL in Vercel or Super Admin Configs before registering Telegram.' };
       if (token && secret && publicUrl) {
         const webhookUrl = `${publicUrl}/api/webhooks/telegram/${workspaceId}`;
-        const response = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${encodeURIComponent(secret)}`, { method: 'POST' });
+        const response = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${encodeURIComponent(secret)}`, { method: 'POST', signal: AbortSignal.timeout(10000) });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || result.ok !== true) return { error: `Credentials saved, but Telegram webhook setup failed: ${result.description ?? response.statusText}` };
       }
@@ -209,6 +217,22 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
     return { error: null };
   } catch (error) {
     return { error: error instanceof Error ? error.message : 'Could not save integration settings' };
+  }
+}
+
+export async function verifyTelegramWebhook(workspaceId: string) {
+  try {
+    const supabase = await createClient();
+    const { data: stored } = await supabase.from('workspaces').select('telegram_bot_token').eq('id', workspaceId).single();
+    if (!stored?.telegram_bot_token) return { error: 'No Telegram bot token is saved.' };
+    let token: string;
+    try { token = decrypt(stored.telegram_bot_token); } catch { token = stored.telegram_bot_token; }
+    const response = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`, { signal: AbortSignal.timeout(10000) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.ok !== true) return { error: result.description ?? `Telegram returned HTTP ${response.status}` };
+    return { data: result.result };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : 'Could not verify Telegram webhook' };
   }
 }
 

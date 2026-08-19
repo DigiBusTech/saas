@@ -16,7 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { Workspace } from '@/lib/types/database';
-import { saveWorkspaceIntegration } from '../../workspaces/actions';
+import { saveWorkspaceIntegration, verifyTelegramWebhook } from '../../workspaces/actions';
 
 interface IntegrationStatus {
   telegram: boolean;
@@ -37,6 +37,7 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
   const [error, setError] = useState('');
   const [showTokens, setShowTokens] = useState<Record<string, boolean>>({});
   const [copiedField, setCopiedField] = useState('');
+  const [webhookStatus, setWebhookStatus] = useState('');
 
   // Accordion states
   const [openAccordion, setOpenAccordion] = useState<string | null>(null);
@@ -188,6 +189,8 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
               setOpenAccordion={setOpenAccordion}
               saving={saving}
               handleSave={handleSave}
+              webhookStatus={webhookStatus}
+              verifyWebhook={async () => { const result = await verifyTelegramWebhook(workspace.id); setWebhookStatus(result.error ? result.error : `Webhook: ${result.data?.url || 'not registered'}${result.data?.last_error_message ? ` — ${result.data.last_error_message}` : ''}`); }}
             />
           ) : (
             <WhatsAppConfig
@@ -213,7 +216,7 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
 // --- Telegram Config Panel ---
 function TelegramConfig({
   workspace, webhookUrl, maskedTokens, showTokens, setShowTokens,
-  copiedField, copyToClipboard, openAccordion, setOpenAccordion, saving, handleSave,
+  copiedField, copyToClipboard, openAccordion, setOpenAccordion, saving, handleSave, webhookStatus, verifyWebhook,
 }: any) {
   return (
     <div className="space-y-4">
@@ -281,6 +284,14 @@ function TelegramConfig({
           Encrypt & Save
         </button>
       </form>
+
+      <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div><p className="text-xs font-semibold text-white">Verify Telegram connection</p><p className="mt-1 text-[10px] text-gray-500">Checks Telegram&apos;s current webhook target and last delivery error using the saved bot token.</p></div>
+          <button type="button" onClick={verifyWebhook} className="shrink-0 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-[10px] font-semibold text-sky-300 hover:bg-sky-500/20">Verify webhook</button>
+        </div>
+        {webhookStatus && <p className="mt-3 rounded-lg bg-black/20 p-3 text-[10px] text-gray-300">{webhookStatus}</p>}
+      </div>
 
       {/* Setup Guide Accordions */}
       <div className="space-y-2">
