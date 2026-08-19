@@ -55,8 +55,8 @@ export async function POST(request: Request) {
 
   // Give the background job a short window to return an answer for the drawer.
   // If it takes longer, the drawer still receives a graceful queued response.
-  for (let attempt = 0; attempt < 8; attempt += 1) {
-    await new Promise((resolve) => setTimeout(resolve, 350));
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const { data: conversation } = await db
       .from('conversations')
       .select('id')

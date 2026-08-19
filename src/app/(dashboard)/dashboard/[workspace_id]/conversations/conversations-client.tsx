@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import type { Workspace } from '@/lib/types/database';
 import { createBrowserClient } from '@supabase/ssr';
+import { approveCopilotDraft } from './actions';
 
 interface Message {
   id: string;
@@ -84,18 +85,14 @@ export function ConversationsClient({ workspace, initialConversations }: Props) 
   }, [conversations, search]);
 
   const handleApprove = async (msgId: string) => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-    await supabase.from('messages').update({ approval_status: 'sent' }).eq('id', msgId);
+    const result = await approveCopilotDraft(workspace.id, msgId);
+    if (result.error) return;
     setConversations((prev) =>
       prev.map((c) => ({
         ...c,
         messages: c.messages.map((m) => m.id === msgId ? { ...m, approval_status: 'sent' as const } : m),
       }))
     );
-    // TODO: trigger actual send via platform API
   };
 
   const handleDiscard = async (msgId: string) => {
@@ -321,7 +318,7 @@ export function ConversationsClient({ workspace, initialConversations }: Props) 
                   className="flex-1 px-3 py-2 rounded-lg bg-zinc-900/60 border border-white/10 text-xs text-white placeholder:text-gray-600 focus:border-indigo-500/40 outline-none transition"
                   onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); /* send */ } }}
                 />
-                <button className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-medium shadow-lg shadow-indigo-500/25 hover:from-indigo-400 hover:to-purple-500 transition flex items-center gap-1.5">
+                <button className="px-4 py-2 rounded-lg bg-linear-to-r from-indigo-500 to-purple-600 text-white text-xs font-medium shadow-lg shadow-indigo-500/25 hover:from-indigo-400 hover:to-purple-500 transition flex items-center gap-1.5">
                   <Send className="w-3.5 h-3.5" /> Send
                 </button>
               </div>
