@@ -162,6 +162,13 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
     const platform = formData.get('platform') as string;
     const supabase = await createClient();
 
+    const { data: workspace } = await supabase
+      .from('workspaces')
+      .select('id')
+      .eq('id', workspaceId)
+      .single();
+    if (!workspace) return { error: 'Workspace not found or you do not have access to it.' };
+
     const update: Record<string, any> = { updated_at: new Date().toISOString() };
 
     if (platform === 'telegram') {
@@ -189,6 +196,7 @@ export async function saveWorkspaceIntegration(workspaceId: string, formData: Fo
       const token = formData.get('telegram_bot_token') as string;
       const secret = formData.get('telegram_webhook_secret') as string;
       const publicUrl = await getPublicAppUrl();
+      if (token && secret && !publicUrl) return { error: 'Credentials were not saved: set NEXT_PUBLIC_APP_URL in Vercel or Super Admin Configs before registering Telegram.' };
       if (token && secret && publicUrl) {
         const webhookUrl = `${publicUrl}/api/webhooks/telegram/${workspaceId}`;
         const response = await fetch(`https://api.telegram.org/bot${token}/setWebhook?url=${encodeURIComponent(webhookUrl)}&secret_token=${encodeURIComponent(secret)}`, { method: 'POST' });
