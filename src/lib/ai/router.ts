@@ -2,13 +2,32 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { decrypt } from '@/lib/encryption';
 import { logTelemetry } from '@/lib/telemetry';
 
+export interface LLMChatMessage {
+  role: 'system' | 'user' | 'assistant' | 'tool';
+  content: string;
+  tool_calls?: unknown[];
+  tool_call_id?: string;
+  name?: string;
+}
+
 export interface LLMRequestOptions {
-  prompt: string;
+  prompt?: string;
   systemInstruction?: string;
   temperature?: number;
   maxTokens?: number;
   /** Abort a single provider attempt after this many ms (default 30s). */
   timeoutMs?: number;
+  /** Full conversation, used instead of prompt/systemInstruction (tool-calling follow-up turns). */
+  messages?: LLMChatMessage[];
+  /** OpenAI-compatible tool/function schemas. Omitted from the request entirely unless provided. */
+  tools?: Array<Record<string, unknown>>;
+  toolChoice?: 'auto' | 'none' | Record<string, unknown>;
+}
+
+export interface LLMToolCall {
+  id: string;
+  name: string;
+  arguments: string;
 }
 
 export interface LLMResult {
@@ -16,6 +35,8 @@ export interface LLMResult {
   provider: string;
   model: string;
   tokensUsed: number;
+  toolCalls?: LLMToolCall[];
+  rawMessage?: Record<string, unknown>;
 }
 
 interface ProviderConfig {
@@ -102,28 +123,33 @@ async function executeSingleProvider(
     modelName = await resolveAccessibleGroqModel(apiKey, modelName);
   }
 
-  const messages = [];
-  if (options.systemInstruction) {
-    messages.push({ role: 'system', content: options.systemInstruction });
-  }
-  messages.push({ role: 'user', content: options.prompt });
+  const messages: LLMChatMessage[] = options.messages ?? [
+    ...(options.systemInstruction ? [{ role: 'system' as const, content: options.systemInstruction }] : []),
+    { role: 'user' as const, content: options.prompt ?? '' },
+  ];
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? 30_000);
 
   try {
+    const body: Record<string, unknown> = {
+      model: modelName,
+      messages,
+      temperature: options.temperature ?? 0.5,
+      max_tokens: options.maxTokens ?? 1000,
+    };
+    if (options.tools?.length) {
+      body.tools = options.tools;
+      body.tool_choice = options.toolChoice ?? 'auto';
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: modelName,
-        messages,
-        temperature: options.temperature ?? 0.5,
-        max_tokens: options.maxTokens ?? 1000,
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     });
 
@@ -135,10 +161,18 @@ async function executeSingleProvider(
     }
 
     const data = await response.json();
-    const text: string = data.choices?.[0]?.message?.content ?? '';
+    const message = data.choices?.[0]?.message ?? {};
+    const text: string = message.content ?? '';
     const tokensUsed: number = data.usage?.total_tokens ?? 0;
+    const toolCalls: LLMToolCall[] | undefined = Array.isArray(message.tool_calls)
+      ? message.tool_calls.map((call: { id: string; function?: { name?: string; arguments?: string } }) => ({
+          id: call.id,
+          name: call.function?.name ?? '',
+          arguments: call.function?.arguments ?? '{}',
+        }))
+      : undefined;
 
-    if (!text) {
+    if (!text && !toolCalls?.length) {
       throw new Error(`Provider "${provider.provider_name}" returned an empty completion.`);
     }
 
@@ -147,6 +181,8 @@ async function executeSingleProvider(
       provider: provider.provider_name,
       model: modelName,
       tokensUsed,
+      toolCalls,
+      rawMessage: message,
     };
   } finally {
     clearTimeout(timeout);

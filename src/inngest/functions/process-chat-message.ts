@@ -4,6 +4,7 @@ import { decrypt } from '@/lib/encryption';
 import { executeLLMRequest } from '@/lib/ai/router';
 import { logTelemetry, normalizeError } from '@/lib/telemetry';
 import { sendEmail } from '@/lib/email';
+import { CHAT_TOOL_DEFINITIONS, executeChatTool, type ChatToolContext } from '@/lib/ai/tools';
 
 // Multi-Agent Orchestration Pipeline with Copilot Support
 export const processChatMessage = inngest.createFunction(
@@ -312,7 +313,7 @@ export const processChatMessage = inngest.createFunction(
 Intent classification: ${intent}
 ${contextInfo}${categoryInstructions}
 
-Respond helpfully and concisely to the customer's message. If products are available and relevant, recommend them with payment links.`;
+Respond helpfully and concisely to the customer's message. If products are available and relevant, recommend them with payment links. Use the available tools when the customer asks about an order status, wants to browse products/services, shows clear buying intent, or needs to be escalated to a human.`;
 
 
       try {
@@ -321,9 +322,43 @@ Respond helpfully and concisely to the customer's message. If products are avail
           systemInstruction: systemPrompt,
           maxTokens: 500,
           temperature: 0.7,
+          ...(workspaceId ? { tools: CHAT_TOOL_DEFINITIONS } : {}),
         });
-        const tokensUsed = result.tokensUsed;
-        const reply = result.text;
+
+        let reply = result.text;
+        let tokensUsed = result.tokensUsed;
+
+        if (workspaceId && result.toolCalls?.length) {
+          const toolContext: ChatToolContext = {
+            db,
+            workspaceId,
+            tenantId,
+            platform,
+            chatId,
+            contactName,
+            conversationId: conversation.id,
+            crmId: crmRecord?.id ?? null,
+          };
+          const toolResultMessages = [];
+          for (const call of result.toolCalls) {
+            const toolResult = await executeChatTool(call.name, call.arguments, toolContext);
+            toolResultMessages.push({ role: 'tool' as const, tool_call_id: call.id, name: call.name, content: JSON.stringify(toolResult) });
+          }
+
+          const followUp = await executeLLMRequest({
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: messageText },
+              { role: 'assistant', content: (result.rawMessage?.content as string) ?? '', tool_calls: result.rawMessage?.tool_calls as unknown[] },
+              ...toolResultMessages,
+            ],
+            maxTokens: 500,
+            temperature: 0.7,
+          });
+          if (followUp.text) reply = followUp.text;
+          tokensUsed += followUp.tokensUsed;
+        }
+
         // Update tenant token + message usage so plan limits are enforced.
         try { await db.rpc('increment_token_usage', { tenant_id_input: tenantId, tokens: tokensUsed }); } catch {}
         try { await db.rpc('increment_message_usage', { tenant_id_input: tenantId, amount: 1 }); } catch {}
