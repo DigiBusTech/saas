@@ -21,6 +21,9 @@ export async function createProduct(workspaceId: string, formData: FormData) {
   const currency = (formData.get('currency') as string) || 'USD';
   const imageUrl = formData.get('image_url') as string;
   const paymentLink = formData.get('payment_link') as string;
+  const code = (formData.get('code') as string)?.trim();
+  const checkoutUrl = formData.get('checkout_url') as string;
+  const isActive = formData.get('is_active') !== 'false';
 
   if (!name || isNaN(price)) return { error: 'Name and valid price are required' };
 
@@ -35,9 +38,12 @@ export async function createProduct(workspaceId: string, formData: FormData) {
       currency,
       image_url: imageUrl || null,
       payment_link: paymentLink || null,
+      code: code || null,
+      checkout_url: checkoutUrl || null,
+      is_active: isActive,
     });
 
-  if (error) return { error: error.message };
+  if (error) return { error: error.code === '23505' ? 'That product code is already in use.' : error.message };
 
   revalidatePath(`/dashboard/${workspaceId}/products`);
   return { error: null };
@@ -50,6 +56,9 @@ export async function updateProduct(productId: string, workspaceId: string, form
   const currency = (formData.get('currency') as string) || 'USD';
   const imageUrl = formData.get('image_url') as string;
   const paymentLink = formData.get('payment_link') as string;
+  const code = (formData.get('code') as string)?.trim();
+  const checkoutUrl = formData.get('checkout_url') as string;
+  const isActive = formData.get('is_active') !== 'false';
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -61,10 +70,13 @@ export async function updateProduct(productId: string, workspaceId: string, form
       currency,
       image_url: imageUrl || null,
       payment_link: paymentLink || null,
+      code: code || null,
+      checkout_url: checkoutUrl || null,
+      is_active: isActive,
     })
     .eq('id', productId);
 
-  if (error) return { error: error.message };
+  if (error) return { error: error.code === '23505' ? 'That product code is already in use.' : error.message };
 
   revalidatePath(`/dashboard/${workspaceId}/products`);
   return { error: null };

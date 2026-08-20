@@ -123,7 +123,60 @@ export interface WorkspaceProduct {
   currency: string;
   image_url: string | null;
   payment_link: string | null;
+  code: string | null;
+  checkout_url: string | null;
+  is_active: boolean;
   created_at: string;
+}
+
+export interface WorkspaceService {
+  id: string;
+  workspace_id: string;
+  name: string;
+  description: string | null;
+  price: number | null;
+  currency: string;
+  image_url: string | null;
+  payment_link: string | null;
+  code: string | null;
+  checkout_url: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface WorkspaceOrderItem {
+  id: string;
+  order_id: string;
+  item_type: 'product' | 'service';
+  item_id: string;
+  title: string;
+  quantity: number;
+  unit_price: number;
+  currency: string;
+}
+
+export type WorkspaceOrderStatus = 'pending_review' | 'approved' | 'rejected' | 'paid' | 'processing' | 'shipped' | 'completed' | 'cancelled';
+
+export interface WorkspaceOrder {
+  id: string;
+  workspace_id: string;
+  customer_name: string;
+  customer_email: string;
+  customer_location: string | null;
+  custom_fields: Record<string, unknown>;
+  payment_method: string;
+  receipt_url: string | null;
+  status: WorkspaceOrderStatus;
+  total: number;
+  currency: string;
+  order_code: string | null;
+  channel: 'whatsapp' | 'telegram' | 'web' | null;
+  lead_id: string | null;
+  updated_by: 'ai' | 'human';
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  workspace_order_items?: WorkspaceOrderItem[];
 }
 
 export interface WorkspaceCRM {
