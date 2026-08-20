@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { inngest } from '@/inngest/client';
 
 export async function getPaymentOptions(workspaceId: string) {
   const db = await createClient();
@@ -31,5 +32,21 @@ export async function reviewOrder(orderId: string, status: 'approved' | 'rejecte
   const { data: { user } } = await db.auth.getUser();
   if (!user) return { error: 'Unauthorized' };
   const { error } = await db.from('workspace_orders').update({ status, reviewed_at: new Date().toISOString(), reviewed_by: user.id }).eq('id', orderId);
+  if (!error) await inngest.send({ name: 'order/status.updated', data: { orderId, newStatus: status } }).catch(() => {});
   return { error: error?.message ?? null };
+}
+
+// General-purpose status update for the full order lifecycle (used by the
+// Order Manager panel), separate from the checkout approve/reject flow above.
+export async function updateOrderStatus(
+  orderId: string,
+  status: 'pending_review' | 'approved' | 'rejected' | 'paid' | 'processing' | 'shipped' | 'completed' | 'cancelled'
+) {
+  const db = await createClient();
+  const { data: { user } } = await db.auth.getUser();
+  if (!user) return { error: 'Unauthorized' };
+  const { error } = await db.from('workspace_orders').update({ status }).eq('id', orderId);
+  if (error) return { error: error.message };
+  await inngest.send({ name: 'order/status.updated', data: { orderId, newStatus: status } }).catch(() => {});
+  return { error: null };
 }
