@@ -5,6 +5,8 @@ import { executeLLMRequest } from '@/lib/ai/router';
 import { logTelemetry, normalizeError } from '@/lib/telemetry';
 import { sendEmail } from '@/lib/email';
 import { CHAT_TOOL_DEFINITIONS, executeChatTool, type ChatToolContext } from '@/lib/ai/tools';
+import { generateEmbedding } from './vectorize-knowledge';
+import { analyzeSentiment } from '@/lib/ai/sentiment';
 
 // Multi-Agent Orchestration Pipeline with Copilot Support
 export const processChatMessage = inngest.createFunction(
@@ -232,6 +234,32 @@ export const processChatMessage = inngest.createFunction(
       return { status: 'manual_mode', conversationId: conversation.id };
     }
 
+    // Step 4.5: Reputation guardrail — score sentiment, log it, and proactively
+    // hand off to a human on negative/angry messages (empathetic reply still sent).
+    const sentiment = analyzeSentiment(messageText);
+    const toolContext: ChatToolContext | null = workspaceId
+      ? { db, workspaceId, tenantId, platform, chatId, contactName, conversationId: conversation.id, crmId: crmRecord?.id ?? null }
+      : null;
+
+    if (workspaceId) {
+      await step.run('log-reputation', async () => {
+        await db.from('workspace_reputation_logs').insert({
+          workspace_id: workspaceId,
+          chat_session_id: chatId,
+          sentiment_score: sentiment.score,
+          sentiment_label: sentiment.label,
+          escalated: sentiment.label === 'negative' || sentiment.label === 'angry',
+          escalation_reason: sentiment.label === 'negative' || sentiment.label === 'angry' ? 'Automated sentiment guardrail' : null,
+        });
+      });
+
+      if ((sentiment.label === 'negative' || sentiment.label === 'angry') && toolContext) {
+        await step.run('sentiment-escalation', async () => {
+          await executeChatTool('escalate_to_human', JSON.stringify({ reason: `Negative customer sentiment detected (${sentiment.label}, score ${sentiment.score}).`, priority_level: sentiment.label === 'angry' ? 'high' : 'medium' }), toolContext);
+        });
+      }
+    }
+
     // Step 5: Supervisor Router — classify intent
     const intent = await step.run('supervisor-router', async () => {
       const lowerMsg = messageText.toLowerCase();
@@ -272,16 +300,34 @@ export const processChatMessage = inngest.createFunction(
         }
       }
 
-      // Support Agent: query knowledge base with workspace filter
+      // Support Agent: strict RAG grounding via pgvector semantic search
+      let kbMatched = false;
       if (intent === 'support_faq') {
-        const { data: kbResults } = await db
-          .from('knowledge_bases')
-          .select('title, content')
-          .eq('tenant_id', tenantId)
-          .or(workspaceId ? `workspace_id.eq.${workspaceId},workspace_id.is.null` : 'workspace_id.is.null')
-          .limit(3);
+        let kbResults: Array<{ title: string; content: string }> | null = null;
+        try {
+          const queryEmbedding = await generateEmbedding(messageText);
+          if (queryEmbedding) {
+            const { data } = workspaceId
+              ? await db.rpc('match_knowledge_workspace', { query_embedding: queryEmbedding, match_tenant_id: tenantId, match_workspace_id: workspaceId, match_threshold: 0.72, match_count: 3 })
+              : await db.rpc('match_knowledge', { query_embedding: queryEmbedding, match_tenant_id: tenantId, match_threshold: 0.72, match_count: 3 });
+            if (data) kbResults = data;
+          }
+        } catch {
+          // Embedding or RPC unavailable (e.g. migration not yet applied) — fall back below.
+        }
+
+        if (!kbResults) {
+          const { data } = await db
+            .from('knowledge_bases')
+            .select('title, content')
+            .eq('tenant_id', tenantId)
+            .or(workspaceId ? `workspace_id.eq.${workspaceId},workspace_id.is.null` : 'workspace_id.is.null')
+            .limit(3);
+          kbResults = data;
+        }
 
         if (kbResults && kbResults.length > 0) {
+          kbMatched = true;
           contextInfo = '\n\nKnowledge base context:\n' + kbResults.map((k) =>
             `[${k.title}]: ${k.content.substring(0, 300)}`
           ).join('\n');
@@ -308,10 +354,18 @@ export const processChatMessage = inngest.createFunction(
         : getPersonaInstructions(botPersona || 'Professional English');
 
       // Use the centrally configured provider order and failover policy.
+      const ragGroundingInstructions = intent === 'support_faq'
+        ? (kbMatched
+            ? '\n\nOnly use the knowledge base context above to answer. Do not invent details not present there.'
+            : '\n\nNo matching information was found in this business\'s knowledge base for this question. Politely say you do not have that specific information on hand and offer to connect them with a team member or take their contact details for a callback. Do not guess or fabricate an answer.')
+        : '';
+      const sentimentInstructions = (sentiment.label === 'negative' || sentiment.label === 'angry')
+        ? `\n\nIMPORTANT: This customer's message shows ${sentiment.label} sentiment. Lead with empathy and acknowledge their frustration first. Do not argue, defend, or make unverified policy claims. Keep your tone calm, apologetic, and solution-focused. A human team member has already been notified and will follow up.`
+        : '';
       const systemPrompt = `You are an AI customer service agent.${personaInstructions}
 
 Intent classification: ${intent}
-${contextInfo}${categoryInstructions}
+${contextInfo}${categoryInstructions}${ragGroundingInstructions}${sentimentInstructions}
 
 Respond helpfully and concisely to the customer's message. If products are available and relevant, recommend them with payment links. Use the available tools when the customer asks about an order status, wants to browse products/services, shows clear buying intent, or needs to be escalated to a human.`;
 
@@ -328,17 +382,7 @@ Respond helpfully and concisely to the customer's message. If products are avail
         let reply = result.text;
         let tokensUsed = result.tokensUsed;
 
-        if (workspaceId && result.toolCalls?.length) {
-          const toolContext: ChatToolContext = {
-            db,
-            workspaceId,
-            tenantId,
-            platform,
-            chatId,
-            contactName,
-            conversationId: conversation.id,
-            crmId: crmRecord?.id ?? null,
-          };
+        if (workspaceId && toolContext && result.toolCalls?.length) {
           const toolResultMessages = [];
           for (const call of result.toolCalls) {
             const toolResult = await executeChatTool(call.name, call.arguments, toolContext);

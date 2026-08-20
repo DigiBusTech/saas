@@ -7,7 +7,7 @@ import { logTelemetry, normalizeError } from '@/lib/telemetry';
  * embeddings endpoint. Returns null on failure so the caller can decide how to
  * handle a degraded (non-vectorized) document.
  */
-async function generateEmbedding(text: string): Promise<number[] | null> {
+export async function generateEmbedding(text: string): Promise<number[] | null> {
   const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
   if (!apiKey) return null;
 
