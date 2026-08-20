@@ -4,12 +4,29 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { logTelemetry } from '@/lib/telemetry';
 
+// Public route embedded on arbitrary third-party sites via public/widget.js —
+// CORS must be permissive since we don't maintain a tenant domain allow-list.
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+function withCors(response: NextResponse): NextResponse {
+  for (const [key, value] of Object.entries(CORS_HEADERS)) response.headers.set(key, value);
+  return response;
+}
+
+export async function OPTIONS() {
+  return withCors(new NextResponse(null, { status: 204 }));
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const workspaceId = searchParams.get('workspaceId');
   const sessionId = searchParams.get('sessionId');
   const since = searchParams.get('since');
-  if (!workspaceId || !sessionId) return NextResponse.json({ error: 'Missing chat identity' }, { status: 400 });
+  if (!workspaceId || !sessionId) return withCors(NextResponse.json({ error: 'Missing chat identity' }, { status: 400 }));
 
   const db = createServiceClient();
   const { data: conversation } = await db
@@ -19,7 +36,7 @@ export async function GET(request: Request) {
     .eq('platform', 'web')
     .eq('platform_chat_id', `web_${sessionId}`)
     .maybeSingle();
-  if (!conversation) return NextResponse.json({ status: 'pending' });
+  if (!conversation) return withCors(NextResponse.json({ status: 'pending' }));
 
   const query = db
     .from('messages')
@@ -29,7 +46,7 @@ export async function GET(request: Request) {
     .order('created_at', { ascending: false })
     .limit(1);
   const { data: reply } = since ? await query.gt('created_at', since).maybeSingle() : await query.maybeSingle();
-  return reply ? NextResponse.json({ status: 'complete', reply: reply.content, createdAt: reply.created_at }) : NextResponse.json({ status: 'pending' });
+  return withCors(reply ? NextResponse.json({ status: 'complete', reply: reply.content, createdAt: reply.created_at }) : NextResponse.json({ status: 'pending' }));
 }
 
 const requestSchema = z.object({
@@ -45,10 +62,10 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    return withCors(NextResponse.json({ error: 'Invalid request body' }, { status: 400 }));
   }
   const parsed = requestSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Invalid chat request' }, { status: 400 });
+  if (!parsed.success) return withCors(NextResponse.json({ error: 'Invalid chat request' }, { status: 400 }));
 
   const { workspaceId, sessionId, content, visitorName, visitorEmail } = parsed.data;
   const db = createServiceClient();
@@ -59,9 +76,9 @@ export async function POST(request: Request) {
     .eq('is_active', true)
     .single();
 
-  if (!workspace) return NextResponse.json({ error: 'Workspace not found' }, { status: 404 });
+  if (!workspace) return withCors(NextResponse.json({ error: 'Workspace not found' }, { status: 404 }));
   const channels = (workspace.sabibio_channels ?? {}) as Record<string, unknown>;
-  if (channels.web_chat_enabled === false) return NextResponse.json({ error: 'Web chat is not enabled' }, { status: 403 });
+  if (channels.web_chat_enabled === false) return withCors(NextResponse.json({ error: 'Web chat is not enabled' }, { status: 403 }));
 
   const chatId = `web_${sessionId}`;
   const externalMessageId = `web_${sessionId}_${crypto.randomUUID()}`;
@@ -93,7 +110,7 @@ export async function POST(request: Request) {
       workspaceId,
       tenantId: workspace.tenant_id,
     });
-    return NextResponse.json({ error: 'Web chat is not connected. Configure the Inngest event key and run migration_016_web_chat.sql.' }, { status: 503 });
+    return withCors(NextResponse.json({ error: 'Web chat is not connected. Configure the Inngest event key and run migration_016_web_chat.sql.' }, { status: 503 }));
   }
 
   // Give the background job a brief window to answer inline. The client
@@ -118,11 +135,12 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (reply) return NextResponse.json({ reply: reply.content, since: requestStartedAt });
+    if (reply) return withCors(NextResponse.json({ reply: reply.content, since: requestStartedAt }));
   }
 
   const queuedReply = workspace.agent_mode === 'copilot'
     ? 'Thank you for reaching out. We have received your message and our team is reviewing the best response. Please stay with us; we will be right back.'
     : 'Thank you for reaching out. We have received your message and our assistant is preparing a helpful response. Please stay with us; we will be right back.';
-  return NextResponse.json({ reply: queuedReply, since: requestStartedAt, queued: true });
+  return withCors(NextResponse.json({ reply: queuedReply, since: requestStartedAt, queued: true }));
 }
+
