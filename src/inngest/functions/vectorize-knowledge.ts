@@ -1,21 +1,34 @@
 import { inngest } from '../client';
 import { createServiceClient } from '@/lib/supabase/server';
+import { decrypt } from '@/lib/encryption';
 import { logTelemetry, normalizeError } from '@/lib/telemetry';
 
 /**
- * Generate an embedding vector for a piece of text using an OpenAI-compatible
- * embeddings endpoint. Returns null on failure so the caller can decide how to
- * handle a degraded (non-vectorized) document.
+ * Resolves the OpenAI API key used for embeddings only — env var first, then
+ * the Super Admin-managed system_configs value (same pattern as GROQ_API_KEY).
+ * Groq has no embeddings endpoint, so a Groq-only key must never be used here.
+ */
+async function resolveEmbeddingApiKey(): Promise<string> {
+  if (process.env.OPENAI_API_KEY?.trim()) return process.env.OPENAI_API_KEY.trim();
+
+  const db = createServiceClient();
+  const { data } = await db.from('system_configs').select('config_value, is_secret').eq('config_key', 'OPENAI_API_KEY').maybeSingle();
+  if (data?.config_value) {
+    try { return data.is_secret ? decrypt(data.config_value) : data.config_value; } catch { return ''; }
+  }
+  return '';
+}
+
+/**
+ * Generate an embedding vector for a piece of text using OpenAI's embeddings
+ * endpoint. Returns null (never throws for a missing key) so the caller can
+ * decide how to handle a degraded (non-vectorized) document.
  */
 export async function generateEmbedding(text: string): Promise<number[] | null> {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
+  const apiKey = await resolveEmbeddingApiKey();
   if (!apiKey) return null;
 
-  const baseUrl = process.env.OPENAI_API_KEY
-    ? 'https://api.openai.com/v1'
-    : 'https://api.openai.com/v1';
-
-  const response = await fetch(`${baseUrl}/embeddings`, {
+  const response = await fetch('https://api.openai.com/v1/embeddings', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
