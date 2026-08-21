@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ThemeToggle } from '../theme-toggle';
 
 const LINKS = [
   { href: '/#features', label: 'Features' },
@@ -17,11 +18,11 @@ export function MarketingNav() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-[#050914]/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-white"
+          className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground"
         >
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-cyan-400 to-blue-500 text-xs font-bold text-slate-950 shadow-lg shadow-cyan-500/20">
             SB
@@ -29,34 +30,38 @@ export function MarketingNav() {
           SabiBio
         </Link>
 
-        <div className="hidden items-center gap-7 text-sm text-slate-300 md:flex">
+        <div className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           {LINKS.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-white">
+            <Link key={item.href} href={item.href} className="hover:text-foreground transition-colors">
               {item.label}
             </Link>
           ))}
         </div>
 
         <div className="hidden items-center gap-3 text-sm md:flex">
-          <Link href="/login" className="text-slate-300 hover:text-white">
+          <ThemeToggle size="sm" />
+          <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors px-2 py-1">
             Log in
           </Link>
           <Link
             href="/signup"
-            className="rounded-full bg-cyan-300 px-4 py-2 font-semibold text-slate-950 hover:bg-cyan-200"
+            className="rounded-full bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Start free
           </Link>
         </div>
 
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-white md:hidden"
-          aria-label="Open menu"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle size="sm" />
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-card text-foreground"
+            aria-label="Open menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </nav>
 
       <AnimatePresence>
@@ -65,7 +70,7 @@ export function MarketingNav() {
             <motion.button
               type="button"
               aria-label="Close menu"
-              className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
+              className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm md:hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -76,14 +81,14 @@ export function MarketingNav() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 260, damping: 30 }}
-              className="fixed inset-y-0 right-0 z-50 w-[min(86vw,20rem)] border-l border-white/10 bg-[#050914] px-5 py-5 md:hidden"
+              className="fixed inset-y-0 right-0 z-50 w-[min(86vw,20rem)] border-l border-border bg-card px-5 py-5 md:hidden"
             >
               <div className="mb-6 flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">Menu</span>
+                <span className="text-sm font-semibold text-foreground">Menu</span>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-300 hover:bg-white/5"
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted"
                   aria-label="Close menu"
                 >
                   <X className="h-5 w-5" />
@@ -95,24 +100,24 @@ export function MarketingNav() {
                     key={item.href}
                     href={item.href}
                     onClick={() => setOpen(false)}
-                    className="block rounded-lg px-3 py-3 text-sm font-medium text-slate-200 hover:bg-white/5"
+                    className="block rounded-lg px-3 py-3 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                   >
                     {item.label}
                   </Link>
                 ))}
               </div>
-              <div className="mt-6 space-y-2 border-t border-white/10 pt-6">
+              <div className="mt-6 border-t border-border pt-4 space-y-3">
                 <Link
                   href="/login"
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg border border-white/10 px-3 py-3 text-center text-sm font-semibold text-white hover:border-cyan-300 hover:text-white"
+                  className="block w-full text-center rounded-lg border border-border px-4 py-2.5 text-sm font-medium text-foreground hover:bg-muted"
                 >
                   Log in
                 </Link>
                 <Link
                   href="/signup"
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg bg-cyan-300 px-3 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-cyan-200"
+                  className="block w-full text-center rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
                 >
                   Start free
                 </Link>

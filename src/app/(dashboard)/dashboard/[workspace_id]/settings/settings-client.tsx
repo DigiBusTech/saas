@@ -72,34 +72,34 @@ export function SettingsClient({ workspace }: Props) {
     <div className="max-w-2xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Settings className="w-5 h-5 text-indigo-400" />
+        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Settings className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
           Workspace Settings
         </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Configure <span className="text-indigo-400 font-medium">{workspace.name}</span>
+        <p className="text-xs text-muted-foreground mt-1">
+          Configure <span className="text-indigo-500 dark:text-indigo-400 font-medium">{workspace.name}</span>
         </p>
       </div>
 
       {/* Business Name */}
-      <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5">
-        <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-2">Business Name</label>
+      <div className="rounded-xl bg-card backdrop-blur-md border border-border p-5">
+        <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Business Name</label>
         <input
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 outline-none transition"
+          className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
         />
-        <p className="text-[10px] text-gray-600 mt-2">The name displayed in your dashboard sidebar, workspace switcher, and used by the AI when introducing itself.</p>
+        <p className="text-[10px] text-muted-foreground mt-2">The name displayed in your dashboard sidebar, workspace switcher, and used by the AI when introducing itself.</p>
       </div>
 
       {/* Agent Persona Selector */}
-      <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5 space-y-3">
+      <div className="rounded-xl bg-card backdrop-blur-md border border-border p-5 space-y-3">
         <div className="flex items-center gap-2 mb-1">
-          <Sparkles className="w-4 h-4 text-purple-400" />
-          <h3 className="text-xs font-semibold text-white">Agent Persona</h3>
+          <Sparkles className="w-4 h-4 text-purple-500 dark:text-purple-400" />
+          <h3 className="text-xs font-semibold text-foreground">Agent Persona</h3>
         </div>
-        <p className="text-[11px] text-gray-500">This determines the tone and vocabulary the AI uses when speaking to your customers. Choose a persona that matches your brand voice.</p>
+        <p className="text-[11px] text-muted-foreground">This determines the tone and vocabulary the AI uses when speaking to your customers. Choose a persona that matches your brand voice.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3">
           {BOT_PERSONAS.map((p) => (
@@ -109,38 +109,38 @@ export function SettingsClient({ workspace }: Props) {
               className={`text-left px-4 py-3 rounded-xl border transition-all duration-300
                 ${persona === p.value
                   ? 'bg-indigo-500/10 border-indigo-500/30 shadow-lg shadow-indigo-500/5'
-                  : 'bg-zinc-800/30 border-white/5 hover:border-white/10 hover:bg-white/5'}`}
+                  : 'bg-muted/50 border-border hover:border-border/80 hover:bg-muted'}`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-white">{p.label}</span>
-                {persona === p.value && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                <span className="text-xs font-medium text-foreground">{p.label}</span>
+                {persona === p.value && <Check className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />}
               </div>
-              <p className="text-[10px] text-gray-500 mt-0.5">{p.desc}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{p.desc}</p>
             </button>
           ))}
         </div>
 
         {persona === 'Custom Prompt' && (
           <div className="mt-3">
-            <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Custom Persona Instructions</label>
+            <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Custom Persona Instructions</label>
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
               rows={4}
               placeholder="e.g. Speak like a friendly boutique concierge. Always mention free shipping over $50."
-              className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600 focus:border-indigo-500/40 outline-none transition resize-none"
+              className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-ring focus:ring-1 focus:ring-ring outline-none transition resize-none"
             />
           </div>
         )}
       </div>
 
       {/* Operating Mode Toggle */}
-      <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5 space-y-3">
+      <div className="rounded-xl bg-card backdrop-blur-md border border-border p-5 space-y-3">
         <div className="flex items-center gap-2 mb-1">
-          <Bot className="w-4 h-4 text-emerald-400" />
-          <h3 className="text-xs font-semibold text-white">Operating Mode</h3>
+          <Bot className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+          <h3 className="text-xs font-semibold text-foreground">Operating Mode</h3>
         </div>
-        <p className="text-[11px] text-gray-500">Control how the AI agent handles incoming conversations. Autopilot is recommended for most businesses; use Copilot if you want to review AI drafts before they are sent.</p>
+        <p className="text-[11px] text-muted-foreground">Control how the AI agent handles incoming conversations. Autopilot is recommended for most businesses; use Copilot if you want to review AI drafts before they are sent.</p>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
           {AGENT_MODES.map((mode) => (
@@ -152,10 +152,10 @@ export function SettingsClient({ workspace }: Props) {
               className={`text-left px-4 py-4 rounded-xl border transition-all duration-300
                 ${agentMode === mode.value
                   ? 'bg-linear-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-indigo-500/30 shadow-lg'
-                  : 'bg-zinc-800/30 border-white/5 hover:border-white/10'}`}
+                  : 'bg-muted/50 border-border hover:border-border/80'}`}
             >
               <div className="flex items-center gap-2 mb-2">
-                <mode.icon className={`w-5 h-5 ${agentMode === mode.value ? 'text-indigo-400' : 'text-gray-600'}`} />
+                <mode.icon className={`w-5 h-5 ${agentMode === mode.value ? 'text-indigo-500 dark:text-indigo-400' : 'text-muted-foreground'}`} />
                 {agentMode === mode.value && (
                   <span className="relative flex h-2 w-2 ml-auto">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -163,8 +163,8 @@ export function SettingsClient({ workspace }: Props) {
                   </span>
                 )}
               </div>
-              <h4 className="text-xs font-semibold text-white">{mode.label}</h4>
-              <p className="text-[10px] text-gray-500 mt-1 leading-relaxed">{mode.desc}</p>
+              <h4 className="text-xs font-semibold text-foreground">{mode.label}</h4>
+              <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">{mode.desc}</p>
             </motion.button>
           ))}
         </div>
@@ -193,13 +193,13 @@ export function SettingsClient({ workspace }: Props) {
       </div>
 
       {/* Danger Zone */}
-      <div className="rounded-xl bg-rose-950/10 border border-rose-900/30 p-5 space-y-3">
+      <div className="rounded-xl bg-rose-500/5 border border-rose-500/20 p-5 space-y-3">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-rose-400" />
-          <h3 className="text-xs font-semibold text-rose-300">Danger Zone</h3>
+          <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400" />
+          <h3 className="text-xs font-semibold text-rose-600 dark:text-rose-300">Danger Zone</h3>
         </div>
-        <p className="text-[11px] text-gray-500">
-          Deleting <span className="text-white font-medium">{workspace.name}</span> permanently removes its conversations, CRM leads, knowledge base, and integrations. This cannot be undone.
+        <p className="text-[11px] text-muted-foreground">
+          Deleting <span className="text-foreground font-medium">{workspace.name}</span> permanently removes its conversations, CRM leads, knowledge base, and integrations. This cannot be undone.
         </p>
         <div className="flex items-center gap-2">
           <input
@@ -207,7 +207,7 @@ export function SettingsClient({ workspace }: Props) {
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
             placeholder={`Type "${workspace.name}" to confirm`}
-            className="flex-1 px-3 py-2 rounded-lg bg-zinc-900/60 border border-rose-900/30 text-xs text-white placeholder:text-gray-600 focus:border-rose-500/40 outline-none transition"
+            className="flex-1 px-3 py-2 rounded-lg bg-card border border-rose-500/30 text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-rose-500 outline-none transition"
           />
           <button
             onClick={handleDelete}

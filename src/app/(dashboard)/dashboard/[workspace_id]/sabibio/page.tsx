@@ -19,8 +19,8 @@ export default async function SabiBioPage({
 
   if (!workspace || !config || error) {
     return (
-      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-white/10 bg-zinc-900/50">
-        <p className="text-sm text-gray-500">SabiBio workspace configuration is unavailable.</p>
+      <div className="flex min-h-64 items-center justify-center rounded-2xl border border-border bg-card">
+        <p className="text-sm text-muted-foreground">SabiBio workspace configuration is unavailable.</p>
       </div>
     );
   }

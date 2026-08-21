@@ -24,15 +24,15 @@ function StatusBadge({ doc }: { doc: KnowledgeDoc }) {
   const map: Record<string, { label: string; cls: string }> = {
     INDEXED: {
       label: 'Indexed',
-      cls: 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30',
+      cls: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
     },
     PENDING: {
       label: 'Pending',
-      cls: 'bg-amber-950/40 text-amber-400 border-amber-900/30 animate-pulse',
+      cls: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 animate-pulse',
     },
     FAILED: {
       label: 'Failed',
-      cls: 'bg-rose-950/40 text-rose-400 border-rose-900/30',
+      cls: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
     },
   };
 
@@ -92,54 +92,54 @@ export function KnowledgeClient({ documents, workspaceId }: Props) {
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-white">Knowledge Grounding</h2>
-          <p className="text-xs text-gray-500 mt-1">
+          <h2 className="text-lg font-bold text-foreground">Knowledge Grounding</h2>
+          <p className="text-xs text-muted-foreground mt-1">
             Add documents the AI uses to answer questions for this business. Text is chunked and vectorized for semantic search.
           </p>
         </div>
         <button
           onClick={() => setShowAdd(true)}
-          className="text-xs px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded transition"
+          className="text-xs px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded transition"
         >
           + Add Document
         </button>
       </div>
 
       {message && (
-        <div className={`p-3 rounded text-xs ${message.type === 'success' ? 'bg-emerald-950/30 border border-emerald-500/30 text-emerald-300' : 'bg-rose-950/30 border border-rose-500/30 text-rose-300'}`}>
+        <div className={`p-3 rounded text-xs ${message.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300'}`}>
           {message.text}
         </div>
       )}
 
       {/* Add Document Form */}
       {showAdd && (
-        <form action={handleAdd} className="bg-[#0F1219] border border-gray-800 rounded-lg p-6 space-y-4">
-          <h3 className="text-sm font-bold text-white">Add Knowledge Document</h3>
-          <p className="text-[10px] text-gray-500">
+        <form action={handleAdd} className="bg-card border border-border rounded-lg p-6 space-y-4">
+          <h3 className="text-sm font-bold text-foreground">Add Knowledge Document</h3>
+          <p className="text-[10px] text-muted-foreground">
             Paste raw text content. Long documents will be automatically split into optimal chunks for retrieval.
           </p>
           <div>
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">Document Title</label>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1.5">Document Title</label>
             <input name="title" type="text" placeholder="e.g. Payment Methods FAQ" required
-              className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none" />
+              className="w-full bg-muted border border-input rounded px-3 py-2 text-xs text-foreground focus:ring-1 focus:ring-ring outline-none" />
           </div>
           <div>
-            <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">Content</label>
+            <label className="block text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1.5">Content</label>
             <textarea name="content" rows={10} required minLength={10} placeholder="Paste your knowledge base text here. This can be FAQ answers, pricing tables, service descriptions, policies, etc."
-              className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono focus:ring-1 focus:ring-indigo-500 outline-none leading-relaxed resize-y" />
+              className="w-full bg-muted border border-input rounded px-3 py-2 text-xs text-foreground/80 font-mono focus:ring-1 focus:ring-ring outline-none leading-relaxed resize-y" />
           </div>
-          <div className="bg-[#0B0E14] border border-gray-800 rounded p-3">
-            <p className="text-[9px] text-gray-500 leading-relaxed">
-              <strong className="text-gray-400">How it works:</strong> Your text is split into ~1000 character chunks with overlap.
+          <div className="bg-muted border border-border rounded p-3">
+            <p className="text-[9px] text-muted-foreground leading-relaxed">
+              <strong className="text-foreground/80">How it works:</strong> Your text is split into ~1000 character chunks with overlap.
               Each chunk gets a vector embedding generated via AI. When a customer asks a question, the system searches
               these vectors for the most relevant chunks and feeds them to the AI for grounded, accurate answers.
             </p>
           </div>
           <div className="flex gap-2 pt-2">
-            <button type="button" onClick={() => setShowAdd(false)} className="text-xs px-3 py-1.5 bg-gray-800 rounded text-gray-400 hover:text-white transition">
+            <button type="button" onClick={() => setShowAdd(false)} className="text-xs px-3 py-1.5 bg-muted rounded text-muted-foreground hover:text-foreground transition">
               Cancel
             </button>
-            <button type="submit" className="text-xs px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded text-white font-bold transition">
+            <button type="submit" className="text-xs px-4 py-1.5 bg-primary hover:bg-primary/90 rounded text-primary-foreground font-bold transition">
               Save & Generate Embeddings
             </button>
           </div>
@@ -152,30 +152,30 @@ export function KnowledgeClient({ documents, workspaceId }: Props) {
           <form
             action={handleEdit}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-2xl bg-[#0F1219] border border-gray-800 rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            className="w-full max-w-2xl bg-card border border-border rounded-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-bold text-white">Edit Knowledge Document</h3>
-              <button type="button" onClick={() => setEditDoc(null)} className="text-gray-500 hover:text-white text-lg leading-none">×</button>
+              <h3 className="text-sm font-bold text-foreground">Edit Knowledge Document</h3>
+              <button type="button" onClick={() => setEditDoc(null)} className="text-muted-foreground hover:text-foreground text-lg leading-none">×</button>
             </div>
-            <p className="text-[10px] text-amber-400/80">
+            <p className="text-[10px] text-amber-600 dark:text-amber-400/80">
               Saving will reset the document to <strong>PENDING</strong> and re-trigger vectorization.
             </p>
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">Document Title</label>
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1.5">Document Title</label>
               <input name="title" type="text" defaultValue={editDoc.title} required
-                className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none" />
+                className="w-full bg-muted border border-input rounded px-3 py-2 text-xs text-foreground focus:ring-1 focus:ring-ring outline-none" />
             </div>
             <div>
-              <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">Content</label>
+              <label className="block text-[10px] uppercase font-bold tracking-wider text-muted-foreground mb-1.5">Content</label>
               <textarea name="content" rows={12} required minLength={10} defaultValue={editDoc.content}
-                className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-gray-300 font-mono focus:ring-1 focus:ring-indigo-500 outline-none leading-relaxed resize-y" />
+                className="w-full bg-muted border border-input rounded px-3 py-2 text-xs text-foreground/80 font-mono focus:ring-1 focus:ring-ring outline-none leading-relaxed resize-y" />
             </div>
             <div className="flex gap-2 pt-2 justify-end">
-              <button type="button" onClick={() => setEditDoc(null)} className="text-xs px-3 py-1.5 bg-gray-800 rounded text-gray-400 hover:text-white transition">
+              <button type="button" onClick={() => setEditDoc(null)} className="text-xs px-3 py-1.5 bg-muted rounded text-muted-foreground hover:text-foreground transition">
                 Cancel
               </button>
-              <button type="submit" className="text-xs px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 rounded text-white font-bold transition">
+              <button type="submit" className="text-xs px-4 py-1.5 bg-primary hover:bg-primary/90 rounded text-primary-foreground font-bold transition">
                 Save & Re-Index
               </button>
             </div>
@@ -186,31 +186,31 @@ export function KnowledgeClient({ documents, workspaceId }: Props) {
       {/* Document List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
+          <h3 className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground">
             Stored Documents ({documents.length})
           </h3>
         </div>
 
         {documents.length === 0 ? (
-          <div className="bg-[#0F1219] border border-gray-800 rounded-lg p-12 text-center">
+          <div className="bg-card border border-border rounded-lg p-12 text-center">
             <svg className="w-10 h-10 text-indigo-500/30 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 19.5A2.5 2.5 0 016.5 17H20M4 19.5A2.5 2.5 0 006.5 22H20V2H6.5A2.5 2.5 0 004 4.5v15z" />
             </svg>
-            <p className="text-xs text-gray-500">No knowledge documents yet. Add your first document to enable AI grounding for this business.</p>
+            <p className="text-xs text-muted-foreground">No knowledge documents yet. Add your first document to enable AI grounding for this business.</p>
           </div>
         ) : (
           documents.map((doc) => (
-            <div key={doc.id} className="bg-[#0F1219] border border-gray-800 rounded-lg p-4 hover:border-gray-700 transition">
+            <div key={doc.id} className="bg-card border border-border rounded-lg p-4 hover:border-border/70 transition">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-xs font-semibold text-white truncate">{doc.title}</h4>
+                    <h4 className="text-xs font-semibold text-foreground truncate">{doc.title}</h4>
                     <StatusBadge doc={doc} />
                   </div>
-                  <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed font-mono">
+                  <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed font-mono">
                     {doc.content.slice(0, 200)}...
                   </p>
-                  <p className="text-[9px] text-gray-600 mt-2">
+                  <p className="text-[9px] text-muted-foreground mt-2">
                     Added {new Date(doc.created_at).toLocaleDateString()} • {doc.content.length.toLocaleString()} chars
                   </p>
                 </div>
@@ -218,14 +218,14 @@ export function KnowledgeClient({ documents, workspaceId }: Props) {
                   <button
                     onClick={() => setEditDoc(doc)}
                     disabled={isPending}
-                    className="text-[10px] px-2 py-1 border border-gray-800 rounded text-indigo-400 hover:text-indigo-300 transition disabled:opacity-50"
+                    className="text-[10px] px-2 py-1 border border-border rounded text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition disabled:opacity-50"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(doc.id, doc.title)}
                     disabled={isPending}
-                    className="text-[10px] px-2 py-1 border border-gray-800 rounded text-rose-400 hover:text-rose-300 transition disabled:opacity-50"
+                    className="text-[10px] px-2 py-1 border border-border rounded text-rose-500 hover:text-rose-400 transition disabled:opacity-50"
                   >
                     Delete
                   </button>

@@ -42,7 +42,7 @@ export default function LoginPage() {
 
       <form action={handleSubmit} className="space-y-5">
         <div>
-          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
             Email address
           </label>
           <input
@@ -50,7 +50,7 @@ export default function LoginPage() {
             name="email"
             placeholder="you@company.com"
             autoComplete="email"
-            className="w-full rounded-lg border border-slate-700/50 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 transition-all focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20"
+            className="w-full rounded-lg border border-input bg-background px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground/60 transition-all focus:border-ring focus:ring-1 focus:ring-ring"
             required
             autoFocus
           />
@@ -65,11 +65,11 @@ export default function LoginPage() {
         />
 
         <div className="flex items-center justify-between text-xs">
-          <label className="flex items-center gap-2 text-slate-400">
-            <input type="checkbox" name="remember" className="h-3.5 w-3.5 accent-cyan-400" />
+          <label className="flex items-center gap-2 text-muted-foreground">
+            <input type="checkbox" name="remember" className="h-3.5 w-3.5 accent-primary" />
             Remember me
           </label>
-          <Link href="/forgot-password" className="text-cyan-300 hover:text-cyan-200">
+          <Link href="/forgot-password" className="text-primary hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -78,15 +78,15 @@ export default function LoginPage() {
           type="submit"
           disabled={loading}
           whileTap={{ scale: 0.98 }}
-          className="w-full rounded-lg bg-linear-to-r from-cyan-400 to-blue-500 py-3 text-sm font-bold tracking-wide text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:from-cyan-300 hover:to-blue-400 disabled:opacity-50"
+          className="w-full rounded-lg bg-primary py-3 text-sm font-bold tracking-wide text-primary-foreground shadow-lg transition-all hover:bg-primary/90 disabled:opacity-50"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </motion.button>
       </form>
 
-      <div className="mt-6 border-t border-white/10 pt-6 text-center text-xs text-slate-400">
+      <div className="mt-6 border-t border-border pt-6 text-center text-xs text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="ml-1 font-medium text-cyan-300 hover:text-cyan-200">
+        <Link href="/signup" className="ml-1 font-medium text-primary hover:underline">
           Start a free trial →
         </Link>
       </div>

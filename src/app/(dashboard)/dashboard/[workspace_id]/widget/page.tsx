@@ -24,58 +24,58 @@ export default function WidgetPage() {
     <div className="max-w-5xl space-y-6">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-2"><Code className="h-5 w-5 text-indigo-400" /><h1 className="text-xl font-semibold text-white">Embed Chat Widget</h1></div>
-        <p className="mt-1 text-xs text-gray-500">Add the chat widget to any website. Paste the code snippet into your site's &lt;head&gt; or &lt;body&gt;.</p>
+        <div className="flex items-center gap-2"><Code className="h-5 w-5 text-indigo-500 dark:text-indigo-400" /><h1 className="text-xl font-semibold text-foreground">Embed Chat Widget</h1></div>
+        <p className="mt-1 text-xs text-muted-foreground">Add the chat widget to any website. Paste the code snippet into your site's &lt;head&gt; or &lt;body&gt;.</p>
       </div>
 
       {/* Setup Instructions */}
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-white">Getting Started</h2>
-        <ol className="space-y-3 text-xs text-gray-400">
-          <li><span className="font-bold text-white">1.</span> Customize the button color below (optional)</li>
-          <li><span className="font-bold text-white">2.</span> Copy the embed code</li>
-          <li><span className="font-bold text-white">3.</span> Paste it into your website's HTML, before the closing &lt;/body&gt; tag</li>
-          <li><span className="font-bold text-white">4.</span> The chat widget will appear on your site immediately</li>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-foreground">Getting Started</h2>
+        <ol className="space-y-3 text-xs text-muted-foreground">
+          <li><span className="font-bold text-foreground">1.</span> Customize the button color below (optional)</li>
+          <li><span className="font-bold text-foreground">2.</span> Copy the embed code</li>
+          <li><span className="font-bold text-foreground">3.</span> Paste it into your website's HTML, before the closing &lt;/body&gt; tag</li>
+          <li><span className="font-bold text-foreground">4.</span> The chat widget will appear on your site immediately</li>
         </ol>
       </div>
 
       {/* Customization */}
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-white">Button Color</h3>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Button Color</h3>
         <div className="flex items-center gap-3 flex-wrap">
           {PRESET_COLORS.map((color) => (
             <button
               key={color}
               onClick={() => setButtonColor(color)}
               className={`w-10 h-10 rounded-lg border-2 transition ${
-                buttonColor === color ? 'border-white' : 'border-white/20 hover:border-white/40'
+                buttonColor === color ? 'border-foreground' : 'border-border hover:border-foreground/40'
               }`}
               style={{ backgroundColor: color }}
               title={color}
             />
           ))}
           <div className="flex items-center gap-2 ml-4">
-            <label className="text-xs text-gray-400">Or enter hex:</label>
+            <label className="text-xs text-muted-foreground">Or enter hex:</label>
             <input
               type="color"
               value={buttonColor}
               onChange={(e) => setButtonColor(e.target.value)}
-              className="w-12 h-8 rounded border border-white/10 cursor-pointer"
+              className="w-12 h-8 rounded border border-border cursor-pointer"
             />
             <input
               type="text"
               value={buttonColor}
               onChange={(e) => setButtonColor(e.target.value)}
-              className="px-2 py-1 rounded bg-zinc-800/50 border border-white/10 text-white text-xs font-mono w-24 outline-none"
+              className="px-2 py-1 rounded bg-muted border border-input text-foreground text-xs font-mono w-24 outline-none"
             />
           </div>
         </div>
       </div>
 
       {/* Embed Code */}
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">Embed Code</h3>
+          <h3 className="text-sm font-semibold text-foreground">Embed Code</h3>
           <button
             onClick={copyToClipboard}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold transition"
@@ -84,17 +84,17 @@ export default function WidgetPage() {
             {copied ? 'Copied!' : 'Copy'}
           </button>
         </div>
-        <pre className="p-4 rounded-lg bg-black/50 border border-white/5 text-gray-300 text-xs overflow-x-auto font-mono">
+        <pre className="p-4 rounded-lg bg-muted border border-border text-foreground/80 text-xs overflow-x-auto font-mono">
           {embedCode}
         </pre>
       </div>
 
       {/* Preview */}
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-white">Live Preview</h3>
-        <p className="text-xs text-gray-500">The widget appears as a floating button on the bottom-right of your pages:</p>
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Live Preview</h3>
+        <p className="text-xs text-muted-foreground">The widget appears as a floating button on the bottom-right of your pages:</p>
         <div className="bg-linear-to-br from-slate-800 to-slate-900 rounded-lg p-8 min-h-64 relative">
-          <div className="text-center text-gray-500 text-xs mb-4">Your website content goes here...</div>
+          <div className="text-center text-gray-400 text-xs mb-4">Your website content goes here...</div>
           {/* Floating Button Preview */}
           <div className="absolute bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: buttonColor }}>
             <svg viewBox="0 0 24 24" className="w-7 h-7 fill-white">
@@ -105,13 +105,13 @@ export default function WidgetPage() {
       </div>
 
       {/* Testing */}
-      <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
-        <h3 className="text-sm font-semibold text-white">Test the Widget</h3>
-        <p className="text-xs text-gray-400">
+      <div className="rounded-xl border border-border bg-card p-6 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground">Test the Widget</h3>
+        <p className="text-xs text-muted-foreground">
           To test the embedded widget, create a simple HTML file with the embed code and open it in your browser. The chat will work from any domain thanks to CORS.
         </p>
         <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-          <p className="text-xs text-blue-300">
+          <p className="text-xs text-blue-600 dark:text-blue-300">
             <span className="font-semibold">Tip:</span> Use Python's built-in server to test locally:<br />
             <code className="font-mono">python -m http.server 8000</code>
           </p>

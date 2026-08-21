@@ -58,13 +58,13 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
   };
 
   return (
-    <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-6 space-y-4">
+    <div className="rounded-xl bg-card backdrop-blur-md border border-border p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-semibold text-white flex items-center gap-2">
-            <Tag className="w-4 h-4 text-purple-400" /> Categories & Tags
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Tag className="w-4 h-4 text-purple-500 dark:text-purple-400" /> Categories & Tags
           </h2>
-          <p className="text-[11px] text-gray-500 mt-1">
+          <p className="text-[11px] text-muted-foreground mt-1">
             Business-defined categories used for CRM leads and AI classification.
           </p>
         </div>
@@ -77,31 +77,31 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
       </div>
 
       {banner && (
-        <div className={`p-3 rounded-lg text-xs flex items-center gap-2 ${banner.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300' : 'bg-rose-500/10 border border-rose-500/30 text-rose-300'}`}>
+        <div className={`p-3 rounded-lg text-xs flex items-center gap-2 ${banner.type === 'success' ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300'}`}>
           <AlertCircle className="w-4 h-4" /> {banner.text}
         </div>
       )}
 
       {categories.length === 0 ? (
         <div className="py-8 text-center">
-          <Tag className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-          <p className="text-xs text-gray-500">No categories yet. Create one to organize your leads.</p>
+          <Tag className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
+          <p className="text-xs text-muted-foreground">No categories yet. Create one to organize your leads.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {categories.map((cat) => (
-            <div key={cat.id} className="flex items-center justify-between rounded-lg bg-zinc-800/40 border border-white/5 px-3 py-2.5">
+            <div key={cat.id} className="flex items-center justify-between rounded-lg bg-muted/50 border border-border px-3 py-2.5">
               <div className="flex items-center gap-2.5">
                 <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: cat.color }} />
-                <span className="text-xs text-white font-medium">{cat.name}</span>
+                <span className="text-xs text-foreground font-medium">{cat.name}</span>
               </div>
               <div className="flex items-center gap-1">
                 <button onClick={() => { setSelectedColor(cat.color); setEditing(cat); }}
-                  className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500 hover:text-indigo-400 transition">
+                  className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-indigo-500 dark:hover:text-indigo-400 transition">
                   <Pencil className="w-3.5 h-3.5" />
                 </button>
                 <button onClick={() => setDeleting(cat)}
-                  className="p-1.5 rounded-lg hover:bg-rose-500/10 text-gray-500 hover:text-rose-400 transition">
+                  className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -122,34 +122,34 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+              className="w-full max-w-sm mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl"
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
-                <h3 className="text-sm font-semibold text-white">{editing ? 'Edit Category' : 'New Category'}</h3>
-                <button onClick={() => { setShowAdd(false); setEditing(null); }} className="p-1.5 rounded-lg hover:bg-white/5 transition"><X className="w-4 h-4 text-gray-500" /></button>
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">{editing ? 'Edit Category' : 'New Category'}</h3>
+                <button onClick={() => { setShowAdd(false); setEditing(null); }} className="p-1.5 rounded-lg hover:bg-muted transition"><X className="w-4 h-4 text-muted-foreground" /></button>
               </div>
               <form onSubmit={editing ? handleUpdate : handleCreate} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Name</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Name</label>
                   <input name="name" required defaultValue={editing?.name ?? ''} placeholder="e.g. VIP Client"
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Color</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Color</label>
                   <div className="flex flex-wrap gap-2">
                     {PRESET_COLORS.map((color) => (
                       <button key={color} type="button" onClick={() => setSelectedColor(color)}
-                        className={`w-7 h-7 rounded-full transition ${selectedColor === color ? 'ring-2 ring-white ring-offset-2 ring-offset-zinc-900' : ''}`}
+                        className={`w-7 h-7 rounded-full transition ${selectedColor === color ? 'ring-2 ring-foreground ring-offset-2 ring-offset-card' : ''}`}
                         style={{ backgroundColor: color }} />
                     ))}
                   </div>
                 </div>
                 {editing && (
-                  <p className="text-[10px] text-amber-400/80">Renaming updates this category on all matching CRM contacts.</p>
+                  <p className="text-[10px] text-amber-600 dark:text-amber-400/80">Renaming updates this category on all matching CRM contacts.</p>
                 )}
                 <div className="flex justify-end gap-3 pt-1">
                   <button type="button" onClick={() => { setShowAdd(false); setEditing(null); }}
-                    className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
+                    className="px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition">Cancel</button>
                   <button type="submit" disabled={busy}
                     className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-purple-500 to-indigo-600 disabled:opacity-50 transition flex items-center gap-2">
                     {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
@@ -173,19 +173,19 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6"
+              className="w-full max-w-sm mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
-                  <Trash2 className="w-6 h-6 text-rose-400" />
+                  <Trash2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-white">Delete Category?</h3>
-                <p className="text-xs text-gray-500 mt-2">
-                  Delete <span className="text-white font-medium">{deleting.name}</span>? Existing contacts keep their tag value but it won&apos;t be a selectable category.
+                <h3 className="text-sm font-semibold text-foreground">Delete Category?</h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Delete <span className="text-foreground font-medium">{deleting.name}</span>? Existing contacts keep their tag value but it won&apos;t be a selectable category.
                 </p>
                 <div className="flex gap-3 mt-6 w-full">
                   <button onClick={() => setDeleting(null)}
-                    className="flex-1 px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition">Cancel</button>
+                    className="flex-1 px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/70 transition">Cancel</button>
                   <button onClick={handleDelete} disabled={busy}
                     className="flex-1 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
                     {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Delete

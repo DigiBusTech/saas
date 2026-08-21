@@ -53,7 +53,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-white dark:bg-[#0B0E14] text-gray-900 dark:text-gray-300">
+      <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <Providers><AppPreloader />{children}</Providers>
       </body>
     </html>

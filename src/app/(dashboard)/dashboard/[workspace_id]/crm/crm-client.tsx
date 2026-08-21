@@ -175,12 +175,12 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Users className="w-5 h-5 text-indigo-400" />
+          <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <Users className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
             Customer CRM
           </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Leads & subscribers for <span className="text-indigo-400 font-medium">{workspace.name}</span>
+          <p className="text-xs text-muted-foreground mt-1">
+            Leads & subscribers for <span className="text-indigo-500 dark:text-indigo-400 font-medium">{workspace.name}</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -213,44 +213,44 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 30 }}
-            className={`rounded-xl bg-linear-to-br ${card.bg} to-transparent backdrop-blur-md border border-white/10 p-4
+            className={`rounded-xl bg-linear-to-br ${card.bg} to-transparent backdrop-blur-md border border-border p-4
               hover:border-indigo-500/40 transition-all duration-300`}
           >
             <card.icon className={`w-5 h-5 ${card.color} mb-2`} />
-            <p className="text-2xl font-bold text-white">{card.value}</p>
-            <p className="text-[10px] text-gray-500 uppercase tracking-wider">{card.label}</p>
+            <p className="text-2xl font-bold text-foreground">{card.value}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{card.label}</p>
           </motion.div>
         ))}
       </div>
 
       {/* Filters */}
       <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-600" />
+        <div className="relative flex-1 min-w-50">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, phone or ID..."
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-zinc-900/60 border border-white/10 text-xs text-white placeholder:text-gray-600 focus:border-indigo-500/40 outline-none transition"
+            className="w-full pl-9 pr-3 py-2 rounded-lg bg-muted border border-input text-xs text-foreground placeholder:text-muted-foreground/60 focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
           />
         </div>
         <select
           value={tagFilter}
           onChange={(e) => setTagFilter(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-zinc-900/60 border border-white/10 text-xs text-white focus:border-indigo-500/40 outline-none transition appearance-none"
+          className="px-3 py-2 rounded-lg bg-muted border border-input text-xs text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none"
         >
-          <option value="" className="bg-zinc-900">All Tags & Categories</option>
+          <option value="">All Tags & Categories</option>
           {categories.length > 0 && (
-            <optgroup label="Categories" className="bg-zinc-900">
+            <optgroup label="Categories">
               {categories.map((c) => (
-                <option key={c.id} value={c.name} className="bg-zinc-900">{c.name}</option>
+                <option key={c.id} value={c.name}>{c.name}</option>
               ))}
             </optgroup>
           )}
           {allTags.length > 0 && (
-            <optgroup label="Tags" className="bg-zinc-900">
+            <optgroup label="Tags">
               {allTags.map((tag) => (
-                <option key={tag} value={tag} className="bg-zinc-900">{tag}</option>
+                <option key={tag} value={tag}>{tag}</option>
               ))}
             </optgroup>
           )}
@@ -259,31 +259,31 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
 
       {/* Data Table */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl bg-zinc-900/60 border border-white/10 p-12 text-center">
-          <Users className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">No CRM records found. Add a lead manually or import WhatsApp contacts.</p>
+        <div className="rounded-xl bg-card border border-border p-12 text-center">
+          <Users className="w-10 h-10 text-muted-foreground/50 mx-auto mb-3" />
+          <p className="text-sm text-muted-foreground">No CRM records found. Add a lead manually or import WhatsApp contacts.</p>
         </div>
       ) : (
-        <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 overflow-hidden">
+        <div className="rounded-xl bg-card backdrop-blur-md border border-border overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/5">
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Customer</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Platform</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Category</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Lead Score</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Status</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-left font-medium">Expiry</th>
-                  <th className="px-4 py-3 text-[10px] text-gray-500 uppercase tracking-wider text-right font-medium">Actions</th>
+                <tr className="border-b border-border">
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Customer</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Platform</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Category</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Lead Score</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-left font-medium">Expiry</th>
+                  <th className="px-4 py-3 text-[10px] text-muted-foreground uppercase tracking-wider text-right font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((lead) => (
-                  <tr key={lead.id} className="border-b border-white/5 hover:bg-white/2 transition">
+                  <tr key={lead.id} className="border-b border-border/60 hover:bg-muted/50 transition">
                     <td className="px-4 py-3">
-                      <p className="text-xs text-white font-medium">{lead.customer_name || 'Unknown'}</p>
-                      <p className="text-[10px] text-gray-600 font-mono">{lead.phone_number || lead.platform_user_id}</p>
+                      <p className="text-xs text-foreground font-medium">{lead.customer_name || 'Unknown'}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono">{lead.phone_number || lead.platform_user_id}</p>
                     </td>
                     <td className="px-4 py-3">
                       {lead.platform === 'telegram' ? (
@@ -294,41 +294,41 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                     </td>
                     <td className="px-4 py-3">
                       {lead.category ? (
-                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/20">{lead.category}</span>
+                        <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20">{lead.category}</span>
                       ) : (
-                        <span className="text-[10px] text-gray-600">â€”</span>
+                        <span className="text-[10px] text-muted-foreground">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div className={`h-full rounded-full ${getScoreColor(lead.lead_score)} transition-all`}
                             style={{ width: `${Math.min(lead.lead_score, 100)}%` }} />
                         </div>
-                        <span className="text-[10px] text-white font-mono">{lead.lead_score}</span>
+                        <span className="text-[10px] text-foreground font-mono">{lead.lead_score}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-0.5 rounded-full text-[9px] font-medium
-                        ${lead.subscription_status === 'subscriber' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                          lead.subscription_status === 'expired' ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
-                          'bg-zinc-800 text-gray-400 border border-white/5'}`}>
+                        ${lead.subscription_status === 'subscriber' ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20' :
+                          lead.subscription_status === 'expired' ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' :
+                          'bg-muted text-muted-foreground border border-border'}`}>
                         {lead.subscription_status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-[10px] text-gray-500">
-                      {lead.subscription_expiry ? new Date(lead.subscription_expiry).toLocaleDateString() : 'â€”'}
+                    <td className="px-4 py-3 text-[10px] text-muted-foreground">
+                      {lead.subscription_expiry ? new Date(lead.subscription_expiry).toLocaleDateString() : '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => setEditingLead(lead)}
                           title="Quick Edit"
-                          className="p-1.5 rounded-lg hover:bg-white/5 text-gray-500 hover:text-indigo-400 transition">
+                          className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-indigo-500 dark:hover:text-indigo-400 transition">
                           <SlidersHorizontal className="w-3.5 h-3.5" />
                         </button>
                         <button onClick={() => setDeletingLead(lead)}
                           title="Delete"
-                          className="p-1.5 rounded-lg hover:bg-rose-500/10 text-gray-500 hover:text-rose-400 transition">
+                          className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 transition">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -353,53 +353,53 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+              className="w-full max-w-md mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl"
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2"><Plus className="w-4 h-4 text-indigo-400" /> Add New Lead</h3>
-                <button onClick={() => setShowAddModal(false)} className="p-1.5 rounded-lg hover:bg-white/5 transition"><X className="w-4 h-4 text-gray-500" /></button>
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2"><Plus className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> Add New Lead</h3>
+                <button onClick={() => setShowAddModal(false)} className="p-1.5 rounded-lg hover:bg-muted transition"><X className="w-4 h-4 text-muted-foreground" /></button>
               </div>
               <form onSubmit={handleCreate} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Name</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Name</label>
                   <input name="customer_name" placeholder="Customer name"
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Platform</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Platform</label>
                   <select name="platform" value={createPlatform} onChange={(e) => setCreatePlatform(e.target.value as 'whatsapp' | 'telegram')}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="whatsapp" className="bg-zinc-900">WhatsApp</option>
-                    <option value="telegram" className="bg-zinc-900">Telegram</option>
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="telegram">Telegram</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
                     {createPlatform === 'whatsapp' ? 'Phone Number' : 'Platform ID / Chat ID'}
                   </label>
                   <input name="platform_user_id" required placeholder={createPlatform === 'whatsapp' ? 'e.g. +2348012345678' : 'e.g. tg_123456'}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                   {createPlatform === 'whatsapp' && <input type="hidden" name="phone_number" />}
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Category / Tag</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Category / Tag</label>
                   <select name="category"
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="" className="bg-zinc-900">â€” None â€”</option>
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
+                    <option value="">— None —</option>
                     {categories.map((c) => (
-                      <option key={c.id} value={c.name} className="bg-zinc-900">{c.name}</option>
+                      <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
-                  {categories.length === 0 && <p className="text-[10px] text-gray-600 mt-1">Define categories in workspace Settings.</p>}
+                  {categories.length === 0 && <p className="text-[10px] text-muted-foreground mt-1">Define categories in workspace Settings.</p>}
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0â€“100)</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Lead Score (0–100)</label>
                   <input name="lead_score" type="number" min="0" max="100" defaultValue={10}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
+                    className="px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition">Cancel</button>
                   <button type="submit" disabled={creating}
                     className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
                     {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Create Lead
@@ -423,64 +423,64 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-md mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto"
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 sticky top-0 bg-zinc-900/95">
-                <h3 className="text-sm font-semibold text-white">Quick Edit: {editingLead.customer_name || 'Unknown'}</h3>
-                <button onClick={() => setEditingLead(null)} className="p-1.5 rounded-lg hover:bg-white/5 transition"><X className="w-4 h-4 text-gray-500" /></button>
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border sticky top-0 bg-card">
+                <h3 className="text-sm font-semibold text-foreground">Quick Edit: {editingLead.customer_name || 'Unknown'}</h3>
+                <button onClick={() => setEditingLead(null)} className="p-1.5 rounded-lg hover:bg-muted transition"><X className="w-4 h-4 text-muted-foreground" /></button>
               </div>
               <form onSubmit={handleUpdate} className="p-6 space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Name</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Name</label>
                   <input name="customer_name" defaultValue={editingLead.customer_name ?? ''}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Phone / ID</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Phone / ID</label>
                   <input name="phone_number" defaultValue={editingLead.phone_number ?? editingLead.platform_user_id}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Category</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Category</label>
                   <select name="category" defaultValue={editingLead.category ?? ''}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="" className="bg-zinc-900">â€” None â€”</option>
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
+                    <option value="">— None —</option>
                     {categories.map((c) => (
-                      <option key={c.id} value={c.name} className="bg-zinc-900">{c.name}</option>
+                      <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                     {editingLead.category && !categories.some((c) => c.name === editingLead.category) && (
-                      <option value={editingLead.category} className="bg-zinc-900">{editingLead.category}</option>
+                      <option value={editingLead.category}>{editingLead.category}</option>
                     )}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0â€“100)</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Lead Score (0–100)</label>
                   <input name="lead_score" type="number" min="0" max="100" defaultValue={editingLead.lead_score}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Tags (comma-separated)</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Tags (comma-separated)</label>
                   <input name="tags" defaultValue={editingLead.tags?.join(', ')}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Subscription Status</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Subscription Status</label>
                   <select name="subscription_status" defaultValue={editingLead.subscription_status}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="lead" className="bg-zinc-900">Lead</option>
-                    <option value="non_subscriber" className="bg-zinc-900">Non-Subscriber</option>
-                    <option value="subscriber" className="bg-zinc-900">Subscriber</option>
-                    <option value="expired" className="bg-zinc-900">Expired</option>
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
+                    <option value="lead">Lead</option>
+                    <option value="non_subscriber">Non-Subscriber</option>
+                    <option value="subscriber">Subscriber</option>
+                    <option value="expired">Expired</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Subscription Expiry</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Subscription Expiry</label>
                   <input name="subscription_expiry" type="date" defaultValue={editingLead.subscription_expiry?.slice(0, 10) ?? ''}
-                    className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
+                    className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
                 </div>
                 <div className="flex justify-end gap-3 pt-2">
                   <button type="button" onClick={() => setEditingLead(null)}
-                    className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
+                    className="px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition">Cancel</button>
                   <button type="submit" disabled={saving}
                     className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
@@ -504,19 +504,19 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
               initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-6"
+              className="w-full max-w-sm mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl p-6"
             >
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
-                  <Trash2 className="w-6 h-6 text-rose-400" />
+                  <Trash2 className="w-6 h-6 text-rose-500 dark:text-rose-400" />
                 </div>
-                <h3 className="text-sm font-semibold text-white">Delete Lead?</h3>
-                <p className="text-xs text-gray-500 mt-2">
-                  This will permanently delete <span className="text-white font-medium">{deletingLead.customer_name || deletingLead.phone_number || deletingLead.platform_user_id}</span> from your CRM. This action cannot be undone.
+                <h3 className="text-sm font-semibold text-foreground">Delete Lead?</h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                  This will permanently delete <span className="text-foreground font-medium">{deletingLead.customer_name || deletingLead.phone_number || deletingLead.platform_user_id}</span> from your CRM. This action cannot be undone.
                 </p>
                 <div className="flex gap-3 mt-6 w-full">
                   <button onClick={() => setDeletingLead(null)}
-                    className="flex-1 px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 transition">Cancel</button>
+                    className="flex-1 px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/70 transition">Cancel</button>
                   <button onClick={handleDelete} disabled={deleting}
                     className="flex-1 px-4 py-2 rounded-lg text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
                     {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />} Delete
@@ -540,19 +540,19 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
               initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+              className="w-full max-w-lg mx-4 bg-card backdrop-blur-xl border border-border rounded-2xl shadow-2xl"
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-emerald-400" /> Import WhatsApp Contacts
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-emerald-500 dark:text-emerald-400" /> Import WhatsApp Contacts
                 </h3>
-                <button onClick={resetImport} className="p-1.5 rounded-lg hover:bg-white/5 transition"><X className="w-4 h-4 text-gray-500" /></button>
+                <button onClick={resetImport} className="p-1.5 rounded-lg hover:bg-muted transition"><X className="w-4 h-4 text-muted-foreground" /></button>
               </div>
 
               <div className="p-6 space-y-4">
                 <div className="rounded-lg bg-emerald-500/5 border border-emerald-500/20 p-3">
-                  <p className="text-[11px] text-emerald-300/90">
-                    Imports are hardcoded to the <strong>WhatsApp</strong> platform. Your CSV must contain columns: <span className="font-mono text-emerald-200">Name</span>, <span className="font-mono text-emerald-200">Phone Number</span>, <span className="font-mono text-emerald-200">Category</span>. Duplicates (matched by phone number) will be updated.
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-300/90">
+                    Imports are hardcoded to the <strong>WhatsApp</strong> platform. Your CSV must contain columns: <span className="font-mono text-emerald-600 dark:text-emerald-200">Name</span>, <span className="font-mono text-emerald-600 dark:text-emerald-200">Phone Number</span>, <span className="font-mono text-emerald-600 dark:text-emerald-200">Category</span>. Duplicates (matched by phone number) will be updated.
                   </p>
                 </div>
 
@@ -567,42 +567,42 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   }}
                   onClick={() => fileInputRef.current?.click()}
                   className={`rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition
-                    ${dragActive ? 'border-emerald-500/60 bg-emerald-500/10' : 'border-white/10 hover:border-white/20 bg-zinc-800/30'}`}
+                    ${dragActive ? 'border-emerald-500/60 bg-emerald-500/10' : 'border-border hover:border-border/80 bg-muted/40'}`}
                 >
                   <input ref={fileInputRef} type="file" accept=".csv" className="hidden"
                     onChange={(e) => { const f = e.target.files?.[0]; if (f) parseFile(f); }} />
-                  <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                  <p className="text-xs text-white font-medium">Drag & drop your CSV here</p>
-                  <p className="text-[10px] text-gray-500 mt-1">or click to browse</p>
+                  <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                  <p className="text-xs text-foreground font-medium">Drag & drop your CSV here</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">or click to browse</p>
                 </div>
 
                 {parseError && (
-                  <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-[11px] text-rose-300 flex items-center gap-2">
+                  <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 p-3 text-[11px] text-rose-600 dark:text-rose-300 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" /> {parseError}
                   </div>
                 )}
 
                 {parsedContacts.length > 0 && (
-                  <div className="rounded-lg bg-zinc-800/40 border border-white/10 overflow-hidden">
-                    <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2">
-                      <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-[11px] text-white font-medium">{parsedContacts.length} contacts ready to import</span>
+                  <div className="rounded-lg bg-muted/40 border border-border overflow-hidden">
+                    <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+                      <FileText className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                      <span className="text-[11px] text-foreground font-medium">{parsedContacts.length} contacts ready to import</span>
                     </div>
                     <div className="max-h-40 overflow-y-auto">
                       <table className="w-full">
                         <thead>
-                          <tr className="border-b border-white/5">
-                            <th className="px-3 py-1.5 text-[9px] text-gray-500 uppercase text-left">Name</th>
-                            <th className="px-3 py-1.5 text-[9px] text-gray-500 uppercase text-left">Phone</th>
-                            <th className="px-3 py-1.5 text-[9px] text-gray-500 uppercase text-left">Category</th>
+                          <tr className="border-b border-border">
+                            <th className="px-3 py-1.5 text-[9px] text-muted-foreground uppercase text-left">Name</th>
+                            <th className="px-3 py-1.5 text-[9px] text-muted-foreground uppercase text-left">Phone</th>
+                            <th className="px-3 py-1.5 text-[9px] text-muted-foreground uppercase text-left">Category</th>
                           </tr>
                         </thead>
                         <tbody>
                           {parsedContacts.slice(0, 50).map((c, i) => (
-                            <tr key={i} className="border-b border-white/5">
-                              <td className="px-3 py-1.5 text-[10px] text-white">{c.name || 'â€”'}</td>
-                              <td className="px-3 py-1.5 text-[10px] text-gray-400 font-mono">{c.phone_number}</td>
-                              <td className="px-3 py-1.5 text-[10px] text-purple-300">{c.category || 'â€”'}</td>
+                            <tr key={i} className="border-b border-border">
+                              <td className="px-3 py-1.5 text-[10px] text-foreground">{c.name || '—'}</td>
+                              <td className="px-3 py-1.5 text-[10px] text-muted-foreground font-mono">{c.phone_number}</td>
+                              <td className="px-3 py-1.5 text-[10px] text-purple-600 dark:text-purple-300">{c.category || '—'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -612,14 +612,14 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                 )}
 
                 {importResult && (
-                  <div className={`rounded-lg p-3 text-[11px] flex items-center gap-2 ${importResult.startsWith('Error') ? 'bg-rose-500/10 border border-rose-500/30 text-rose-300' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'}`}>
+                  <div className={`rounded-lg p-3 text-[11px] flex items-center gap-2 ${importResult.startsWith('Error') ? 'bg-rose-500/10 border border-rose-500/30 text-rose-600 dark:text-rose-300' : 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-300'}`}>
                     {importResult.startsWith('Error') ? <AlertCircle className="w-4 h-4" /> : <Check className="w-4 h-4" />} {importResult}
                   </div>
                 )}
 
                 <div className="flex justify-end gap-3 pt-1">
                   <button type="button" onClick={resetImport}
-                    className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
+                    className="px-4 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition">Cancel</button>
                   <button onClick={handleImport} disabled={importing || parsedContacts.length === 0}
                     className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-600 disabled:opacity-40 shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2">
                     {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}

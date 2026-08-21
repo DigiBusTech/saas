@@ -57,15 +57,15 @@ export default async function DashboardLayout({
     { href: '/dashboard/account', label: 'Account & Data', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0' },
   ];
   return (
-    <div className="min-h-screen bg-zinc-950 text-gray-300 lg:flex">
+    <div className="min-h-screen bg-background text-foreground lg:flex">
       {/* Sidebar */}
-      <aside className="hidden w-72 bg-zinc-950/80 backdrop-blur-md border-r border-white/5 lg:flex lg:flex-col lg:shrink-0">
+      <aside className="hidden w-72 bg-card/80 backdrop-blur-md border-r border-border lg:flex lg:flex-col lg:shrink-0">
         {/* Brand */}
-        <div className="h-14 border-b border-white/5 flex items-center px-4 gap-2.5">
+        <div className="h-14 border-b border-border flex items-center px-4 gap-2.5">
           <BrandMark fallbackText="SB" size="sm" />
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-white truncate">{tenant?.name ?? 'SabiBio'}</p>
-            <span className="text-[8px] text-cyan-300 bg-cyan-950/40 px-1.5 py-0.5 border border-cyan-900/40 rounded-full font-bold uppercase">
+            <p className="text-xs font-semibold text-foreground truncate">{tenant?.name ?? 'SabiBio'}</p>
+            <span className="text-[8px] text-cyan-500 dark:text-cyan-300 bg-cyan-500/10 dark:bg-cyan-950/40 px-1.5 py-0.5 border border-cyan-500/20 dark:border-cyan-900/40 rounded-full font-bold uppercase">
               {tenant?.plan_type ?? 'trial'}
             </span>
           </div>
@@ -88,11 +88,11 @@ export default async function DashboardLayout({
           )}
 
           {/* Divider */}
-          <div className="border-t border-white/5" />
+          <div className="border-t border-border" />
 
           {/* Global Nav Links */}
           <div>
-            <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+            <p className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               🏢 Platform
             </p>
             <DashboardNavGroup title="" items={globalNavItems} />
@@ -100,21 +100,21 @@ export default async function DashboardLayout({
         </nav>
 
         {/* User Footer */}
-        <div className="border-t border-white/5 p-3 space-y-2">
+        <div className="border-t border-border p-3 space-y-2">
           <div className="flex items-center gap-2 px-2">
-            <div className="w-6 h-6 rounded-full bg-linear-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center text-[9px] font-bold text-indigo-400">
+            <div className="w-6 h-6 rounded-full bg-linear-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center text-[9px] font-bold text-indigo-500 dark:text-indigo-400">
               {(profile?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[10px] text-white font-medium truncate">{profile?.full_name ?? user.email}</p>
-              <p className="text-[8px] text-gray-600 uppercase tracking-wider">{profile?.role}</p>
+              <p className="text-[10px] text-foreground font-medium truncate">{profile?.full_name ?? user.email}</p>
+              <p className="text-[8px] text-muted-foreground uppercase tracking-wider">{profile?.role}</p>
             </div>
           </div>
           <div className="flex items-center gap-2 px-2">
-            <ThemeToggle />
+            <ThemeToggle showSystemOption={true} className="w-full justify-between" />
           </div>
           <form action={signOut}>
-            <button type="submit" className="w-full text-[10px] text-gray-500 hover:text-rose-400 py-1.5 px-2 border border-white/5 hover:border-rose-950/40 rounded-lg transition text-left">
+            <button type="submit" className="w-full text-[10px] text-muted-foreground hover:text-destructive py-1.5 px-2 border border-border hover:border-destructive/40 rounded-lg transition text-left">
               Sign Out
             </button>
           </form>

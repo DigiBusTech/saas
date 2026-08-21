@@ -9,7 +9,11 @@ interface Plan {
   slug: string;
   price_usd: number;
   price_ngn: number;
-  stripe_price_id: string | null;
+  price_monthly_usd: number | null;
+  price_annual_usd: number | null;
+  price_monthly_ngn: number | null;
+  price_annual_ngn: number | null;
+  annual_discount_percentage: number | null;
   features: Record<string, boolean>;
   allow_telegram: boolean;
   allow_whatsapp: boolean;
@@ -17,6 +21,13 @@ interface Plan {
   whatsapp_message_limit: number;
   monthly_token_limit: number;
   max_workspaces: number;
+  // NEW PHASE 3 FIELDS
+  ai_message_cap: number;
+  knowledge_doc_cap: number;
+  crm_lead_cap: number;
+  has_whatsapp: boolean;
+  has_telegram: boolean;
+  is_enterprise_contact_sales: boolean;
   is_active: boolean;
   sort_order: number;
 }
@@ -31,30 +42,60 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
 
   // Form state
   const [form, setForm] = useState({
-    name: '', slug: '', price_usd: 0, price_ngn: 0, stripe_price_id: '',
+    name: '', slug: '', price_usd: 0, price_ngn: 0,
+    price_monthly_usd: 0, price_annual_usd: 0, price_monthly_ngn: 0, price_annual_ngn: 0,
+    annual_discount_percentage: 16.67,
     allow_telegram: true, allow_whatsapp: true,
     telegram_message_limit: 100, whatsapp_message_limit: 100,
     monthly_token_limit: 100000, max_workspaces: 1, is_active: true, sort_order: 0,
+    // NEW PHASE 3 FIELDS
+    ai_message_cap: 200,
+    knowledge_doc_cap: 10,
+    crm_lead_cap: 50,
+    has_whatsapp: true,
+    has_telegram: true,
+    is_enterprise_contact_sales: false,
     features: {} as Record<string, boolean>,
   });
 
   function loadPlan(p: Plan) {
     setForm({
       name: p.name, slug: p.slug, price_usd: p.price_usd, price_ngn: p.price_ngn,
-      stripe_price_id: p.stripe_price_id || '', allow_telegram: p.allow_telegram,
+      price_monthly_usd: p.price_monthly_usd ?? p.price_usd,
+      price_annual_usd: p.price_annual_usd ?? (p.price_usd * 10),
+      price_monthly_ngn: p.price_monthly_ngn ?? p.price_ngn,
+      price_annual_ngn: p.price_annual_ngn ?? (p.price_ngn * 10),
+      annual_discount_percentage: p.annual_discount_percentage ?? 16.67,
+      allow_telegram: p.allow_telegram,
       allow_whatsapp: p.allow_whatsapp, telegram_message_limit: p.telegram_message_limit,
       whatsapp_message_limit: p.whatsapp_message_limit, monthly_token_limit: p.monthly_token_limit,
       max_workspaces: p.max_workspaces ?? 1, is_active: p.is_active, sort_order: p.sort_order,
+      // NEW PHASE 3 FIELDS
+      ai_message_cap: p.ai_message_cap ?? 200,
+      knowledge_doc_cap: p.knowledge_doc_cap ?? 10,
+      crm_lead_cap: p.crm_lead_cap ?? 50,
+      has_whatsapp: p.has_whatsapp ?? true,
+      has_telegram: p.has_telegram ?? true,
+      is_enterprise_contact_sales: p.is_enterprise_contact_sales ?? false,
       features: { ...p.features },
     });
   }
 
   function resetForm() {
     setForm({
-      name: '', slug: '', price_usd: 0, price_ngn: 0, stripe_price_id: '',
+      name: '', slug: '', price_usd: 0, price_ngn: 0,
+      price_monthly_usd: 0, price_annual_usd: 0, price_monthly_ngn: 0, price_annual_ngn: 0,
+      annual_discount_percentage: 16.67,
       allow_telegram: true, allow_whatsapp: true,
       telegram_message_limit: 100, whatsapp_message_limit: 100,
       monthly_token_limit: 100000, max_workspaces: 1, is_active: true, sort_order: 0,
+      // NEW PHASE 3 FIELDS
+      ai_message_cap: 200,
+      knowledge_doc_cap: 10,
+      crm_lead_cap: 50,
+      has_whatsapp: true,
+      has_telegram: true,
+      is_enterprise_contact_sales: false,
       features: { ai_insights: false, priority_support: false, dedicated_account_manager: false },
     });
   }
@@ -66,7 +107,12 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
     fd.set('slug', form.slug);
     fd.set('price_usd', String(form.price_usd));
     fd.set('price_ngn', String(form.price_ngn));
-    fd.set('stripe_price_id', form.stripe_price_id);
+    // PHASE 4: Monthly/Annual pricing fields
+    fd.set('price_monthly_usd', String(form.price_monthly_usd));
+    fd.set('price_annual_usd', String(form.price_annual_usd));
+    fd.set('price_monthly_ngn', String(form.price_monthly_ngn));
+    fd.set('price_annual_ngn', String(form.price_annual_ngn));
+    fd.set('annual_discount_percentage', String(form.annual_discount_percentage));
     fd.set('allow_telegram', String(form.allow_telegram));
     fd.set('allow_whatsapp', String(form.allow_whatsapp));
     fd.set('telegram_message_limit', String(form.telegram_message_limit));
@@ -75,6 +121,13 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
     fd.set('max_workspaces', String(form.max_workspaces));
     fd.set('is_active', String(form.is_active));
     fd.set('sort_order', String(form.sort_order));
+    // NEW PHASE 3 FIELDS
+    fd.set('ai_message_cap', String(form.ai_message_cap));
+    fd.set('knowledge_doc_cap', String(form.knowledge_doc_cap));
+    fd.set('crm_lead_cap', String(form.crm_lead_cap));
+    fd.set('has_whatsapp', String(form.has_whatsapp));
+    fd.set('has_telegram', String(form.has_telegram));
+    fd.set('is_enterprise_contact_sales', String(form.is_enterprise_contact_sales));
     fd.set('features', JSON.stringify(form.features));
     return fd;
   }
@@ -128,20 +181,55 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
           </div>
         )}
         <div>
-          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Price USD (cents)</label>
+          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Price USD (cents) [Legacy]</label>
           <input type="number" value={form.price_usd} onChange={(e) => setForm({ ...form, price_usd: +e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+          <p className="text-[8px] text-gray-600 mt-1">Fallback if monthly/annual not set</p>
         </div>
         <div>
-          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Price NGN (kobo)</label>
+          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Price NGN (kobo) [Legacy]</label>
           <input type="number" value={form.price_ngn} onChange={(e) => setForm({ ...form, price_ngn: +e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+          <p className="text-[8px] text-gray-600 mt-1">Fallback if monthly/annual not set</p>
         </div>
-        <div>
-          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Stripe Price ID</label>
-          <input type="text" value={form.stripe_price_id} onChange={(e) => setForm({ ...form, stripe_price_id: e.target.value })}
+      </div>
+
+      {/* PHASE 4: Monthly & Annual Billing Pricing */}
+      <div className="border-t border-gray-800 pt-4">
+        <p className="text-[9px] text-gray-500 uppercase font-bold mb-3">💰 Monthly & Annual Billing (Phase 4)</p>
+        <div className="grid grid-cols-4 gap-4">
+          <div>
+            <label className="block text-[9px] text-emerald-500 uppercase font-bold mb-1">Monthly USD (cents)</label>
+            <input type="number" value={form.price_monthly_usd} onChange={(e) => setForm({ ...form, price_monthly_usd: +e.target.value })}
+              className="w-full bg-gray-900 border border-emerald-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-[9px] text-cyan-500 uppercase font-bold mb-1">Annual USD (cents)</label>
+            <input type="number" value={form.price_annual_usd} onChange={(e) => setForm({ ...form, price_annual_usd: +e.target.value })}
+              className="w-full bg-gray-900 border border-cyan-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-cyan-500 focus:outline-none" />
+            <p className="text-[8px] text-gray-600 mt-1">~10x monthly for 2 months free</p>
+          </div>
+          <div>
+            <label className="block text-[9px] text-emerald-500 uppercase font-bold mb-1">Monthly NGN (kobo)</label>
+            <input type="number" value={form.price_monthly_ngn} onChange={(e) => setForm({ ...form, price_monthly_ngn: +e.target.value })}
+              className="w-full bg-gray-900 border border-emerald-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-emerald-500 focus:outline-none" />
+          </div>
+          <div>
+            <label className="block text-[9px] text-cyan-500 uppercase font-bold mb-1">Annual NGN (kobo)</label>
+            <input type="number" value={form.price_annual_ngn} onChange={(e) => setForm({ ...form, price_annual_ngn: +e.target.value })}
+              className="w-full bg-gray-900 border border-cyan-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-cyan-500 focus:outline-none" />
+            <p className="text-[8px] text-gray-600 mt-1">~10x monthly for 2 months free</p>
+          </div>
+        </div>
+        <div className="mt-3">
+          <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Annual Discount %</label>
+          <input type="number" step="0.01" value={form.annual_discount_percentage} onChange={(e) => setForm({ ...form, annual_discount_percentage: +e.target.value })}
             className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+          <p className="text-[8px] text-gray-600 mt-1">Default: 16.67% (2 months free on annual)</p>
         </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Sort Order</label>
           <input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: +e.target.value })}
@@ -151,7 +239,54 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
 
       {/* Channel Limits */}
       <div className="border-t border-gray-800 pt-4">
-        <p className="text-[9px] text-gray-500 uppercase font-bold mb-3">Channel Limits</p>
+        <p className="text-[9px] text-gray-500 uppercase font-bold mb-3">Tier Limits (New 4-Tier Structure)</p>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">AI Message Cap</label>
+            <input type="number" value={form.ai_message_cap} onChange={(e) => setForm({ ...form, ai_message_cap: +e.target.value })}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+            <p className="text-[8px] text-gray-600 mt-1">Total AI messages per workspace</p>
+          </div>
+          <div>
+            <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Knowledge Doc Cap</label>
+            <input type="number" value={form.knowledge_doc_cap} onChange={(e) => setForm({ ...form, knowledge_doc_cap: +e.target.value })}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+            <p className="text-[8px] text-gray-600 mt-1">Max RAG documents</p>
+          </div>
+          <div>
+            <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">CRM Lead Cap</label>
+            <input type="number" value={form.crm_lead_cap} onChange={(e) => setForm({ ...form, crm_lead_cap: +e.target.value })}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+            <p className="text-[8px] text-gray-600 mt-1">Max CRM contacts</p>
+          </div>
+          <div>
+            <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Max Workspaces</label>
+            <input type="number" value={form.max_workspaces} min={1} onChange={(e) => setForm({ ...form, max_workspaces: +e.target.value })}
+              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      {/* Channel Access */}
+      <div className="border-t border-gray-800 pt-4">
+        <p className="text-[9px] text-gray-500 uppercase font-bold mb-3">Channel Access</p>
+        <div className="grid grid-cols-2 gap-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={form.has_telegram} onChange={(e) => setForm({ ...form, has_telegram: e.target.checked })}
+              className="w-3.5 h-3.5 rounded border-gray-700 bg-gray-900 text-indigo-600" />
+            <span className="text-xs text-gray-300">Has Telegram</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={form.has_whatsapp} onChange={(e) => setForm({ ...form, has_whatsapp: e.target.checked })}
+              className="w-3.5 h-3.5 rounded border-gray-700 bg-gray-900 text-indigo-600" />
+            <span className="text-xs text-gray-300">Has WhatsApp</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Legacy Channel Limits (for backward compatibility) */}
+      <div className="border-t border-gray-800 pt-4">
+        <p className="text-[9px] text-gray-500 uppercase font-bold mb-3">Legacy Limits (Deprecated)</p>
         <div className="grid grid-cols-2 gap-4">
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={form.allow_telegram} onChange={(e) => setForm({ ...form, allow_telegram: e.target.checked })}
@@ -178,13 +313,19 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
             <input type="number" value={form.monthly_token_limit} onChange={(e) => setForm({ ...form, monthly_token_limit: +e.target.value })}
               className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
           </div>
-          <div>
-            <label className="block text-[9px] text-gray-500 uppercase font-bold mb-1">Max Workspaces</label>
-            <input type="number" value={form.max_workspaces} min={1} onChange={(e) => setForm({ ...form, max_workspaces: +e.target.value })}
-              className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-white text-xs font-mono focus:border-indigo-500 focus:outline-none" />
-          </div>
         </div>
       </div>
+
+      {/* Enterprise Options */}
+      {!isCreate && (
+        <div className="border-t border-gray-800 pt-4">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={form.is_enterprise_contact_sales} onChange={(e) => setForm({ ...form, is_enterprise_contact_sales: e.target.checked })}
+              className="w-3.5 h-3.5 rounded border-gray-700 bg-gray-900 text-indigo-600" />
+            <span className="text-xs text-gray-300">Enterprise: Contact Sales (no checkout)</span>
+          </label>
+        </div>
+      )}
 
       {/* Feature Toggles */}
       <div className="border-t border-gray-800 pt-4">
@@ -255,9 +396,15 @@ export default function PlansClient({ plans }: { plans: Plan[] }) {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[10px]">
                   <div><span className="text-gray-500">USD:</span> <span className="text-white font-mono">${(plan.price_usd / 100).toFixed(0)}/mo</span></div>
                   <div><span className="text-gray-500">NGN:</span> <span className="text-white font-mono">₦{(plan.price_ngn / 100).toLocaleString()}/mo</span></div>
-                  <div><span className="text-gray-500">Telegram:</span> <span className={plan.allow_telegram ? 'text-emerald-400' : 'text-rose-400'}>{plan.allow_telegram ? `✓ ${plan.telegram_message_limit.toLocaleString()} msgs` : '✕ disabled'}</span></div>
-                  <div><span className="text-gray-500">WhatsApp:</span> <span className={plan.allow_whatsapp ? 'text-emerald-400' : 'text-rose-400'}>{plan.allow_whatsapp ? `✓ ${plan.whatsapp_message_limit.toLocaleString()} msgs` : '✕ disabled'}</span></div>
-                  <div className="col-span-2"><span className="text-gray-500">Tokens:</span> <span className="text-white font-mono">{plan.monthly_token_limit.toLocaleString()}/mo</span></div>
+                  <div><span className="text-gray-500">AI Messages:</span> <span className="text-white font-mono">{plan.ai_message_cap?.toLocaleString() || 'N/A'}</span></div>
+                  <div><span className="text-gray-500">Knowledge Docs:</span> <span className="text-white font-mono">{plan.knowledge_doc_cap?.toLocaleString() || 'N/A'}</span></div>
+                  <div><span className="text-gray-500">CRM Leads:</span> <span className="text-white font-mono">{plan.crm_lead_cap?.toLocaleString() || 'N/A'}</span></div>
+                  <div><span className="text-gray-500">Workspaces:</span> <span className="text-white font-mono">{plan.max_workspaces}</span></div>
+                  <div><span className="text-gray-500">Telegram:</span> <span className={plan.has_telegram ? 'text-emerald-400' : 'text-rose-400'}>{plan.has_telegram ? '✓ enabled' : '✕ disabled'}</span></div>
+                  <div><span className="text-gray-500">WhatsApp:</span> <span className={plan.has_whatsapp ? 'text-emerald-400' : 'text-rose-400'}>{plan.has_whatsapp ? '✓ enabled' : '✕ disabled'}</span></div>
+                  {plan.is_enterprise_contact_sales && (
+                    <div className="col-span-2"><span className="text-amber-400 font-bold">⚠ Enterprise: Contact Sales Only</span></div>
+                  )}
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1.5">

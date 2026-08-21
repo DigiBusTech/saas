@@ -50,7 +50,9 @@ export const processChatMessage = inngest.createFunction(
     }
 
     // Step 0.5: Enforce monthly usage limits before spending AI tokens.
+    // PHASE 4: Check WORKSPACE-LEVEL limits in addition to tenant-level limits
     const usageBlocked = await step.run('check-usage-limits', async () => {
+      // Check tenant-level limits (legacy)
       const { data: tenant } = await db
         .from('tenants')
         .select('token_usage, monthly_token_limit, message_usage, monthly_message_limit, status')
@@ -60,6 +62,31 @@ export const processChatMessage = inngest.createFunction(
       if (tenant.status !== 'active' && tenant.status !== 'trial') return true;
       if (tenant.monthly_token_limit && tenant.token_usage >= tenant.monthly_token_limit) return true;
       if (tenant.monthly_message_limit && tenant.message_usage >= tenant.monthly_message_limit) return true;
+      
+      // PHASE 4: Check workspace-level limits (NEW 4-TIER SYSTEM)
+      if (workspaceId) {
+        const { data: workspace } = await db
+          .from('workspaces')
+          .select('messages_used, message_limit, trial_ends_at, subscription_tier')
+          .eq('id', workspaceId)
+          .single();
+        
+        if (workspace) {
+          // Check if trial has expired
+          if (workspace.subscription_tier === 'free_trial' && workspace.trial_ends_at) {
+            const trialEnd = new Date(workspace.trial_ends_at);
+            if (trialEnd < new Date()) {
+              return true; // Trial expired
+            }
+          }
+          
+          // Check if AI message limit exceeded
+          if (workspace.messages_used >= workspace.message_limit) {
+            return true; // Message cap reached
+          }
+        }
+      }
+      
       return false;
     });
 
@@ -123,7 +150,7 @@ export const processChatMessage = inngest.createFunction(
     // If usage limits are exhausted, notify the customer once and stop before calling the LLM.
     if (usageBlocked) {
       await step.run('save-limit-notice', async () => {
-        const notice = 'This business has reached its monthly message limit. A human team member will follow up shortly.';
+        const notice = 'Our AI assistant is temporarily offline. A human team member will follow up with you shortly. Thank you for your patience.';
         await db.from('messages').insert({
           conversation_id: conversation.id,
           sender_type: 'bot',
@@ -131,51 +158,79 @@ export const processChatMessage = inngest.createFunction(
           content: notice,
           approval_status: 'sent',
         });
-        await db.from('conversations').update({ status: 'human_handoff' }).eq('id', conversation.id);
+        await db.from('conversations').update({ status: 'escalated' }).eq('id', conversation.id);
       });
       return { status: 'usage_limit_reached', conversationId: conversation.id };
     }
 
     // Step 3: Upsert CRM record (workspace-scoped) and capture id + ai_status
-    let crmRecord: { id: string; ai_status: string } | null = null;
+    let crmRecord: { id: string; ai_status: string; customer_name: string | null; email: string | null } | null = null;
     if (workspaceId) {
       crmRecord = await step.run('upsert-crm-record', async () => {
         const { data: existingCrm } = await db
           .from('workspace_crm')
-          .select('id, lead_score, ai_status')
+          .select('id, lead_score, ai_status, customer_name, email')
           .eq('workspace_id', workspaceId)
           .eq('platform', platform)
           .eq('platform_user_id', chatId)
           .single();
 
         if (existingCrm) {
-          const updatePayload = {
-            customer_name: contactName,
-            email: visitorEmail || undefined,
+          const updatePayload: any = {
             last_interaction: new Date().toISOString(),
           };
+          // For web chat, inject the pre-chat metadata immediately
+          if (platform === 'web') {
+            if (contactName) updatePayload.customer_name = contactName;
+            if (visitorEmail) updatePayload.email = visitorEmail;
+          } else if (contactName && (!existingCrm.customer_name || existingCrm.customer_name === chatId)) {
+            // For social channels, update name if it was previously missing
+            updatePayload.customer_name = contactName;
+          }
+
           const updateResult = await db.from('workspace_crm').update(updatePayload).eq('id', existingCrm.id);
           if (updateResult.error?.code === 'PGRST204') {
             await db.from('workspace_crm').update({
-              customer_name: contactName,
               last_interaction: updatePayload.last_interaction,
             }).eq('id', existingCrm.id);
           } else if (updateResult.error) {
             throw new Error(`Failed to update CRM record: ${updateResult.error.message} (${updateResult.error.code ?? 'unknown'})`);
           }
-          return { id: existingCrm.id, ai_status: existingCrm.ai_status ?? 'active' };
+          
+          // Re-fetch updated data
+          const { data: updated } = await db
+            .from('workspace_crm')
+            .select('id, ai_status, customer_name, email')
+            .eq('id', existingCrm.id)
+            .single();
+          
+          return updated ? { 
+            id: updated.id, 
+            ai_status: updated.ai_status ?? 'active',
+            customer_name: updated.customer_name,
+            email: updated.email,
+          } : { 
+            id: existingCrm.id, 
+            ai_status: existingCrm.ai_status ?? 'active',
+            customer_name: existingCrm.customer_name,
+            email: existingCrm.email,
+          };
         }
 
-        const crmPayload = {
+        const crmPayload: any = {
           workspace_id: workspaceId,
           platform,
           platform_user_id: chatId,
           customer_name: contactName,
-          email: visitorEmail || null,
           lead_score: 10,
           tags: ['New Lead'],
         };
-        let { data: created, error } = await db.from('workspace_crm').insert(crmPayload).select('id, ai_status').single();
+        // Web chat: inject email immediately
+        if (platform === 'web' && visitorEmail) {
+          crmPayload.email = visitorEmail;
+        }
+
+        let { data: created, error } = await db.from('workspace_crm').insert(crmPayload).select('id, ai_status, customer_name, email').single();
         if (error?.code === 'PGRST204') {
           ({ data: created, error } = await db.from('workspace_crm').insert({
             workspace_id: workspaceId,
@@ -184,12 +239,17 @@ export const processChatMessage = inngest.createFunction(
             customer_name: contactName,
             lead_score: 10,
             tags: ['New Lead'],
-          }).select('id, ai_status').single());
+          }).select('id, ai_status, customer_name, email').single());
         }
 
         if (error) throw new Error(`Failed to create CRM record: ${error.message} (${error.code ?? 'unknown'})`);
         if (!created) throw new Error('Failed to create CRM record: database returned no record');
-        return { id: created.id, ai_status: created.ai_status ?? 'active' };
+        return { 
+          id: created.id, 
+          ai_status: created.ai_status ?? 'active',
+          customer_name: created.customer_name,
+          email: created.email,
+        };
       });
 
       // Log the inbound user message to chat_messages (for the Unified Inbox)
@@ -277,6 +337,25 @@ export const processChatMessage = inngest.createFunction(
     const aiResponse = await step.run('generate-ai-response', async () => {
       let contextInfo = '';
 
+      // PHASE 1: Pre-chat identity context injection for web chat
+      let identityContext = '';
+      if (crmRecord) {
+        const hasName = crmRecord.customer_name && crmRecord.customer_name !== chatId;
+        const hasEmail = crmRecord.email && crmRecord.email.includes('@');
+        
+        if (platform === 'web' && hasName && hasEmail) {
+          // Web chat: user already provided name and email in pre-chat form
+          identityContext = `\n\nCURRENT CUSTOMER CONTEXT:\nName: ${crmRecord.customer_name}\nEmail: ${crmRecord.email}\nPlatform: Web Chat\n\nIMPORTANT: Do NOT ask the customer for their name or email. You already have this information.`;
+        } else if (platform !== 'web' && (!hasName || !hasEmail)) {
+          // Social channels: prompt for missing details naturally
+          const missing: string[] = [];
+          if (!hasName) missing.push('name');
+          if (!hasEmail) missing.push('email');
+          
+          identityContext = `\n\nLEAD ONBOARDING REQUIRED:\nMissing customer information: ${missing.join(', ')}\n\nIf this is the customer's first message or they haven't provided their ${missing.join(' and ')}, politely ask for it in a natural, friendly way (e.g., "Welcome! To better assist you, may I have your name and email?"). Once provided, use the update_lead_profile tool to save it, then immediately address their inquiry without repeating the question.`;
+        }
+      }
+
       // Sales Agent: fetch products for product recommendations
       if (intent === 'sales_intent' && workspaceId) {
         const { data: products } = await db
@@ -300,7 +379,7 @@ export const processChatMessage = inngest.createFunction(
         }
       }
 
-      // Support Agent: strict RAG grounding via pgvector semantic search
+      // PHASE 2: Enhanced RAG grounding via pgvector semantic search with intelligent synthesis
       let kbMatched = false;
       if (intent === 'support_faq') {
         let kbResults: Array<{ title: string; content: string }> | null = null;
@@ -328,9 +407,12 @@ export const processChatMessage = inngest.createFunction(
 
         if (kbResults && kbResults.length > 0) {
           kbMatched = true;
-          contextInfo = '\n\nKnowledge base context:\n' + kbResults.map((k) =>
-            `[${k.title}]: ${k.content.substring(0, 300)}`
-          ).join('\n');
+          // PHASE 2: Improved RAG formatting with clear synthesis instructions
+          contextInfo = '\n\n=== GROUNDING KNOWLEDGE BASE DOCUMENTS ===\n' + 
+            kbResults.map((k, idx) =>
+              `\n[Document ${idx + 1}: ${k.title}]\n${k.content.substring(0, 400)}\n`
+            ).join('\n---\n') +
+            '\n=== END KNOWLEDGE BASE ===\n';
         }
       }
 
@@ -348,7 +430,7 @@ export const processChatMessage = inngest.createFunction(
         }
       }
 
-      // Build persona-aware prompt
+      // PHASE 2: Enhanced persona adaptation instructions
       const personaInstructions = botPersona === 'Custom Prompt'
         ? await getCustomPersonaInstructions(db, workspaceId)
         : getPersonaInstructions(botPersona || 'Professional English');
@@ -356,18 +438,25 @@ export const processChatMessage = inngest.createFunction(
       // Use the centrally configured provider order and failover policy.
       const ragGroundingInstructions = intent === 'support_faq'
         ? (kbMatched
-            ? '\n\nOnly use the knowledge base context above to answer. Do not invent details not present there.'
-            : '\n\nNo matching information was found in this business\'s knowledge base for this question. Politely say you do not have that specific information on hand and offer to connect them with a team member or take their contact details for a callback. Do not guess or fabricate an answer.')
+            ? '\n\n📋 INSTRUCTIONS: Synthesize the knowledge base documents above intelligently. Answer the customer\'s question using these facts while maintaining a natural, conversational tone. Do NOT copy text verbatim if it sounds robotic. Adapt the information to fit the customer\'s specific question. If the documents don\'t fully answer their question, acknowledge what you can confirm and what you cannot.'
+            : '\n\n⚠️ IMPORTANT: No matching information was found in this business\'s knowledge base for this question. Politely inform the customer that you don\'t have that specific information on hand. Offer to connect them with a team member who can provide detailed answers, or take their contact details for a callback. Do not guess, speculate, or fabricate an answer.')
         : '';
+      
       const sentimentInstructions = (sentiment.label === 'negative' || sentiment.label === 'angry')
-        ? `\n\nIMPORTANT: This customer's message shows ${sentiment.label} sentiment. Lead with empathy and acknowledge their frustration first. Do not argue, defend, or make unverified policy claims. Keep your tone calm, apologetic, and solution-focused. A human team member has already been notified and will follow up.`
+        ? `\n\n🚨 EMPATHY REQUIRED: This customer's message shows ${sentiment.label} sentiment (score: ${sentiment.score}). Lead with empathy and acknowledge their frustration FIRST before anything else. Use phrases like "I understand this has been frustrating for you" or "I sincerely apologize for the inconvenience." Do not argue, defend company policies, or make unverified claims. Keep your tone calm, apologetic, and solution-focused. A human team member has been notified and will follow up personally.`
         : '';
-      const systemPrompt = `You are an AI customer service agent.${personaInstructions}
+
+      const systemPrompt = `You are an AI-powered customer service agent for this business.${personaInstructions}
 
 Intent classification: ${intent}
-${contextInfo}${categoryInstructions}${ragGroundingInstructions}${sentimentInstructions}
+${contextInfo}${identityContext}${categoryInstructions}${ragGroundingInstructions}${sentimentInstructions}
 
-Respond helpfully and concisely to the customer's message. If products are available and relevant, recommend them with payment links. Use the available tools when the customer asks about an order status, wants to browse products/services, shows clear buying intent, or needs to be escalated to a human.`;
+Core Guidelines:
+- Respond helpfully, concisely, and professionally to the customer's message.
+- If products or services are available and relevant to their inquiry, recommend them with direct purchase/booking links.
+- Use the available tools when: (1) customer asks about order status, (2) wants to browse offerings, (3) shows clear buying/booking intent, (4) provides identity information that needs saving, or (5) needs human escalation.
+- For service bookings, ask for their preferred appointment date/time and any special requirements.
+- Maintain the business persona across all interactions, whether this is a consulting firm, salon, e-commerce store, or service provider.`;
 
 
       try {
@@ -406,6 +495,11 @@ Respond helpfully and concisely to the customer's message. If products are avail
         // Update tenant token + message usage so plan limits are enforced.
         try { await db.rpc('increment_token_usage', { tenant_id_input: tenantId, tokens: tokensUsed }); } catch {}
         try { await db.rpc('increment_message_usage', { tenant_id_input: tenantId, amount: 1 }); } catch {}
+        
+        // PHASE 4: Update workspace-level message usage
+        if (workspaceId) {
+          try { await db.rpc('increment_workspace_message_usage', { workspace_id_input: workspaceId }); } catch {}
+        }
 
         return { reply, tokensUsed };
       } catch (err) {

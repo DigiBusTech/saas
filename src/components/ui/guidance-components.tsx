@@ -37,22 +37,22 @@ export function FeatureGuide({
       exit={{ opacity: 0, height: 0 }}
       className="mb-6 overflow-hidden"
     >
-      <div className="bg-linear-to-r from-cyan-50/50 to-blue-50/50 dark:from-cyan-950/20 dark:to-blue-950/20 border border-cyan-200 dark:border-cyan-500/30 rounded-lg p-4 backdrop-blur-sm">
+      <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 backdrop-blur-sm">
         <div className="flex items-start gap-3">
           {icon && (
-            <div className="mt-1 shrink-0 text-cyan-600 dark:text-cyan-400">
+            <div className="mt-1 shrink-0 text-primary">
               {icon}
             </div>
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+              <h3 className="font-semibold text-foreground text-sm">
                 {title}
               </h3>
               {collapsible && (
                 <button
                   onClick={() => setIsOpen(!isOpen)}
-                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
+                  className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
                   aria-label={isOpen ? 'Collapse' : 'Expand'}
                 >
                   <svg
@@ -79,7 +79,7 @@ export function FeatureGuide({
                 animate={{ opacity: 1 }}
                 className="mt-2"
               >
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed">
                   {description}
                 </p>
                 {action && (
@@ -87,14 +87,14 @@ export function FeatureGuide({
                     {action.href ? (
                       <a
                         href={action.href}
-                        className="inline-flex text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                        className="inline-flex text-xs font-medium text-primary hover:underline transition-colors"
                       >
                         {action.label} →
                       </a>
                     ) : (
                       <button
                         onClick={action.onClick}
-                        className="text-xs font-medium text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+                        className="text-xs font-medium text-primary hover:underline transition-colors"
                       >
                         {action.label} →
                       </button>
@@ -142,7 +142,7 @@ export function Tooltip({ content, children, side = 'top' }: TooltipProps) {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className={`absolute ${positionClasses[side]} px-2 py-1.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none`}
+          className={`absolute ${positionClasses[side]} px-2.5 py-1.5 bg-popover text-popover-foreground border border-border text-xs rounded-lg shadow-lg whitespace-nowrap z-50 pointer-events-none`}
         >
           {content}
         </motion.div>
@@ -177,24 +177,24 @@ export function FormInput({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-slate-900 dark:text-white mb-1.5">
+        <label className="block text-sm font-medium text-foreground mb-1.5">
           {label}
-          {required && <span className="text-rose-500 ml-1">*</span>}
+          {required && <span className="text-destructive ml-1">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 shrink-0">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground shrink-0">
             {icon}
           </div>
         )}
         <input
           type={type}
           placeholder={placeholder}
-          className={`w-full ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2.5 bg-white dark:bg-slate-900 border rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-200 ${
+          className={`w-full ${icon ? 'pl-10' : 'pl-3'} pr-3 py-2.5 bg-background border rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all duration-200 ${
             error
-              ? 'border-rose-300 dark:border-rose-500/30'
-              : 'border-slate-300 dark:border-slate-700'
+              ? 'border-destructive'
+              : 'border-input'
           }`}
           {...props}
         />

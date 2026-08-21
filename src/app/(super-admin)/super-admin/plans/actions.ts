@@ -22,7 +22,12 @@ export async function createPlan(formData: FormData) {
   const slug = formData.get('slug') as string;
   const price_usd = parseInt(formData.get('price_usd') as string, 10) || 0;
   const price_ngn = parseInt(formData.get('price_ngn') as string, 10) || 0;
-  const stripe_price_id = (formData.get('stripe_price_id') as string) || '';
+  // PHASE 4: Monthly/Annual pricing
+  const price_monthly_usd = parseInt(formData.get('price_monthly_usd') as string, 10) || price_usd;
+  const price_annual_usd = parseInt(formData.get('price_annual_usd') as string, 10) || price_usd * 10;
+  const price_monthly_ngn = parseInt(formData.get('price_monthly_ngn') as string, 10) || price_ngn;
+  const price_annual_ngn = parseInt(formData.get('price_annual_ngn') as string, 10) || price_ngn * 10;
+  const annual_discount_percentage = parseFloat(formData.get('annual_discount_percentage') as string) || 16.67;
   const allow_telegram = formData.get('allow_telegram') === 'true';
   const allow_whatsapp = formData.get('allow_whatsapp') === 'true';
   const telegram_message_limit = parseInt(formData.get('telegram_message_limit') as string, 10) || 100;
@@ -30,6 +35,14 @@ export async function createPlan(formData: FormData) {
   const monthly_token_limit = parseInt(formData.get('monthly_token_limit') as string, 10) || 100000;
   const max_workspaces = parseInt(formData.get('max_workspaces') as string, 10) || 1;
   const sort_order = parseInt(formData.get('sort_order') as string, 10) || 0;
+  
+  // NEW PHASE 3 FIELDS
+  const ai_message_cap = parseInt(formData.get('ai_message_cap') as string, 10) || 200;
+  const knowledge_doc_cap = parseInt(formData.get('knowledge_doc_cap') as string, 10) || 10;
+  const crm_lead_cap = parseInt(formData.get('crm_lead_cap') as string, 10) || 50;
+  const has_whatsapp = formData.get('has_whatsapp') === 'true';
+  const has_telegram = formData.get('has_telegram') === 'true';
+  const is_enterprise_contact_sales = formData.get('is_enterprise_contact_sales') === 'true';
 
   let features: Record<string, boolean> = {};
   try {
@@ -47,7 +60,11 @@ export async function createPlan(formData: FormData) {
     slug,
     price_usd,
     price_ngn,
-    stripe_price_id,
+    price_monthly_usd,
+    price_annual_usd,
+    price_monthly_ngn,
+    price_annual_ngn,
+    annual_discount_percentage,
     features,
     allow_telegram,
     allow_whatsapp,
@@ -56,6 +73,13 @@ export async function createPlan(formData: FormData) {
     monthly_token_limit,
     max_workspaces,
     sort_order,
+    // NEW PHASE 3 FIELDS
+    ai_message_cap,
+    knowledge_doc_cap,
+    crm_lead_cap,
+    has_whatsapp,
+    has_telegram,
+    is_enterprise_contact_sales,
   });
 
   if (error) return { error: error.message };
@@ -71,7 +95,12 @@ export async function updatePlan(formData: FormData) {
   const name = formData.get('name') as string;
   const price_usd = parseInt(formData.get('price_usd') as string, 10) || 0;
   const price_ngn = parseInt(formData.get('price_ngn') as string, 10) || 0;
-  const stripe_price_id = (formData.get('stripe_price_id') as string) || '';
+  // PHASE 4: Monthly/Annual pricing
+  const price_monthly_usd = parseInt(formData.get('price_monthly_usd') as string, 10) || price_usd;
+  const price_annual_usd = parseInt(formData.get('price_annual_usd') as string, 10) || price_usd * 10;
+  const price_monthly_ngn = parseInt(formData.get('price_monthly_ngn') as string, 10) || price_ngn;
+  const price_annual_ngn = parseInt(formData.get('price_annual_ngn') as string, 10) || price_ngn * 10;
+  const annual_discount_percentage = parseFloat(formData.get('annual_discount_percentage') as string) || 16.67;
   const allow_telegram = formData.get('allow_telegram') === 'true';
   const allow_whatsapp = formData.get('allow_whatsapp') === 'true';
   const telegram_message_limit = parseInt(formData.get('telegram_message_limit') as string, 10) || 100;
@@ -80,6 +109,14 @@ export async function updatePlan(formData: FormData) {
   const max_workspaces = parseInt(formData.get('max_workspaces') as string, 10) || 1;
   const is_active = formData.get('is_active') === 'true';
   const sort_order = parseInt(formData.get('sort_order') as string, 10) || 0;
+  
+  // NEW PHASE 3 FIELDS
+  const ai_message_cap = parseInt(formData.get('ai_message_cap') as string, 10) || 200;
+  const knowledge_doc_cap = parseInt(formData.get('knowledge_doc_cap') as string, 10) || 10;
+  const crm_lead_cap = parseInt(formData.get('crm_lead_cap') as string, 10) || 50;
+  const has_whatsapp = formData.get('has_whatsapp') === 'true';
+  const has_telegram = formData.get('has_telegram') === 'true';
+  const is_enterprise_contact_sales = formData.get('is_enterprise_contact_sales') === 'true';
 
   let features: Record<string, boolean> = {};
   try {
@@ -98,7 +135,11 @@ export async function updatePlan(formData: FormData) {
       name,
       price_usd,
       price_ngn,
-      stripe_price_id,
+      price_monthly_usd,
+      price_annual_usd,
+      price_monthly_ngn,
+      price_annual_ngn,
+      annual_discount_percentage,
       features,
       allow_telegram,
       allow_whatsapp,
@@ -108,6 +149,13 @@ export async function updatePlan(formData: FormData) {
       max_workspaces,
       is_active,
       sort_order,
+      // NEW PHASE 3 FIELDS
+      ai_message_cap,
+      knowledge_doc_cap,
+      crm_lead_cap,
+      has_whatsapp,
+      has_telegram,
+      is_enterprise_contact_sales,
     })
     .eq('id', id);
 

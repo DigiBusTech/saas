@@ -30,10 +30,10 @@ export default function ServicesPage() {
   return (
     <div className="max-w-5xl space-y-6">
       <div>
-        <div className="flex items-center gap-2"><BriefcaseBusiness className="h-5 w-5 text-cyan-400" /><h1 className="text-xl font-semibold text-white">Services</h1></div>
-        <p className="mt-1 text-xs text-gray-500">Add services with descriptions and pricing, then feature them on SabiBio.</p>
+        <div className="flex items-center gap-2"><BriefcaseBusiness className="h-5 w-5 text-cyan-500 dark:text-cyan-400" /><h1 className="text-xl font-semibold text-foreground">Services</h1></div>
+        <p className="mt-1 text-xs text-muted-foreground">Add services with descriptions and pricing, then feature them on SabiBio.</p>
       </div>
-      <form id="service-form" action={submit} className="grid gap-3 rounded-2xl border border-white/10 bg-zinc-900/50 p-5 md:grid-cols-2">
+      <form id="service-form" action={submit} className="grid gap-3 rounded-2xl border border-border bg-card p-5 md:grid-cols-2">
         <input name="name" required placeholder="Service name" className="field" />
         <input name="price" type="number" min="0" step="0.01" placeholder="Price" className="field" />
         <input name="currency" defaultValue="USD" placeholder="Currency" className="field" />
@@ -42,25 +42,25 @@ export default function ServicesPage() {
         <input name="checkout_url" placeholder="Checkout URL (optional)" className="field" />
         <input name="payment_link" placeholder="Booking or payment link" className="field md:col-span-2" />
         <textarea name="description" placeholder="Describe what the client gets" rows={3} className="field resize-none md:col-span-2" />
-        <button className="flex w-fit items-center gap-2 rounded-lg bg-cyan-400 px-4 py-2 text-xs font-bold text-slate-950"><Plus className="h-3.5 w-3.5" /> Add service</button>
-        {message && <p className="text-xs text-cyan-300">{message}</p>}
+        <button className="flex w-fit items-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"><Plus className="h-3.5 w-3.5" /> Add service</button>
+        {message && <p className="text-xs text-primary">{message}</p>}
       </form>
       <div className="grid gap-3 md:grid-cols-2">
         {services.map((service) => (
-          <div key={service.id} className="rounded-xl border border-white/10 bg-zinc-900/50 p-4">
+          <div key={service.id} className="rounded-xl border border-border bg-card p-4">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold text-white">{service.name}</h2>
-                  {service.code && <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-800 border border-white/10 text-gray-400 font-mono">{service.code}</span>}
-                  {!service.is_active && <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-400">Inactive</span>}
+                  <h2 className="text-sm font-semibold text-foreground">{service.name}</h2>
+                  {service.code && <span className="text-[9px] px-1.5 py-0.5 rounded bg-muted border border-border text-muted-foreground font-mono">{service.code}</span>}
+                  {!service.is_active && <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400">Inactive</span>}
                 </div>
-                <p className="mt-1 text-xs text-gray-500">{service.description}</p>
-                <p className="mt-3 text-sm font-bold text-cyan-300">{service.currency} {service.price ?? 'Contact us'}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{service.description}</p>
+                <p className="mt-3 text-sm font-bold text-primary">{service.currency} {service.price ?? 'Contact us'}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
-                <button disabled={pending} onClick={() => remove(service.id)} className="text-gray-500 hover:text-rose-300"><Trash2 className="h-4 w-4" /></button>
-                <button disabled={pending} onClick={() => toggleActive(service.id, !service.is_active)} className="text-[9px] text-gray-500 hover:text-cyan-300">
+                <button disabled={pending} onClick={() => remove(service.id)} className="text-muted-foreground hover:text-rose-500"><Trash2 className="h-4 w-4" /></button>
+                <button disabled={pending} onClick={() => toggleActive(service.id, !service.is_active)} className="text-[9px] text-muted-foreground hover:text-primary">
                   {service.is_active ? 'Deactivate' : 'Activate'}
                 </button>
               </div>

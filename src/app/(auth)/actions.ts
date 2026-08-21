@@ -5,6 +5,8 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { loginSchema, signupSchema } from '@/lib/schemas';
 import { sendEmail } from '@/lib/email';
+import { validateSignupEmail, extractEmailDomain } from '@/lib/security/email-check';
+import { headers } from 'next/headers';
 
 export async function login(formData: FormData) {
   const raw = {
@@ -51,12 +53,42 @@ export async function signup(formData: FormData) {
     acceptedTerms: formData.get('acceptedTerms') as string,
   };
 
+  const browserFingerprint = formData.get('browserFingerprint') as string | null;
+
   const parsed = signupSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
 
+  // PHASE 2: Anti-Abuse — Disposable Email Check
+  const emailValidation = validateSignupEmail(parsed.data.email);
+  if (!emailValidation.valid) {
+    return { error: emailValidation.reason || 'Invalid email address.' };
+  }
+
   const serviceClient = createServiceClient();
+
+  // Extract client IP for fraud detection
+  const headersList = await headers();
+  const forwardedFor = headersList.get('x-forwarded-for');
+  const realIp = headersList.get('x-real-ip');
+  const clientIp = forwardedFor?.split(',')[0]?.trim() || realIp || 'unknown';
+
+  const emailDomain = extractEmailDomain(parsed.data.email);
+
+  // PHASE 2: Anti-Abuse — Check if trial was already claimed from this IP/fingerprint
+  let trialBlocked = false;
+  try {
+    const { data: abuseCheck } = await serviceClient.rpc('check_trial_abuse', {
+      ip_addr: clientIp,
+      fingerprint: browserFingerprint || 'unknown',
+      email_domain_input: emailDomain,
+    });
+    trialBlocked = abuseCheck === true;
+  } catch (err) {
+    console.error('[signup] Trial abuse check failed:', err);
+    // Fail open: allow signup if check fails
+  }
 
   // 1. Create the tenant first
   const { data: tenant, error: tenantError } = await serviceClient
@@ -71,7 +103,7 @@ export async function signup(formData: FormData) {
 
   // 2. Sign up the user with the tenant_id in metadata
   const supabase = await createClient();
-  const { error: authError } = await supabase.auth.signUp({
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -84,10 +116,62 @@ export async function signup(formData: FormData) {
     },
   });
 
-  if (authError) {
+  if (authError || !authData.user) {
     // Rollback tenant creation
     await serviceClient.from('tenants').delete().eq('id', tenant.id);
-    return { error: authError.message };
+    return { error: authError?.message || 'Failed to create account.' };
+  }
+
+  const userId = authData.user.id;
+
+  // 3. Create a default workspace for the tenant
+  const workspaceSlug = parsed.data.tenantName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 50);
+
+  const now = new Date();
+  const trialEndsAt = trialBlocked ? now : new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // 14 days from now
+
+  const { data: workspace, error: workspaceError } = await serviceClient
+    .from('workspaces')
+    .insert({
+      tenant_id: tenant.id,
+      name: parsed.data.tenantName,
+      slug: workspaceSlug,
+      subscription_tier: 'free_trial',
+      trial_ends_at: trialBlocked ? now.toISOString() : trialEndsAt.toISOString(),
+      is_trial_claimed: true,
+      message_limit: 200,
+      messages_used: 0,
+      knowledge_doc_limit: 10,
+      knowledge_docs_used: 0,
+      crm_lead_limit: 50,
+      crm_leads_used: 0,
+    })
+    .select()
+    .single();
+
+  if (workspaceError || !workspace) {
+    console.error('[signup] Workspace creation failed:', workspaceError);
+    // Continue anyway - workspace can be created later
+  }
+
+  // 4. Record signup footprint for anti-abuse tracking
+  try {
+    await serviceClient.from('signup_footprints').insert({
+      user_id: userId,
+      tenant_id: tenant.id,
+      workspace_id: workspace?.id || null,
+      ip_address: clientIp,
+      browser_fingerprint: browserFingerprint || null,
+      email_domain: emailDomain,
+      trial_claimed: !trialBlocked, // Only count as trial claim if not blocked
+    });
+  } catch (err) {
+    console.error('[signup] Footprint logging failed:', err);
+    // Non-critical, continue
   }
 
   // Fire-and-forget welcome email — never block signup on SMTP issues.

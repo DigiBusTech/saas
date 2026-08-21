@@ -99,22 +99,22 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
     <div className="max-w-3xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-lg font-semibold text-white flex items-center gap-2">
-          <Zap className="w-5 h-5 text-indigo-400" />
+        <h1 className="text-lg font-semibold text-foreground flex items-center gap-2">
+          <Zap className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
           Integration Settings
         </h1>
-        <p className="text-xs text-gray-500 mt-1">
-          Configure API credentials for <span className="text-indigo-400 font-medium">{workspace.name}</span>
+        <p className="text-xs text-muted-foreground mt-1">
+          Configure API credentials for <span className="text-indigo-500 dark:text-indigo-400 font-medium">{workspace.name}</span>
         </p>
       </div>
 
       {/* Critical Webhook Alert */}
-      <div className="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
-        <Shield className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
         <div>
-          <p className="text-xs font-semibold text-amber-300">CRITICAL: Unique Webhook URL</p>
-          <p className="text-[10px] text-amber-400/80 mt-1 leading-relaxed">
-            This Webhook URL is unique to THIS specific business (<span className="font-bold text-amber-300">{workspace.name}</span>). 
+          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">CRITICAL: Unique Webhook URL</p>
+          <p className="text-[10px] text-amber-700/80 dark:text-amber-400/80 mt-1 leading-relaxed">
+            This Webhook URL is unique to THIS specific business (<span className="font-bold text-amber-700 dark:text-amber-300">{workspace.name}</span>). 
             Do not use this URL for your other businesses. Each business has its own unique webhook endpoint for proper message routing.
           </p>
         </div>
@@ -128,10 +128,10 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
             onClick={() => setActiveTab(tab.key)}
             className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-medium transition-all duration-300
               ${activeTab === tab.key
-                ? 'bg-zinc-900/60 backdrop-blur-md border border-white/10 text-white shadow-lg'
-                : 'text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent'}`}
+                ? 'bg-card backdrop-blur-md border border-border text-foreground shadow-lg'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent'}`}
           >
-            <tab.icon className={`w-4 h-4 ${activeTab === tab.key ? (tab.color === 'emerald' ? 'text-emerald-400' : 'text-sky-400') : ''}`} />
+            <tab.icon className={`w-4 h-4 ${activeTab === tab.key ? (tab.color === 'emerald' ? 'text-emerald-500 dark:text-emerald-400' : 'text-sky-500 dark:text-sky-400') : ''}`} />
             {tab.label}
             {tab.connected && (
               <span className="relative flex h-2 w-2">
@@ -221,23 +221,23 @@ function TelegramConfig({
   return (
     <div className="space-y-4">
       {/* Webhook URL Card */}
-      <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5">
+      <div className="rounded-xl bg-card backdrop-blur-md border border-border p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold text-white flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-sky-400" />
+          <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
             Webhook URL
           </h3>
-          <span className="text-[9px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <span className="text-[9px] px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
             Auto-generated
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-white/5 text-[11px] text-sky-300 font-mono truncate">
+          <code className="flex-1 px-3 py-2.5 rounded-lg bg-muted border border-border text-[11px] text-sky-600 dark:text-sky-300 font-mono truncate">
             {webhookUrl}
           </code>
           <button
             onClick={() => copyToClipboard(webhookUrl, 'tg-webhook')}
-            className="px-3 py-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 transition text-sky-400"
+            className="px-3 py-2.5 rounded-lg bg-sky-500/10 border border-sky-500/20 hover:bg-sky-500/20 transition text-sky-600 dark:text-sky-400"
           >
             {copiedField === 'tg-webhook' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -245,33 +245,33 @@ function TelegramConfig({
       </div>
 
       {/* Credentials Form */}
-      <form onSubmit={handleSave} className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5 space-y-4">
-        <h3 className="text-xs font-semibold text-white">Bot Token</h3>
+      <form onSubmit={handleSave} className="rounded-xl bg-card backdrop-blur-md border border-border p-5 space-y-4">
+        <h3 className="text-xs font-semibold text-foreground">Bot Token</h3>
         <div className="relative">
           <input
             name="telegram_bot_token"
             type={showTokens['tg_token'] ? 'text' : 'password'}
             placeholder={maskedTokens.telegram_bot_token || 'Enter your Telegram Bot Token'}
-            className="w-full px-3 py-2.5 pr-10 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600
+            className="w-full px-3 py-2.5 pr-10 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60
               focus:border-sky-500/40 focus:ring-1 focus:ring-sky-500/20 outline-none transition font-mono"
           />
           <button
             type="button"
             onClick={() => setShowTokens((p: any) => ({ ...p, tg_token: !p.tg_token }))}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             {showTokens['tg_token'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Webhook Secret</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Webhook Secret</label>
           <input
             name="telegram_webhook_secret"
             type="password"
             placeholder={maskedTokens.telegram_webhook_secret || 'Set the secret used in Telegram webhook configuration'}
             minLength={8}
             required={!maskedTokens.telegram_webhook_secret}
-            className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600 focus:border-sky-500/40 focus:ring-1 focus:ring-sky-500/20 outline-none transition font-mono"
+            className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-sky-500/40 focus:ring-1 focus:ring-sky-500/20 outline-none transition font-mono"
           />
         </div>
         <button
@@ -285,12 +285,12 @@ function TelegramConfig({
         </button>
       </form>
 
-      <div className="rounded-xl border border-white/10 bg-zinc-900/60 p-4">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center justify-between gap-3">
-          <div><p className="text-xs font-semibold text-white">Verify Telegram connection</p><p className="mt-1 text-[10px] text-gray-500">Checks Telegram&apos;s current webhook target and last delivery error using the saved bot token.</p></div>
-          <button type="button" onClick={verifyWebhook} className="shrink-0 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-[10px] font-semibold text-sky-300 hover:bg-sky-500/20">Verify webhook</button>
+          <div><p className="text-xs font-semibold text-foreground">Verify Telegram connection</p><p className="mt-1 text-[10px] text-muted-foreground">Checks Telegram&apos;s current webhook target and last delivery error using the saved bot token.</p></div>
+          <button type="button" onClick={verifyWebhook} className="shrink-0 rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-[10px] font-semibold text-sky-600 dark:text-sky-300 hover:bg-sky-500/20">Verify webhook</button>
         </div>
-        {webhookStatus && <p className="mt-3 rounded-lg bg-black/20 p-3 text-[10px] text-gray-300">{webhookStatus}</p>}
+        {webhookStatus && <p className="mt-3 rounded-lg bg-muted p-3 text-[10px] text-foreground/80">{webhookStatus}</p>}
       </div>
 
       {/* Setup Guide Accordions */}
@@ -301,11 +301,11 @@ function TelegramConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>Open Telegram and search for <code className="text-sky-400">@BotFather</code></li>
-            <li>Send <code className="text-sky-400">/newbot</code> command</li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>Open Telegram and search for <code className="text-sky-600 dark:text-sky-400">@BotFather</code></li>
+            <li>Send <code className="text-sky-600 dark:text-sky-400">/newbot</code> command</li>
             <li>Choose a name and username for your bot</li>
-            <li>BotFather will give you a <strong className="text-white">Bot Token</strong> â€” copy it</li>
+            <li>BotFather will give you a <strong className="text-foreground">Bot Token</strong> — copy it</li>
             <li>Paste it in the field above and click &quot;Encrypt &amp; Save&quot;</li>
           </ol>
         </SetupAccordion>
@@ -316,9 +316,9 @@ function TelegramConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>Paste the generated URL into the BotFather webhook setup or call Telegram&apos;s <code className="text-sky-400">setWebhook</code> API.</li>
-            <li>The <strong className="text-white">Webhook Secret</strong> is not the Telegram chat ID. It is a private random value you choose, for example <code className="text-sky-400">sabi_tg_2026_a9f3</code>.</li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>Paste the generated URL into the BotFather webhook setup or call Telegram&apos;s <code className="text-sky-600 dark:text-sky-400">setWebhook</code> API.</li>
+            <li>The <strong className="text-foreground">Webhook Secret</strong> is not the Telegram chat ID. It is a private random value you choose, for example <code className="text-sky-600 dark:text-sky-400">sabi_tg_2026_a9f3</code>.</li>
             <li>Save the same secret in this screen and send it to Telegram as the <code className="text-sky-400">secret_token</code> parameter.</li>
             <li>Telegram will then send it on every request as <code className="text-sky-400">X-Telegram-Bot-Api-Secret-Token</code>; SabiBio verifies that header before dispatching the message.</li>
             <li>The chat ID is generated by Telegram per conversation and is never entered as the webhook secret.</li>
@@ -326,18 +326,18 @@ function TelegramConfig({
           <div className="mt-3 rounded-lg border border-sky-500/20 bg-sky-500/5 p-3 text-[10px] text-sky-200">
             Example: <code>https://api.telegram.org/botBOT_TOKEN/setWebhook?url=WEBHOOK_URL&amp;secret_token=YOUR_RANDOM_SECRET</code>
           </div>
-          <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-[10px] text-gray-400">
+          <div className="mt-3 rounded-lg border border-border bg-muted p-3 text-[10px] text-muted-foreground">
             After saving, SabiBio registers this webhook automatically when <code className="text-sky-300">NEXT_PUBLIC_APP_URL</code> is configured. You can verify Telegram&apos;s current target with <code className="text-sky-300">getWebhookInfo</code>; the URL must match the generated URL above and Telegram must report no pending errors.
           </div>
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
             <li>Copy the auto-generated webhook URL above</li>
-            <li>Open this URL in your browser (replace <code className="text-sky-400">YOUR_TOKEN</code>):</li>
+            <li>Open this URL in your browser (replace <code className="text-sky-600 dark:text-sky-400">YOUR_TOKEN</code>):</li>
             <li>
-              <code className="block mt-1 px-2 py-1.5 rounded bg-zinc-800 text-[10px] text-sky-300 break-all">
+              <code className="block mt-1 px-2 py-1.5 rounded bg-muted text-[10px] text-sky-600 dark:text-sky-300 break-all">
                 https://api.telegram.org/botYOUR_TOKEN/setWebhook?url={webhookUrl}
               </code>
             </li>
-            <li>You should see <code className="text-emerald-400">{`{"ok":true}`}</code></li>
+            <li>You should see <code className="text-emerald-600 dark:text-emerald-400">{`{"ok":true}`}</code></li>
           </ol>
         </SetupAccordion>
 
@@ -347,12 +347,12 @@ function TelegramConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>Go back to your chat with <code className="text-sky-400">@BotFather</code></li>
-            <li>Send <code className="text-sky-400">/setdescription</code></li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>Go back to your chat with <code className="text-sky-600 dark:text-sky-400">@BotFather</code></li>
+            <li>Send <code className="text-sky-600 dark:text-sky-400">/setdescription</code></li>
             <li>Select your bot from the list</li>
             <li>Type a short description of your business (e.g. &quot;Your 24/7 AI Shopping Assistant for [Brand Name]&quot;)</li>
-            <li>This text appears on your bot&apos;s profile page <strong className="text-white">before</strong> a user clicks <strong className="text-white">Start</strong></li>
+            <li>This text appears on your bot&apos;s profile page <strong className="text-foreground">before</strong> a user clicks <strong className="text-foreground">Start</strong></li>
           </ol>
         </SetupAccordion>
 
@@ -362,10 +362,10 @@ function TelegramConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>In your chat with <code className="text-sky-400">@BotFather</code>, send <code className="text-sky-400">/setuserpic</code></li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>In your chat with <code className="text-sky-600 dark:text-sky-400">@BotFather</code>, send <code className="text-sky-600 dark:text-sky-400">/setuserpic</code></li>
             <li>Select your bot from the list</li>
-            <li>Upload your <strong className="text-white">business logo</strong> as a photo (square, at least 512Ã—512px recommended)</li>
+            <li>Upload your <strong className="text-foreground">business logo</strong> as a photo (square, at least 512×512px recommended)</li>
             <li>BotFather will confirm the profile photo has been set</li>
             <li>Your bot will now display your brand logo in chats and search results</li>
           </ol>
@@ -383,23 +383,23 @@ function WhatsAppConfig({
   return (
     <div className="space-y-4">
       {/* Webhook URL Card */}
-      <div className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5">
+      <div className="rounded-xl bg-card backdrop-blur-md border border-border p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xs font-semibold text-white flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5 text-emerald-400" />
+          <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
+            <Shield className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
             Webhook URL
           </h3>
-          <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
             Auto-generated
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <code className="flex-1 px-3 py-2.5 rounded-lg bg-zinc-800/80 border border-white/5 text-[11px] text-emerald-300 font-mono truncate">
+          <code className="flex-1 px-3 py-2.5 rounded-lg bg-muted border border-border text-[11px] text-emerald-600 dark:text-emerald-300 font-mono truncate">
             {webhookUrl}
           </code>
           <button
             onClick={() => copyToClipboard(webhookUrl, 'wa-webhook')}
-            className="px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition text-emerald-400"
+            className="px-3 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 transition text-emerald-600 dark:text-emerald-400"
           >
             {copiedField === 'wa-webhook' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
           </button>
@@ -407,9 +407,9 @@ function WhatsAppConfig({
 
         {/* Verify Token Display */}
         <div className="mt-3">
-          <p className="text-[10px] text-gray-500 mb-1">Verification Token</p>
+          <p className="text-[10px] text-muted-foreground mb-1">Verification Token</p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 px-3 py-2 rounded-lg bg-zinc-800/80 border border-white/5 text-[11px] text-amber-300 font-mono">
+            <code className="flex-1 px-3 py-2 rounded-lg bg-muted border border-border text-[11px] text-amber-600 dark:text-amber-300 font-mono">
               {maskedTokens.whatsapp_verify_token || 'Not set yet'}
             </code>
           </div>
@@ -417,24 +417,24 @@ function WhatsAppConfig({
       </div>
 
       {/* Credentials Form */}
-      <form onSubmit={handleSave} className="rounded-xl bg-zinc-900/60 backdrop-blur-md border border-white/10 p-5 space-y-4">
-        <h3 className="text-xs font-semibold text-white mb-3">WhatsApp Business API Credentials</h3>
+      <form onSubmit={handleSave} className="rounded-xl bg-card backdrop-blur-md border border-border p-5 space-y-4">
+        <h3 className="text-xs font-semibold text-foreground mb-3">WhatsApp Business API Credentials</h3>
 
         {/* Phone Number ID */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Phone Number ID</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Phone Number ID</label>
           <div className="relative">
             <input
               name="whatsapp_phone_number_id"
               type={showTokens['wa_phone'] ? 'text' : 'password'}
               placeholder={maskedTokens.whatsapp_phone_number_id || 'Enter Phone Number ID'}
-              className="w-full px-3 py-2.5 pr-10 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600
+              className="w-full px-3 py-2.5 pr-10 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60
                 focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 outline-none transition font-mono"
             />
             <button
               type="button"
               onClick={() => setShowTokens((p: any) => ({ ...p, wa_phone: !p.wa_phone }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               {showTokens['wa_phone'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -443,19 +443,19 @@ function WhatsAppConfig({
 
         {/* Access Token */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Access Token</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Access Token</label>
           <div className="relative">
             <input
               name="whatsapp_access_token"
               type={showTokens['wa_token'] ? 'text' : 'password'}
               placeholder={maskedTokens.whatsapp_access_token || 'Enter Access Token'}
-              className="w-full px-3 py-2.5 pr-10 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600
+              className="w-full px-3 py-2.5 pr-10 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60
                 focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 outline-none transition font-mono"
             />
             <button
               type="button"
               onClick={() => setShowTokens((p: any) => ({ ...p, wa_token: !p.wa_token }))}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             >
               {showTokens['wa_token'] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
@@ -464,12 +464,12 @@ function WhatsAppConfig({
 
         {/* Verify Token */}
         <div>
-          <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Verify Token</label>
+          <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Verify Token</label>
           <input
             name="whatsapp_verify_token"
             type="text"
             placeholder={maskedTokens.whatsapp_verify_token || 'Choose a verification token'}
-            className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white placeholder:text-gray-600
+            className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60
               focus:border-emerald-500/40 focus:ring-1 focus:ring-emerald-500/20 outline-none transition font-mono"
           />
         </div>
@@ -493,12 +493,12 @@ function WhatsAppConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>Go to <a href="https://developers.facebook.com" target="_blank" className="text-emerald-400 underline inline-flex items-center gap-1">developers.facebook.com <ExternalLink className="w-3 h-3" /></a></li>
-            <li>Click <strong className="text-white">Create App</strong> â†’ select the <strong className="text-white">&quot;Other&quot;</strong> use case, then select <strong className="text-white">&quot;Business&quot;</strong> as the app type</li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>Go to <a href="https://developers.facebook.com" target="_blank" className="text-emerald-600 dark:text-emerald-400 underline inline-flex items-center gap-1">developers.facebook.com <ExternalLink className="w-3 h-3" /></a></li>
+            <li>Click <strong className="text-foreground">Create App</strong> â†’ select the <strong className="text-foreground">&quot;Other&quot;</strong> use case, then select <strong className="text-foreground">&quot;Business&quot;</strong> as the app type</li>
             <li>Give your app a name and connect it to your Meta Business Account</li>
-            <li>Once created, click <strong className="text-white">Add Product</strong> on the left sidebar and select <strong className="text-white">WhatsApp</strong></li>
-            <li>Navigate to <strong className="text-white">WhatsApp â†’ API Setup</strong> to find your <strong className="text-white">Phone Number ID</strong> and <strong className="text-white">Temporary Access Token</strong></li>
+            <li>Once created, click <strong className="text-foreground">Add Product</strong> on the left sidebar and select <strong className="text-foreground">WhatsApp</strong></li>
+            <li>Navigate to <strong className="text-foreground">WhatsApp → API Setup</strong> to find your <strong className="text-foreground">Phone Number ID</strong> and <strong className="text-foreground">Temporary Access Token</strong></li>
           </ol>
         </SetupAccordion>
 
@@ -508,11 +508,11 @@ function WhatsAppConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>In your Meta App, go to <strong className="text-white">WhatsApp â†’ Configuration</strong></li>
-            <li>Click <strong className="text-white">Edit</strong> under Webhook</li>
-            <li>Paste your webhook URL from above as the <strong className="text-white">Callback URL</strong></li>
-            <li>Enter your chosen <strong className="text-white">Verify Token</strong> (same as the one you saved above)</li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>In your Meta App, go to <strong className="text-foreground">WhatsApp → Configuration</strong></li>
+            <li>Click <strong className="text-foreground">Edit</strong> under Webhook</li>
+            <li>Paste your webhook URL from above as the <strong className="text-foreground">Callback URL</strong></li>
+            <li>Enter your chosen <strong className="text-foreground">Verify Token</strong> (same as the one you saved above)</li>
             <li>Subscribe to the <code className="text-emerald-400">messages</code> webhook field</li>
           </ol>
         </SetupAccordion>
@@ -523,14 +523,14 @@ function WhatsAppConfig({
           openAccordion={openAccordion}
           setOpenAccordion={setOpenAccordion}
         >
-          <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>By default, your app is in <strong className="text-white">Development</strong> mode and can only send messages to <strong className="text-amber-400">5 verified test numbers</strong></li>
-            <li>Add test numbers in <strong className="text-white">WhatsApp â†’ API Setup â†’ &quot;To&quot;</strong> field â€” each must verify via SMS code</li>
+          <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+            <li>By default, your app is in <strong className="text-foreground">Development</strong> mode and can only send messages to <strong className="text-amber-600 dark:text-amber-400">5 verified test numbers</strong></li>
+            <li>Add test numbers in <strong className="text-foreground">WhatsApp → API Setup → &quot;To&quot;</strong> field — each must verify via SMS code</li>
             <li>To go live for production, you must:
-              <ul className="list-disc list-inside ml-4 mt-1 space-y-1 text-gray-500">
-                <li>Complete <strong className="text-white">Meta Business Verification</strong> (upload business documents)</li>
-                <li>Add a <strong className="text-white">real phone number</strong> (not the test number Meta provides)</li>
-                <li>Toggle the app switch at the top of the Meta dashboard from <strong className="text-amber-400">Development</strong> to <strong className="text-emerald-400">Live</strong></li>
+              <ul className="list-disc list-inside ml-4 mt-1 space-y-1 text-muted-foreground">
+                <li>Complete <strong className="text-foreground">Meta Business Verification</strong> (upload business documents)</li>
+                <li>Add a <strong className="text-foreground">real phone number</strong> (not the test number Meta provides)</li>
+                <li>Toggle the app switch at the top of the Meta dashboard from <strong className="text-amber-600 dark:text-amber-400">Development</strong> to <strong className="text-emerald-600 dark:text-emerald-400">Live</strong></li>
               </ul>
             </li>
           </ol>
@@ -543,17 +543,17 @@ function WhatsAppConfig({
           setOpenAccordion={setOpenAccordion}
         >
           <div className="space-y-3">
-            <div className="bg-amber-950/30 border border-amber-500/20 rounded-lg px-3 py-2">
-              <p className="text-[10px] text-amber-400">âš ï¸ The default token from API Setup expires in <strong>24 hours</strong>. Follow these steps to create a permanent one.</p>
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
+              <p className="text-[10px] text-amber-600 dark:text-amber-400">⚠️ The default token from API Setup expires in <strong>24 hours</strong>. Follow these steps to create a permanent one.</p>
             </div>
-            <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-              <li>Go to <a href="https://business.facebook.com/settings/system-users" target="_blank" className="text-emerald-400 underline inline-flex items-center gap-1">Meta Business Settings â†’ System Users <ExternalLink className="w-3 h-3" /></a></li>
-              <li>Click <strong className="text-white">Add</strong> to create a new System User (name it e.g. &quot;WhatsApp API Bot&quot;)</li>
-              <li>Set the role to <strong className="text-white">Admin</strong></li>
-              <li>Click <strong className="text-white">Add Assets</strong> â†’ select <strong className="text-white">Apps</strong> â†’ choose your WhatsApp app â†’ grant <strong className="text-white">Full Control</strong></li>
-              <li>Click <strong className="text-white">Generate New Token</strong> â†’ select your app â†’ check the <code className="text-emerald-400">whatsapp_business_messaging</code> and <code className="text-emerald-400">whatsapp_business_management</code> permissions</li>
-              <li>Copy the generated token and paste it in the <strong className="text-white">Access Token</strong> field above</li>
-              <li>This token <strong className="text-emerald-400">does not expire</strong> and is safe for production use</li>
+            <ol className="list-decimal list-inside space-y-2 text-xs text-muted-foreground">
+              <li>Go to <a href="https://business.facebook.com/settings/system-users" target="_blank" className="text-emerald-600 dark:text-emerald-400 underline inline-flex items-center gap-1">Meta Business Settings → System Users <ExternalLink className="w-3 h-3" /></a></li>
+              <li>Click <strong className="text-foreground">Add</strong> to create a new System User (name it e.g. &quot;WhatsApp API Bot&quot;)</li>
+              <li>Set the role to <strong className="text-foreground">Admin</strong></li>
+              <li>Click <strong className="text-foreground">Add Assets</strong> → select <strong className="text-foreground">Apps</strong> → choose your WhatsApp app → grant <strong className="text-foreground">Full Control</strong></li>
+              <li>Click <strong className="text-foreground">Generate New Token</strong> → select your app → check the <code className="text-emerald-600 dark:text-emerald-400">whatsapp_business_messaging</code> and <code className="text-emerald-600 dark:text-emerald-400">whatsapp_business_management</code> permissions</li>
+              <li>Copy the generated token and paste it in the <strong className="text-foreground">Access Token</strong> field above</li>
+              <li>This token <strong className="text-emerald-600 dark:text-emerald-400">does not expire</strong> and is safe for production use</li>
             </ol>
           </div>
         </SetupAccordion>
@@ -575,13 +575,13 @@ function SetupAccordion({
   const isOpen = openAccordion === id;
 
   return (
-    <div className="rounded-xl bg-zinc-900/40 border border-white/5 overflow-hidden">
+    <div className="rounded-xl bg-card/60 border border-border overflow-hidden">
       <button
         onClick={() => setOpenAccordion(isOpen ? null : id)}
-        className="w-full flex items-center justify-between px-5 py-3 text-xs font-medium text-gray-300 hover:text-white transition"
+        className="w-full flex items-center justify-between px-5 py-3 text-xs font-medium text-muted-foreground hover:text-foreground transition"
       >
         {title}
-        <ChevronDown className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {isOpen && (

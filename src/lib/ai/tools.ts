@@ -52,13 +52,32 @@ export const CHAT_TOOL_DEFINITIONS: Array<Record<string, unknown>> = [
     type: 'function',
     function: {
       name: 'log_purchase_intent',
-      description: 'Record that the customer showed clear intent to buy a specific product or service, and draft a pending order.',
+      description: 'Record that the customer showed clear intent to buy a product or book a service, and draft a pending order.',
       parameters: {
         type: 'object',
         properties: {
           item_code: { type: 'string', description: 'The product or service code, e.g. PRD-101 or SRV-882.' },
+          order_type: { type: 'string', enum: ['product', 'service'], description: 'Whether this is a physical product purchase or service booking.' },
+          service_date: { type: 'string', description: 'For service bookings: preferred appointment date/time in ISO format.' },
+          booking_notes: { type: 'string', description: 'For service bookings: any special requests or notes from the customer.' },
         },
-        required: ['item_code'],
+        required: ['item_code', 'order_type'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'update_lead_profile',
+      description: 'Update the customer\'s name and email in the CRM. Use this when the customer provides missing identity information.',
+      parameters: {
+        type: 'object',
+        properties: {
+          name: { type: 'string', description: 'Customer\'s full name.' },
+          email: { type: 'string', description: 'Customer\'s email address.' },
+          phone: { type: 'string', description: 'Customer\'s phone number (optional).' },
+        },
+        required: [],
       },
     },
   },
@@ -204,7 +223,11 @@ export async function executeChatTool(
 
       case 'log_purchase_intent': {
         const itemCode = String(args.item_code ?? '').trim();
-        await logAnalyticsEvent(ctx, 'purchase_intent', { item_code: itemCode || null });
+        const orderType = String(args.order_type ?? 'product').trim() as 'product' | 'service';
+        const serviceDate = args.service_date ? String(args.service_date) : null;
+        const bookingNotes = args.booking_notes ? String(args.booking_notes) : null;
+
+        await logAnalyticsEvent(ctx, 'purchase_intent', { item_code: itemCode || null, order_type: orderType });
         if (!itemCode) return { logged: true, order_created: false };
 
         const [{ data: product }, { data: service }] = await Promise.all([
@@ -221,21 +244,31 @@ export async function executeChatTool(
         }
 
         const orderCode = generateOrderCode();
+        const insertPayload: any = {
+          workspace_id: ctx.workspaceId,
+          customer_name: ctx.contactName,
+          customer_email: customerEmail,
+          payment_method: 'pending',
+          status: 'pending_review',
+          total: item.price ?? 0,
+          currency: item.currency ?? 'USD',
+          order_code: orderCode,
+          channel: ctx.platform,
+          lead_id: ctx.crmId,
+          updated_by: 'ai',
+          order_type: orderType,
+        };
+
+        // Add service-specific fields
+        if (orderType === 'service') {
+          insertPayload.service_date = serviceDate;
+          insertPayload.booking_notes = bookingNotes;
+          insertPayload.service_status = 'inquiry';
+        }
+
         const { data: order, error } = await ctx.db
           .from('workspace_orders')
-          .insert({
-            workspace_id: ctx.workspaceId,
-            customer_name: ctx.contactName,
-            customer_email: customerEmail,
-            payment_method: 'pending',
-            status: 'pending_review',
-            total: item.price ?? 0,
-            currency: item.currency ?? 'USD',
-            order_code: orderCode,
-            channel: ctx.platform,
-            lead_id: ctx.crmId,
-            updated_by: 'ai',
-          })
+          .insert(insertPayload)
           .select('id')
           .single();
         if (error || !order) return { logged: true, order_created: false, message: 'Could not draft the order automatically.' };
@@ -250,7 +283,36 @@ export async function executeChatTool(
           currency: item.currency ?? 'USD',
         });
 
-        return { logged: true, order_created: true, order_code: orderCode };
+        return { 
+          logged: true, 
+          order_created: true, 
+          order_code: orderCode,
+          order_type: orderType,
+          ...(orderType === 'service' && serviceDate ? { scheduled_date: serviceDate } : {}),
+        };
+      }
+
+      case 'update_lead_profile': {
+        if (!ctx.crmId) return { updated: false, message: 'No CRM record found for this conversation.' };
+
+        const updatePayload: any = {};
+        if (args.name && String(args.name).trim()) updatePayload.customer_name = String(args.name).trim();
+        if (args.email && String(args.email).trim()) updatePayload.email = String(args.email).trim();
+        if (args.phone && String(args.phone).trim()) updatePayload.phone_number = String(args.phone).trim();
+
+        if (Object.keys(updatePayload).length === 0) {
+          return { updated: false, message: 'No valid profile data provided.' };
+        }
+
+        const { error } = await ctx.db
+          .from('workspace_crm')
+          .update(updatePayload)
+          .eq('id', ctx.crmId);
+
+        if (error) return { updated: false, message: 'Failed to update profile.' };
+
+        await logAnalyticsEvent(ctx, 'lead_profile_updated', updatePayload);
+        return { updated: true, message: 'Customer profile updated successfully.' };
       }
 
       default:

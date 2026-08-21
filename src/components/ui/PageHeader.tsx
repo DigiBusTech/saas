@@ -21,16 +21,16 @@ export function PageHeader({ title, subtitle, icon, guide, actions, defaultColla
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-start gap-3">
           {icon && (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-cyan-300">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-primary">
               {icon}
             </div>
           )}
           <div className="min-w-0">
-            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {title}
             </h1>
             {subtitle && (
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-400">{subtitle}</p>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">{subtitle}</p>
             )}
           </div>
         </div>
@@ -40,48 +40,48 @@ export function PageHeader({ title, subtitle, icon, guide, actions, defaultColla
       {guide && (
         <details
           {...(defaultCollapsed ? {} : { open: true })}
-          className="group rounded-xl border border-cyan-400/20 bg-linear-to-br from-cyan-500/8 to-blue-500/5 backdrop-blur-sm open:shadow-lg open:shadow-cyan-500/5"
+          className="group rounded-xl border border-primary/20 bg-primary/5 backdrop-blur-sm open:shadow-lg open:shadow-primary/5"
         >
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm outline-none transition hover:bg-white/2">
-            <span className="flex items-center gap-2 text-slate-100">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm outline-none transition hover:bg-muted/50">
+            <span className="flex items-center gap-2 text-foreground">
               <span
                 aria-hidden
-                className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-400/20 text-xs font-bold text-cyan-200"
+                className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/20 text-xs font-bold text-primary"
               >
                 ?
               </span>
               <span className="font-medium">How this page helps you</span>
             </span>
-            <span className="text-xs uppercase tracking-widest text-cyan-200/80 transition group-open:hidden">
+            <span className="text-xs uppercase tracking-widest text-primary/80 transition group-open:hidden">
               Show guide
             </span>
-            <span className="hidden text-xs uppercase tracking-widest text-cyan-200/80 group-open:inline">
+            <span className="hidden text-xs uppercase tracking-widest text-primary/80 group-open:inline">
               Hide guide
             </span>
           </summary>
-          <div className="border-t border-white/5 px-4 py-4 text-sm leading-6 text-slate-300 sm:px-5">
+          <div className="border-t border-border/50 px-4 py-4 text-sm leading-6 text-muted-foreground sm:px-5">
             <div className="grid gap-4 sm:grid-cols-[1fr_1fr]">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">
+                <p className="text-xs font-semibold uppercase tracking-widest text-primary">
                   What this page does
                 </p>
-                <p className="mt-2 text-slate-300">{guide.what}</p>
+                <p className="mt-2 text-foreground">{guide.what}</p>
               </div>
               {guide.how && (
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-widest text-cyan-300">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-primary">
                     How to use it
                   </p>
-                  <p className="mt-2 text-slate-300">{guide.how}</p>
+                  <p className="mt-2 text-foreground">{guide.how}</p>
                 </div>
               )}
             </div>
 
             {guide.tips && guide.tips.length > 0 && (
-              <ul className="mt-4 space-y-2 border-t border-white/5 pt-4">
+              <ul className="mt-4 space-y-2 border-t border-border/50 pt-4">
                 {guide.tips.map((tip) => (
-                  <li key={tip} className="flex items-start gap-2 text-xs text-slate-300">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                  <li key={tip} className="flex items-start gap-2 text-xs text-muted-foreground">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -89,12 +89,12 @@ export function PageHeader({ title, subtitle, icon, guide, actions, defaultColla
             )}
 
             {guide.docHref && (
-              <div className="mt-4 border-t border-white/5 pt-4">
+              <div className="mt-4 border-t border-border/50 pt-4">
                 <a
                   href={guide.docHref}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-cyan-200"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
                 >
                   {guide.docLabel ?? 'Read the full guide'} →
                 </a>

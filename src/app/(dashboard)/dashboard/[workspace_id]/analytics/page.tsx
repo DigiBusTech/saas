@@ -19,7 +19,7 @@ export default function AnalyticsPage() {
     getAnalyticsData(workspaceId, days).then(setData);
   }, [workspaceId, days]);
 
-  if (!data) return <div className="text-center py-12 text-gray-500">Loading analytics...</div>;
+  if (!data) return <div className="text-center py-12 text-muted-foreground">Loading analytics...</div>;
 
   const sentimentData = [
     { name: 'Positive', value: data.sentiment.positive, color: '#10b981' },
@@ -39,14 +39,14 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-indigo-400" /><h1 className="text-xl font-semibold text-white">Analytics</h1></div>
+          <div className="flex items-center gap-2"><BarChart3 className="h-5 w-5 text-indigo-500 dark:text-indigo-400" /><h1 className="text-xl font-semibold text-foreground">Analytics</h1></div>
           <div className="flex gap-2">
             {[7, 30, 90].map((d) => (
               <button
                 key={d}
                 onClick={() => setDays(d)}
                 className={`text-xs px-3 py-1 rounded-lg ${
-                  days === d ? 'bg-indigo-500 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                  days === d ? 'bg-indigo-500 text-white' : 'bg-muted text-muted-foreground hover:bg-muted/70'
                 }`}
               >
                 {d}d
@@ -54,7 +54,7 @@ export default function AnalyticsPage() {
             ))}
           </div>
         </div>
-        <p className="mt-1 text-xs text-gray-500">Conversation insights, customer sentiment, and channel performance.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Conversation insights, customer sentiment, and channel performance.</p>
       </div>
 
       {/* KPI Cards */}
@@ -75,8 +75,8 @@ export default function AnalyticsPage() {
       {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Inquiries Over Time */}
-        <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-indigo-400" /> Inquiries Over Time</h2>
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2"><MessageSquare className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> Inquiries Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data.eventsByDay}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -89,8 +89,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Sentiment Breakdown */}
-        <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-400" /> Sentiment Index</h2>
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-indigo-500 dark:text-indigo-400" /> Sentiment Index</h2>
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie data={sentimentData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={2} dataKey="value">
@@ -106,8 +106,8 @@ export default function AnalyticsPage() {
 
         {/* Channels Performance */}
         {channelData.length > 0 && (
-          <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6">
-            <h2 className="text-sm font-semibold text-white mb-4">Inquiries by Channel</h2>
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h2 className="text-sm font-semibold text-foreground mb-4">Inquiries by Channel</h2>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie data={channelData} cx="50%" cy="50%" outerRadius={100} paddingAngle={2} dataKey="value">
@@ -123,15 +123,15 @@ export default function AnalyticsPage() {
         )}
 
         {/* Event Types Breakdown */}
-        <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6">
-          <h2 className="text-sm font-semibold text-white mb-4">Event Types</h2>
+        <div className="rounded-xl border border-border bg-card p-6">
+          <h2 className="text-sm font-semibold text-foreground mb-4">Event Types</h2>
           <div className="space-y-2">
             {Object.entries(data.eventsByType)
               .sort(([, a], [, b]) => (b as number) - (a as number))
               .map(([type, count]) => (
                 <div key={type} className="flex items-center justify-between text-xs">
-                  <span className="text-gray-400 capitalize">{type.replace(/_/g, ' ')}</span>
-                  <span className="font-semibold text-white">{count as number}</span>
+                  <span className="text-muted-foreground capitalize">{type.replace(/_/g, ' ')}</span>
+                  <span className="font-semibold text-foreground">{count as number}</span>
                 </div>
               ))}
           </div>

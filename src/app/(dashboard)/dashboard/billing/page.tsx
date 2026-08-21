@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-type Region = 'global' | 'africa';
+type Currency = 'usd' | 'ngn';
 
 interface PlanRow {
   id: string;
@@ -19,7 +19,7 @@ interface PlanRow {
 }
 
 export default function BillingPage() {
-  const [region, setRegion] = useState<Region>('global');
+  const [currency, setCurrency] = useState<Currency>('usd');
   const [loading, setLoading] = useState<string | null>(null);
   const [includeSetup, setIncludeSetup] = useState(false);
   const [plans, setPlans] = useState<PlanRow[]>([]);
@@ -53,22 +53,20 @@ export default function BillingPage() {
   async function handleCheckout(planSlug: string) {
     setLoading(planSlug);
 
-    const endpoint = region === 'africa'
-      ? '/api/checkout/flutterwave'
-      : '/api/checkout/stripe';
-
     try {
-      const res = await fetch(endpoint, {
+      const res = await fetch('/api/checkout/flutterwave', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: planSlug, setupFee: includeSetup }),
+        body: JSON.stringify({ 
+          plan: planSlug, 
+          setupFee: includeSetup,
+          currency: currency.toUpperCase()
+        }),
       });
 
       const data = await res.json();
 
-      if (region === 'global' && data.url) {
-        window.location.href = data.url;
-      } else if (region === 'africa' && data.config) {
+      if (data.config) {
         // @ts-expect-error — FlutterwaveCheckout loaded from CDN script
         if (typeof window.FlutterwaveCheckout === 'function') {
           // @ts-expect-error
@@ -99,31 +97,31 @@ export default function BillingPage() {
       <div>
         <h2 className="text-lg font-bold text-white">Choose Your Plan</h2>
         <p className="text-xs text-gray-500 mt-1">
-          Select your region to see local pricing. All plans include a 14-day money-back guarantee.
+          Select your preferred currency. All plans include a 14-day money-back guarantee.
         </p>
       </div>
 
-      {/* Region Selector */}
+      {/* Currency Selector */}
       <div className="flex gap-2">
         <button
-          onClick={() => setRegion('global')}
+          onClick={() => setCurrency('usd')}
           className={`px-4 py-2 rounded text-xs font-semibold transition ${
-            region === 'global'
+            currency === 'usd'
               ? 'bg-indigo-600 text-white'
               : 'bg-gray-900 text-gray-400 border border-gray-800 hover:text-white'
           }`}
         >
-          🌍 Global (USD — Stripe)
+          💵 USD (US Dollars)
         </button>
         <button
-          onClick={() => setRegion('africa')}
+          onClick={() => setCurrency('ngn')}
           className={`px-4 py-2 rounded text-xs font-semibold transition ${
-            region === 'africa'
+            currency === 'ngn'
               ? 'bg-emerald-600 text-white'
               : 'bg-gray-900 text-gray-400 border border-gray-800 hover:text-white'
           }`}
         >
-          🌍 Africa (NGN — Flutterwave)
+          🇳🇬 NGN (Nigerian Naira)
         </button>
       </div>
 
@@ -140,7 +138,7 @@ export default function BillingPage() {
             Add Full Setup & Installation Package
           </span>
           <span className="text-[10px] text-gray-500 block mt-0.5">
-            {region === 'global' ? '$499 one-time' : '₦350,000 one-time'} — We configure everything for you: WhatsApp Business API, Telegram bot, knowledge base setup, and go-live testing.
+            {currency === 'usd' ? '$499 one-time' : '₦350,000 one-time'} — We configure everything for you: WhatsApp Business API, Telegram bot, knowledge base setup, and go-live testing.
           </span>
         </div>
       </label>
@@ -157,7 +155,7 @@ export default function BillingPage() {
               <div>
                 <h3 className="text-sm font-bold text-white">{plan.name}</h3>
                 <p className="text-2xl font-light text-indigo-400 mt-2 font-mono">
-                  {region === 'global'
+                  {currency === 'usd'
                     ? `$${(plan.price_usd / 100).toFixed(0)}`
                     : `₦${(plan.price_ngn / 100).toLocaleString()}`}
                   <span className="text-xs text-gray-500 font-normal">/mo</span>
@@ -191,11 +189,8 @@ export default function BillingPage() {
         </div>
       )}
 
-      {/* Flutterwave CDN script (loaded only when Africa region is selected) */}
-      {region === 'africa' && (
-        // eslint-disable-next-line @next/next/no-before-interactive-script-outside-document
-        <script src="https://checkout.flutterwave.com/v3.js" async />
-      )}
+      {/* Flutterwave CDN script */}
+      <script src="https://checkout.flutterwave.com/v3.js" async />
     </div>
   );
 }
