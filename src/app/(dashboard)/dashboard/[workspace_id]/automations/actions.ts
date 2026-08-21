@@ -26,6 +26,9 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
   const channelFilterRaw = formData.get('channel_filter') as string;
   const channelFilter = channelFilterRaw ? JSON.parse(channelFilterRaw) : ['whatsapp', 'telegram'];
   const emailSubject = formData.get('email_subject') as string;
+  // PHASE 5.5: Scheduling support
+  const automationType = (formData.get('automation_type') as string) || 'trigger';
+  const scheduledAt = formData.get('scheduled_at') as string;
 
   if (!title || !triggerType || !messageTemplate) {
     return { error: 'Title, trigger type, and message template are required' };
@@ -35,6 +38,16 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
   if (channelFilter.includes('email') && !emailSubject) {
     return { error: 'Email subject is required when email channel is selected' };
   }
+
+  // PHASE 5.5: Validate scheduled_at if type is scheduled
+  if (automationType === 'scheduled' && !scheduledAt) {
+    return { error: 'Scheduled date/time is required for scheduled automations' };
+  }
+
+  // Determine initial status based on automation type
+  let status = 'active';
+  if (automationType === 'instant') status = 'draft'; // Instant sends are drafts until user clicks "Send Now"
+  if (automationType === 'scheduled') status = 'scheduled';
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -50,6 +63,9 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
       cta_link: ctaLink || null,
       channel_filter: channelFilter, // PHASE 5.5
       email_subject: emailSubject || null, // PHASE 5.5
+      automation_type: automationType, // PHASE 5.5
+      scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null, // PHASE 5.5
+      status, // PHASE 5.5
     });
 
   if (error) return { error: error.message };
@@ -70,6 +86,15 @@ export async function updateAutomation(automationId: string, workspaceId: string
   const channelFilterRaw = formData.get('channel_filter') as string;
   const channelFilter = channelFilterRaw ? JSON.parse(channelFilterRaw) : ['whatsapp', 'telegram'];
   const emailSubject = formData.get('email_subject') as string;
+  // PHASE 5.5: Scheduling support
+  const automationType = (formData.get('automation_type') as string) || 'trigger';
+  const scheduledAt = formData.get('scheduled_at') as string;
+
+  // Determine status update based on automation type
+  let status: string | undefined;
+  if (automationType === 'instant') status = 'draft';
+  if (automationType === 'scheduled') status = 'scheduled';
+  if (automationType === 'trigger') status = 'active';
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -84,6 +109,9 @@ export async function updateAutomation(automationId: string, workspaceId: string
       cta_link: ctaLink || null,
       channel_filter: channelFilter, // PHASE 5.5
       email_subject: emailSubject || null, // PHASE 5.5
+      automation_type: automationType, // PHASE 5.5
+      scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null, // PHASE 5.5
+      ...(status ? { status } : {}), // PHASE 5.5
     })
     .eq('id', automationId);
 

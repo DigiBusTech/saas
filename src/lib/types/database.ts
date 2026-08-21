@@ -244,6 +244,14 @@ export interface WorkspaceAutomation {
   rate_limit_delay_ms: number; // default 1500 for WhatsApp, 35 for Telegram
   execution_mode: 'instant' | 'scheduled'; // default 'scheduled'
   last_executed_at: string | null;
+  // PHASE 5.5: Scheduling & Status tracking
+  status: 'draft' | 'active' | 'scheduled' | 'processing' | 'completed' | 'paused'; // default 'active'
+  scheduled_at: string | null; // For scheduled blasts
+  automation_type: 'trigger' | 'instant' | 'scheduled' | 'drip'; // default 'trigger'
+  target_segment: string | null; // Optional lead segment filter
+  lead_count: number; // Cached count of eligible leads
+  sent_count: number; // Total sent successfully
+  failed_count: number; // Total failed to send
 }
 
 export interface KnowledgeBase {

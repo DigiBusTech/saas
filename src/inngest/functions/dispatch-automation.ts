@@ -251,12 +251,30 @@ export const dispatchAutomation = inngest.createFunction(
       totalFailed += emailResults.failed;
     }
 
-    // Step 6: Update automation last_executed_at
-    await step.run('update-automation-timestamp', async () => {
-      await db
+    // Step 6: Update automation execution status
+    await step.run('update-automation-status', async () => {
+      // Fetch automation to check type
+      const { data: automation } = await db
         .from('workspace_automations')
-        .update({ last_executed_at: new Date().toISOString() })
-        .eq('id', automationId);
+        .select('automation_type, status')
+        .eq('id', automationId)
+        .single();
+
+      // Determine final status based on automation type
+      let finalStatus = 'active'; // Default for trigger-based
+      
+      if (automation?.automation_type === 'instant' || automation?.automation_type === 'scheduled') {
+        // One-time sends should be marked as completed
+        finalStatus = 'completed';
+      }
+
+      // Use the RPC function to update status and counters
+      await db.rpc('update_automation_execution_status', {
+        p_automation_id: automationId,
+        p_status: finalStatus,
+        p_sent_count: totalSent,
+        p_failed_count: totalFailed,
+      });
     });
 
     return {

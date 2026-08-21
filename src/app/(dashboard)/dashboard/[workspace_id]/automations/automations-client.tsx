@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Zap, Plus, X, Loader2, Pencil, Trash2, Power, PowerOff, ImageIcon, ExternalLink, Mail, MessageSquare,
+  Zap, Plus, X, Loader2, Pencil, Trash2, Power, PowerOff, ImageIcon, ExternalLink, Mail, MessageSquare, Send, Calendar, Clock,
 } from 'lucide-react';
 import type { Workspace, WorkspaceAutomation } from '@/lib/types/database';
 import { createAutomation, updateAutomation, toggleAutomation, deleteAutomation } from './actions';
@@ -31,6 +31,9 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [selectedChannels, setSelectedChannels] = useState<string[]>(['whatsapp', 'telegram']); // PHASE 5.5
+  const [automationType, setAutomationType] = useState<'trigger' | 'instant' | 'scheduled' | 'drip'>('trigger'); // PHASE 5.5
+  const [sendingNow, setSendingNow] = useState<string | null>(null);
+  const [leadCount, setLeadCount] = useState<Record<string, number>>({});
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,6 +65,39 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
 
   const getTriggerLabel = (t: string) => TRIGGER_TYPES.find((tr) => tr.value === t)?.label ?? t;
 
+  const getStatusBadge = (auto: WorkspaceAutomation) => {
+    const badges = {
+      draft: { label: 'Draft', class: 'text-gray-600 dark:text-gray-400 bg-gray-500/10' },
+      active: { label: 'Active', class: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' },
+      scheduled: { label: 'Scheduled', class: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
+      processing: { label: 'Sending...', class: 'text-sky-600 dark:text-sky-400 bg-sky-500/10 animate-pulse' },
+      completed: { label: 'Completed', class: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' },
+      paused: { label: 'Paused', class: 'text-rose-600 dark:text-rose-400 bg-rose-500/10' },
+    };
+    const badge = badges[auto.status as keyof typeof badges] || badges.active;
+    return <span className={`text-[9px] px-2 py-0.5 rounded font-medium ${badge.class}`}>{badge.label}</span>;
+  };
+
+  const handleSendNow = async (autoId: string) => {
+    if (!confirm('Send this automation now to all eligible leads?')) return;
+    setSendingNow(autoId);
+    try {
+      const res = await fetch(`/api/automations/${autoId}/dispatch`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ Dispatched to ${data.leadCount} leads!`);
+        window.location.reload();
+      } else {
+        alert(`❌ ${data.error || 'Failed to dispatch'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('❌ Network error');
+    } finally {
+      setSendingNow(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -76,8 +112,9 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
         <button
           onClick={() => {
             setEditingAutomation(null);
-            // PHASE 5.5: Reset to default channels when creating new automation
+            // PHASE 5.5: Reset to default values when creating new automation
             setSelectedChannels(['whatsapp', 'telegram']);
+            setAutomationType('trigger');
             setError('');
             setShowModal(true);
           }}
@@ -106,21 +143,37 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                 ${auto.is_active ? 'border-emerald-500/20 hover:border-emerald-500/40' : 'border-border opacity-60 hover:opacity-80'}`}
             >
               <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-                    {auto.is_active && (
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      {auto.is_active && (
+                        <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                        </span>
+                      )}
+                      {auto.title}
+                    </h3>
+                    {getStatusBadge(auto)}
+                  </div>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                      {getTriggerLabel(auto.trigger_type)}
+                    </span>
+                    {auto.trigger_type === 'subscription_expiring' && auto.trigger_days_before > 0 && (
+                      <span className="text-[10px] text-amber-600 dark:text-amber-400">{auto.trigger_days_before} days before</span>
+                    )}
+                    {auto.scheduled_at && (
+                      <span className="text-[10px] text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded flex items-center gap-1">
+                        <Calendar className="w-2.5 h-2.5" />
+                        {new Date(auto.scheduled_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     )}
-                    {auto.title}
-                  </h3>
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded mt-1 inline-block">
-                    {getTriggerLabel(auto.trigger_type)}
-                  </span>
-                  {auto.trigger_type === 'subscription_expiring' && auto.trigger_days_before > 0 && (
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400 ml-1">{auto.trigger_days_before} days before</span>
+                  </div>
+                  {(auto.sent_count > 0 || auto.failed_count > 0) && (
+                    <div className="text-[9px] text-muted-foreground mt-1">
+                      Sent: {auto.sent_count} • Failed: {auto.failed_count}
+                    </div>
                   )}
                 </div>
                 <button onClick={() => handleToggle(auto)}
@@ -165,10 +218,21 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
               </div>
 
               <div className="flex gap-2 pt-1 border-t border-border">
+                {auto.automation_type === 'instant' && auto.status !== 'processing' && auto.status !== 'completed' && (
+                  <button
+                    onClick={() => handleSendNow(auto.id)}
+                    disabled={sendingNow === auto.id}
+                    className="flex-1 py-1.5 rounded-lg text-[10px] font-medium text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 transition flex items-center justify-center gap-1"
+                  >
+                    {sendingNow === auto.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
+                    Send Now
+                  </button>
+                )}
                 <button onClick={() => {
                   setEditingAutomation(auto);
-                  // PHASE 5.5: Pre-populate channel selection from existing automation
+                  // PHASE 5.5: Pre-populate all fields from existing automation
                   setSelectedChannels(auto.channel_filter && Array.isArray(auto.channel_filter) ? auto.channel_filter : ['whatsapp', 'telegram']);
+                  setAutomationType(auto.automation_type || 'trigger');
                   setError('');
                   setShowModal(true);
                 }}
@@ -217,24 +281,82 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                   <p className="text-[10px] text-muted-foreground mt-1">A descriptive name for this automation (e.g. &quot;7-Day Renewal Reminder&quot;). Only visible to you.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Trigger Type</label>
-                    <select name="trigger_type" defaultValue={editingAutomation?.trigger_type ?? 'new_lead'}
-                      className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
-                      {TRIGGER_TYPES.map((t) => (
-                        <option key={t.value} value={t.value}>{t.label}</option>
-                      ))}
-                    </select>
-                    <p className="text-[10px] text-muted-foreground mt-1">The event that fires this automation. The cron engine checks these daily.</p>
+                {/* PHASE 5.5: Automation Type Selector */}
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Automation Type</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {[
+                      { value: 'trigger', label: 'Trigger', desc: 'Event-based', icon: <Zap className="w-3.5 h-3.5" /> },
+                      { value: 'instant', label: 'Instant', desc: 'Send manually', icon: <Send className="w-3.5 h-3.5" /> },
+                      { value: 'scheduled', label: 'Scheduled', desc: 'Future send', icon: <Calendar className="w-3.5 h-3.5" /> },
+                      { value: 'drip', label: 'Drip', desc: 'Multi-step', icon: <Clock className="w-3.5 h-3.5" /> },
+                    ].map((type) => (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setAutomationType(type.value as any)}
+                        className={`p-2 rounded-lg border text-xs font-medium transition ${
+                          automationType === type.value
+                            ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-600 dark:text-indigo-400'
+                            : 'bg-muted border-input text-muted-foreground hover:border-ring'
+                        }`}
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          {type.icon}
+                          <span className="text-[10px]">{type.label}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  <div>
-                    <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Days Before (if expiry)</label>
-                    <input name="trigger_days_before" type="number" min="0" defaultValue={editingAutomation?.trigger_days_before ?? 3}
-                      className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
-                    <p className="text-[10px] text-muted-foreground mt-1">Only applies to &quot;Subscription Expiring&quot; trigger. Set 0 to fire on the expiry day itself.</p>
-                  </div>
+                  <input type="hidden" name="automation_type" value={automationType} />
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    {automationType === 'trigger' && 'Fires automatically when event occurs (e.g., subscription expiring).'}
+                    {automationType === 'instant' && 'Create now, send manually with "Send Now" button.'}
+                    {automationType === 'scheduled' && 'Send automatically at a specific date/time.'}
+                    {automationType === 'drip' && 'Multi-step sequence with delays between messages.'}
+                  </p>
                 </div>
+
+                {/* Conditional: Date/Time Picker for Scheduled Blasts */}
+                {automationType === 'scheduled' && (
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                      Scheduled Date & Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="scheduled_at"
+                      defaultValue={editingAutomation?.scheduled_at ? new Date(editingAutomation.scheduled_at).toISOString().slice(0, 16) : ''}
+                      required={automationType === 'scheduled'}
+                      className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Choose when this automation should send. The system checks every 5 minutes for ready automations.
+                    </p>
+                  </div>
+                )}
+
+                {/* Trigger Type & Days Before (only for trigger-based) */}
+                {automationType === 'trigger' && (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Trigger Type</label>
+                      <select name="trigger_type" defaultValue={editingAutomation?.trigger_type ?? 'new_lead'}
+                        className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition appearance-none">
+                        {TRIGGER_TYPES.map((t) => (
+                          <option key={t.value} value={t.value}>{t.label}</option>
+                        ))}
+                      </select>
+                      <p className="text-[10px] text-muted-foreground mt-1">The event that fires this automation. The cron engine checks these daily.</p>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">Days Before (if expiry)</label>
+                      <input name="trigger_days_before" type="number" min="0" defaultValue={editingAutomation?.trigger_days_before ?? 3}
+                        className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground focus:border-ring focus:ring-1 focus:ring-ring outline-none transition" />
+                      <p className="text-[10px] text-muted-foreground mt-1">Only applies to &quot;Subscription Expiring&quot; trigger. Set 0 to fire on the expiry day itself.</p>
+                    </div>
+                  </div>
+                )}
 {/* PHASE 5.5: Multi-channel Selection */}
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
