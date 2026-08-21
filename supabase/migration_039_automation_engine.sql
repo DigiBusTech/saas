@@ -91,7 +91,7 @@ COMMENT ON COLUMN public.workspace_crm.email_verified IS 'Whether email has been
 ALTER TABLE public.workspace_crm
 ADD COLUMN IF NOT EXISTS preferred_channel TEXT DEFAULT 'whatsapp' CHECK (preferred_channel IN ('whatsapp', 'telegram', 'web_chat', 'email'));
 
-COMMENT ON COLUMN public.workspace_crm.preferred_channel IS 'Lead\'s preferred communication channel';
+COMMENT ON COLUMN public.workspace_crm.preferred_channel IS 'Lead''s preferred communication channel';
 
 -- 6. Create function to get leads eligible for automation by channel
 CREATE OR REPLACE FUNCTION public.get_automation_eligible_leads(
