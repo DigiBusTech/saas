@@ -1,11 +1,15 @@
 -- =========================================================================
--- Migration 032: RAG Citations & Source URL Support
+-- Migration 033: RAG Citations & Source URL Support
 -- Adds source_url field to knowledge_bases for proper citation tracking
 -- =========================================================================
 
 -- Add source_url column to knowledge_bases for citation support
 ALTER TABLE public.knowledge_bases 
 ADD COLUMN IF NOT EXISTS source_url TEXT;
+
+-- Drop existing functions first (return type is changing)
+DROP FUNCTION IF EXISTS match_knowledge(vector, uuid, double precision, integer);
+DROP FUNCTION IF EXISTS public.match_knowledge_workspace(vector, uuid, uuid, double precision, integer);
 
 -- Update match_knowledge function to return source_url
 CREATE OR REPLACE FUNCTION match_knowledge(
