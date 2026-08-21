@@ -27,20 +27,24 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
 
   if (!profile?.tenant_id) redirect('/dashboard/onboarding');
 
-  // Use regular client for workspace lookup (respects RLS)
-  // Must filter by tenant_id for RLS policy
-  const { data: workspace, error: workspaceError } = await supabase
+  // Fetch workspace (no plan relation here - plans are at tenant level)
+  const { data: workspace } = await supabase
     .from('workspaces')
-    .select('*, subscription_plans(*)')
+    .select('*')
     .eq('id', workspace_id)
     .eq('tenant_id', profile.tenant_id)
     .single();
 
-  if (!workspace || workspaceError) {
-    console.log('Workspace error:', workspaceError);
-    console.log('Redirecting to onboarding...');
-    redirect('/dashboard/onboarding');
-  }
+  if (!workspace) redirect('/dashboard/onboarding');
+
+  // Fetch tenant with subscription plan
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('*, subscription_plans(*)')
+    .eq('id', profile.tenant_id)
+    .single();
+
+  const plan = tenant?.subscription_plans;
 
   const svc = createServiceClient();
 
@@ -61,8 +65,8 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
     svc.from('workspace_knowledge').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id)
   ]);
 
-  const plan = workspace.subscription_plans;
-  const aiMessageLimit = plan?.ai_message_cap || 200;
+  // Calculate AI usage based on total message limits
+  const aiMessageLimit = (plan?.telegram_message_limit || 50) + (plan?.whatsapp_message_limit || 50);
   const aiUsagePercent = Math.min(((totalMessages || 0) / aiMessageLimit) * 100, 100);
 
   // Determine greeting based on time of day
