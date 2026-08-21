@@ -13,11 +13,7 @@ CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(tenant_id,
 CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON chat_messages(conversation_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_knowledge_base_workspace ON knowledge_base(workspace_id, created_at DESC);
 
--- Add constraints to prevent orphaned records
-ALTER TABLE workspace_members 
-ADD CONSTRAINT fk_workspace_members_user 
-FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
+-- Add constraints to prevent orphaned records and ensure data integrity
 ALTER TABLE workspace_crm 
 ADD CONSTRAINT check_workspace_crm_channel 
 CHECK (preferred_channel IN ('whatsapp', 'telegram', 'email', 'web'));
@@ -85,11 +81,7 @@ CREATE POLICY "Users can view audit logs for their tenants"
   ON audit_logs FOR SELECT
   USING (
     tenant_id IN (
-      SELECT t.id FROM tenants t
-      JOIN workspace_members wm ON wm.workspace_id IN (
-        SELECT id FROM workspaces WHERE tenant_id = t.id
-      )
-      WHERE wm.user_id = auth.uid()
+      SELECT tenant_id FROM users WHERE id = auth.uid()
     )
   );
 
@@ -129,8 +121,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 --   AFTER INSERT OR UPDATE OR DELETE ON tenants
 --   FOR EACH ROW EXECUTE FUNCTION log_audit_trail();
 
--- CREATE TRIGGER audit_workspace_members
---   AFTER INSERT OR UPDATE OR DELETE ON workspace_members
+-- CREATE TRIGGER audit_users
+--   AFTER INSERT OR UPDATE OR DELETE ON users
 --   FOR EACH ROW EXECUTE FUNCTION log_audit_trail();
 
 -- Add rate limiting table for API endpoints

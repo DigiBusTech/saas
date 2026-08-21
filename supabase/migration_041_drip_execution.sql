@@ -266,8 +266,10 @@ CREATE POLICY "Users can view drip progress for their workspaces"
   ON workspace_automation_drip_progress FOR SELECT
   USING (
     workspace_id IN (
-      SELECT workspace_id FROM workspace_members 
-      WHERE user_id = auth.uid()
+      SELECT id FROM workspaces 
+      WHERE tenant_id IN (
+        SELECT tenant_id FROM users WHERE id = auth.uid()
+      )
     )
   );
 
@@ -275,10 +277,20 @@ CREATE POLICY "Users can manage drip progress for their workspaces"
   ON workspace_automation_drip_progress FOR ALL
   USING (
     workspace_id IN (
-      SELECT workspace_id FROM workspace_members 
-      WHERE user_id = auth.uid() AND role IN ('owner', 'admin')
+      SELECT id FROM workspaces 
+      WHERE tenant_id IN (
+        SELECT tenant_id FROM users 
+        WHERE id = auth.uid() 
+        AND role IN ('tenant_admin', 'super_admin')
+      )
     )
   );
+
+CREATE POLICY "Service role can manage drip progress"
+  ON workspace_automation_drip_progress FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
 
 COMMENT ON TABLE workspace_automation_drip_progress IS 'Tracks multi-step drip sequence progress per lead';
 COMMENT ON FUNCTION enroll_leads_in_drip IS 'Enrolls eligible leads into a drip sequence';
