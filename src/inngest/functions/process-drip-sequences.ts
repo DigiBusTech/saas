@@ -1,5 +1,5 @@
 import { inngest } from '../client';
-import { createServiceClient } from '@/lib/supabase/server-service';
+import { createServiceClient } from '@/lib/supabase/server';
 
 /**
  * Drip Sequence Processor
@@ -11,9 +11,9 @@ export const processDripSequences = inngest.createFunction(
   { 
     id: 'process-drip-sequences',
     name: 'Process Drip Sequences',
+    triggers: [{ cron: '*/10 * * * *' }], // Every 10 minutes
   },
-  { cron: '*/10 * * * *' }, // Every 10 minutes
-  async ({ step, logger }) => {
+  async ({ step, logger }: { step: any; logger: any }) => {
     
     // Step 1: Fetch drip messages ready to send
     const messages = await step.run('fetch-ready-drip-messages', async () => {

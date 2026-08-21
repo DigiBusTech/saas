@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server-service';
+import { createServiceClient } from '@/lib/supabase/server';
 
 /**
  * GET /api/health

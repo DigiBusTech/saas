@@ -62,9 +62,9 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
           {branding.cover_url && <div className="h-32 w-full bg-cover bg-center" style={{ backgroundImage: `url(${String(branding.cover_url)})` }} />}
           <div className={`w-full ${branding.cover_url ? 'px-4 pb-4 pt-0' : ''} ${coverOverlap && branding.cover_url ? '-mt-12 px-4 pb-4' : ''}`}>
           <div className={`flex h-24 w-24 items-center justify-center overflow-hidden border-2 ${logoPosition === 'right' ? 'ml-auto' : logoPosition === 'left' ? 'mr-auto' : 'mx-auto'}`} style={{ borderColor: primary, background: `${primary}22`, borderRadius: logoRadius }}>
-            {workspace.logo_url || branding.avatar_url ? <img src={String(workspace.logo_url || branding.avatar_url)} alt="" className="h-full w-full object-cover" /> : <span className="text-3xl font-bold" style={{ color: primary }}>{workspace.name.slice(0, 1).toUpperCase()}</span>}
+            {workspace.logo_url || branding.avatar_url ? <img src={String(workspace.logo_url || branding.avatar_url)} alt="" className="h-full w-full object-cover" /> : <span className="text-3xl font-bold" style={{ color: primary }}>{String(workspace.name).slice(0, 1).toUpperCase()}</span>}
           </div>
-          <div className={`mt-4 flex gap-2 ${logoPosition === 'center' ? 'justify-center' : ''}`}><h1 className="text-xl font-bold">{workspace.name}</h1>{hasVerifiedBadge && <ShieldCheck className="h-5 w-5" style={{ color: primary }} />}</div>
+          <div className={`mt-4 flex gap-2 ${logoPosition === 'center' ? 'justify-center' : ''}`}><h1 className="text-xl font-bold">{String(workspace.name)}</h1>{hasVerifiedBadge && <ShieldCheck className="h-5 w-5" style={{ color: primary }} />}</div>
           {branding.bio && <p className={`mt-3 max-w-md text-sm leading-6 text-white/65 ${logoPosition === 'center' ? 'mx-auto' : ''}`}>{String(branding.bio)}</p>}
           {socialItems.length > 0 && <div className={`mt-5 flex gap-4 text-white/60 ${logoPosition === 'center' ? 'justify-center' : ''}`}>{socialItems.map((item) => <a key={item.key} href={String(item.href)} target="_blank" rel="noreferrer" className="transition hover:text-white"><SocialIcon path={item.icon.path} title={item.key} /></a>)}</div>}
           </div>
@@ -88,24 +88,24 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
         
         {/* PHASE 1: Business Legal Footer with Workspace Name */}
         <div className="mt-10 flex flex-wrap justify-center gap-3 text-[10px] text-white/40">
-          {legal.show_privacy && <a href="#privacy_policy" className="hover:text-white">{workspace.name} Privacy Policy</a>}
-          {legal.show_terms && <a href="#terms_of_service" className="hover:text-white">{workspace.name} Terms</a>}
-          {legal.show_disclaimer && <a href="#disclaimer" className="hover:text-white">Legal Disclaimer</a>}
+          {Boolean(legal.show_privacy) && <a href="#privacy_policy" className="hover:text-white">{workspace.name as string} Privacy Policy</a>}
+          {Boolean(legal.show_terms) && <a href="#terms_of_service" className="hover:text-white">{workspace.name as string} Terms</a>}
+          {Boolean(legal.show_disclaimer) && <a href="#disclaimer" className="hover:text-white">Legal Disclaimer</a>}
         </div>
         <div className="mt-6 space-y-4 text-left">
-          {legal.show_privacy && String(legal.privacy_policy ?? '').trim() && (
+          {Boolean(legal.show_privacy) && String(legal.privacy_policy ?? '').trim() && (
             <section id="privacy_policy" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
-              <h2 className="text-xs font-semibold text-white">{workspace.name} Privacy Policy</h2>
+              <h2 className="text-xs font-semibold text-white">{workspace.name as string} Privacy Policy</h2>
               <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.privacy_policy)}</p>
             </section>
           )}
-          {legal.show_terms && String(legal.terms_of_service ?? '').trim() && (
+          {Boolean(legal.show_terms) && String(legal.terms_of_service ?? '').trim() && (
             <section id="terms_of_service" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
-              <h2 className="text-xs font-semibold text-white">{workspace.name} Terms of Service</h2>
+              <h2 className="text-xs font-semibold text-white">{workspace.name as string} Terms of Service</h2>
               <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.terms_of_service)}</p>
             </section>
           )}
-          {legal.show_disclaimer && String(legal.disclaimer ?? '').trim() && (
+          {Boolean(legal.show_disclaimer) && String(legal.disclaimer ?? '').trim() && (
             <section id="disclaimer" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
               <h2 className="text-xs font-semibold text-white">Legal Disclaimer</h2>
               <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.disclaimer)}</p>

@@ -189,7 +189,7 @@ export const processChatMessage = inngest.createFunction(
         
         const { data: existingCrm } = await db
           .from('workspace_crm')
-          .select('id, lead_score, ai_status, customer_name, email')
+          .select('id, lead_score, ai_status, customer_name, email, phone_number')
           .eq('workspace_id', workspaceId)
           .eq('platform', platform)
           .eq('platform_user_id', lookupId)
@@ -197,7 +197,9 @@ export const processChatMessage = inngest.createFunction(
 
         if (existingCrm) {
           const updatePayload: any = {
-            last_in5.5: Always persist WhatsApp profile.name when provided
+            last_interaction: new Date().toISOString()
+          };
+          // PHASE 5.5: Always persist WhatsApp profile.name when provided
           if (contactName && (!existingCrm.customer_name || existingCrm.customer_name === 'WhatsApp User')) {
             updatePayload.customer_name = contactName;
           }
@@ -206,11 +208,8 @@ export const processChatMessage = inngest.createFunction(
           }
           
           // PHASE 5.5: For WhatsApp, store phone if not already present
-          if (platform === 'whatsapp' && waId && !existingCrm.phone) {
-            updatePayload.phone = waId.replace(/\D/g, ''); // Store clean phone numberctName;
-          }
-          if (visitorEmail) {
-            updatePayload.email = visitorEmail;
+          if (platform === 'whatsapp' && waId && !existingCrm.phone_number) {
+            updatePayload.phone_number = waId.replace(/\D/g, ''); // Store clean phone number
           }
           
           // PHASE 2: Update session tracking data
@@ -247,7 +246,14 @@ export const processChatMessage = inngest.createFunction(
             email: existingCrm.email,
           };
         }
-email: visitorEmail || null,
+
+        // Create new CRM record if not exists
+        const crmPayload: any = {
+          workspace_id: workspaceId,
+          platform,
+          platform_user_id: lookupId,
+          customer_name: contactName || (platform === 'whatsapp' ? 'WhatsApp User' : 'Anonymous'),
+          email: visitorEmail || null,
           lead_score: 10,
           tags: ['New Lead'],
           // PHASE 2: Session tracking data
@@ -256,12 +262,11 @@ email: visitorEmail || null,
           user_agent: userAgent || null,
           first_message_at: new Date().toISOString(),
           last_seen_at: new Date().toISOString(),
-        }; lead_score: 10,
-          tags: ['New Lead'],
         };
-        // Web chat: inject email immediately
-        if (platform === 'web' && visitorEmail) {
-          crmPayload.email = visitorEmail;
+
+        // PHASE 5.5: For WhatsApp, store phone number
+        if (platform === 'whatsapp' && waId) {
+          crmPayload.phone_number = waId.replace(/\D/g, '');
         }
 
         let { data: created, error } = await db.from('workspace_crm').insert(crmPayload).select('id, ai_status, customer_name, email').single();
@@ -489,7 +494,7 @@ email: visitorEmail || null,
       // PHASE 1: Format chat history for context injection
       const chatHistoryContext = chatHistory.length > 1 
         ? `\n\n=== CONVERSATION HISTORY (Last ${chatHistory.length} messages) ===\n` +
-          chatHistory.slice(0, -1).map(m => 
+          chatHistory.slice(0, -1).map((m: any) => 
             `${m.sender_type === 'user' ? m.sender_name : 'You'}: ${m.content}`
           ).join('\n') +
           '\n=== END CONVERSATION HISTORY ==='

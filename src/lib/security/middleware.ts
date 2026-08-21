@@ -36,7 +36,7 @@ export function rateLimit(config: RateLimitConfig) {
   return async (req: NextRequest): Promise<NextResponse | null> => {
     const identifier = config.identifier 
       ? config.identifier(req)
-      : req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+      : req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'anonymous';
 
     const key = `ratelimit:${identifier}`;
     const now = Date.now();
@@ -274,7 +274,7 @@ export function setSecurityHeaders(response: NextResponse): NextResponse {
 
 export function logRequest(req: NextRequest, startTime: number) {
   const duration = Date.now() - startTime;
-  const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
   const userAgent = req.headers.get('user-agent') || 'unknown';
   
   console.log(JSON.stringify({
@@ -342,7 +342,7 @@ export function unblockIP(ip: string) {
 }
 
 export function isIPBlocked(req: NextRequest): boolean {
-  const ip = req.ip || req.headers.get('x-forwarded-for');
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip');
   if (!ip) return false;
   
   return blockedIPs.has(ip);
@@ -355,7 +355,7 @@ export function isIPBlocked(req: NextRequest): boolean {
 const suspiciousIPs = new Map<string, { count: number; lastSeen: number }>();
 
 export function trackSuspiciousActivity(req: NextRequest, reason: string) {
-  const ip = req.ip || req.headers.get('x-forwarded-for') || 'unknown';
+  const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
   
   const entry = suspiciousIPs.get(ip) || { count: 0, lastSeen: Date.now() };
   entry.count++;

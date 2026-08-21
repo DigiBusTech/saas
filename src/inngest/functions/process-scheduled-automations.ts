@@ -1,6 +1,6 @@
 import { inngest } from '../client';
-import { createServiceClient } from '@/lib/supabase/server-service';
-import { sendInngestEvent } from '../client';
+import { createServiceClient } from '@/lib/supabase/server';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 
 /**
  * Scheduled Automation Processor
@@ -12,9 +12,9 @@ export const processScheduledAutomations = inngest.createFunction(
   { 
     id: 'process-scheduled-automations',
     name: 'Process Scheduled Automations',
+    triggers: [{ cron: '*/5 * * * *' }], // Every 5 minutes
   },
-  { cron: '*/5 * * * *' }, // Every 5 minutes
-  async ({ step, logger }) => {
+  async ({ step, logger }: { step: any; logger: any }) => {
     
     // Step 1: Fetch automations ready to execute
     const automations = await step.run('fetch-scheduled-automations', async () => {

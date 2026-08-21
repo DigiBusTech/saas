@@ -11,6 +11,14 @@ interface Params {
   workspace_id: string;
 }
 
+interface WorkspaceMetrics {
+  total_leads: number;
+  total_messages: number;
+  total_orders: number;
+  page_views_today: number;
+  total_revenue?: number;
+}
+
 export default async function WorkspaceOverviewPage({ params }: { params: Promise<Params> }) {
   const { workspace_id } = await params;
   
@@ -51,7 +59,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
   // PHASE 3: Use optimized RPC for metrics (single query instead of 6 parallel queries)
   const { data: metrics } = await svc.rpc('get_workspace_metrics', { 
     p_workspace_id: workspace_id 
-  }).single();
+  }).single() as { data: any };
 
   const totalLeads = Number(metrics?.total_leads || 0);
   const totalMessages = Number(metrics?.total_messages || 0);

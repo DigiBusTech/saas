@@ -21,7 +21,7 @@ export async function OPTIONS() {
 const analyticsSchema = z.object({
   workspaceId: z.string().uuid(),
   eventType: z.enum(['page_view', 'link_click', 'product_view', 'service_view', 'channel_click', 'form_submit']),
-  eventData: z.record(z.unknown()).optional(),
+  eventData: z.record(z.string(), z.unknown()).optional(),
   sessionId: z.string().optional(),
 });
 

@@ -7,9 +7,12 @@ import { inngest } from '@/inngest/client';
  * Handles WhatsApp, Telegram, and Email delivery
  */
 export const dispatchAutomation = inngest.createFunction(
-  { id: 'automation-dispatcher', name: 'Dispatch Automation Messages' },
-  { event: 'automation/dispatch' },
-  async ({ event, step }) => {
+  {
+    id: 'automation-dispatcher',
+    name: 'Dispatch Automation Messages',
+    triggers: [{ event: 'automation/dispatch' }],
+  },
+  async ({ event, step }: { event: any; step: any }) => {
     const {
       automationId,
       workspaceId,
@@ -45,10 +48,11 @@ export const dispatchAutomation = inngest.createFunction(
     }
 
     // Step 2: Group leads by channel
+    type Lead = { lead_name?: string; phone?: string; telegram_chat_id?: string; email?: string; channel_type: string; [key: string]: any };
     const leadsByChannel = {
-      whatsapp: leads.filter((l: any) => l.channel_type === 'whatsapp' && l.phone),
-      telegram: leads.filter((l: any) => l.channel_type === 'telegram' && l.telegram_chat_id),
-      email: leads.filter((l: any) => l.email && l.email !== ''),
+      whatsapp: leads.filter((l: any) => l.channel_type === 'whatsapp' && l.phone) as Lead[],
+      telegram: leads.filter((l: any) => l.channel_type === 'telegram' && l.telegram_chat_id) as Lead[],
+      email: leads.filter((l: any) => l.email && l.email !== '') as Lead[],
     };
 
     let totalSent = 0;

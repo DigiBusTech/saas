@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { sendInngestEvent } from '@/inngest/client';
+import { sendInngestEvent } from '@/lib/inngest/dynamic';
 
 /**
  * POST /api/automations/[id]/dispatch
