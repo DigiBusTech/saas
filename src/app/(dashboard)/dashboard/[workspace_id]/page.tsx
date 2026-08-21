@@ -11,7 +11,9 @@ interface Params {
   workspace_id: string;
 }
 
-export default async function WorkspaceOverviewPage({ params }: { params: Params }) {
+export default async function WorkspaceOverviewPage({ params }: { params: Promise<Params> }) {
+  const { workspace_id } = await params;
+  
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
@@ -22,7 +24,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
   const { data: workspace } = await svc
     .from('workspaces')
     .select('*, subscription_plans(*)')
-    .eq('id', params.workspace_id)
+    .eq('id', workspace_id)
     .single();
 
   if (!workspace) redirect('/dashboard');
@@ -36,12 +38,12 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
     { count: serviceCount },
     { count: knowledgeDocs }
   ] = await Promise.all([
-    svc.from('workspace_crm').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id),
-    svc.from('chat_messages').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id).eq('is_ai', true),
-    svc.from('workspace_orders').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id),
-    svc.from('workspace_products').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id),
-    svc.from('workspace_services').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id),
-    svc.from('workspace_knowledge').select('*', { count: 'exact', head: true }).eq('workspace_id', params.workspace_id)
+    svc.from('workspace_crm').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
+    svc.from('chat_messages').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id).eq('is_ai', true),
+    svc.from('workspace_orders').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
+    svc.from('workspace_products').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
+    svc.from('workspace_services').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
+    svc.from('workspace_knowledge').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id)
   ]);
 
   const plan = workspace.subscription_plans;
@@ -55,7 +57,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
   return (
     <div className="min-h-screen bg-background">
       {/* Welcome Header */}
-      <div className="border-b border-border bg-gradient-to-r from-primary/5 via-background to-accent/5 px-4 md:px-8 py-6 md:py-10">
+      <div className="border-b border-border bg-linear-to-r from-primary/5 via-background to-accent/5 px-4 md:px-8 py-6 md:py-10">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl md:text-4xl font-bold text-foreground mb-2">
             {greeting} 👋
@@ -80,7 +82,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-1">{totalLeads || 0}</h3>
             <p className="text-xs md:text-sm text-muted-foreground">Total Leads in CRM</p>
             <Link 
-              href={`/dashboard/${params.workspace_id}/crm`}
+              href={`/dashboard/${workspace_id}/crm`}
               className="mt-3 text-xs text-primary hover:underline flex items-center gap-1"
             >
               View all leads <ArrowRight className="w-3 h-3" />
@@ -119,7 +121,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-1">{totalOrders || 0}</h3>
             <p className="text-xs md:text-sm text-muted-foreground">Total Orders</p>
             <Link 
-              href={`/dashboard/${params.workspace_id}/orders`}
+              href={`/dashboard/${workspace_id}/orders`}
               className="mt-3 text-xs text-primary hover:underline flex items-center gap-1"
             >
               Manage orders <ArrowRight className="w-3 h-3" />
@@ -138,7 +140,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
             </h3>
             <p className="text-xs md:text-sm text-muted-foreground">SabiBio Page Status</p>
             <Link 
-              href={`/dashboard/${params.workspace_id}/sabibio`}
+              href={`/dashboard/${workspace_id}/sabibio`}
               className="mt-3 text-xs text-primary hover:underline flex items-center gap-1"
             >
               Edit page <ArrowRight className="w-3 h-3" />
@@ -153,7 +155,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             <Link
-              href={`/dashboard/${params.workspace_id}/sabibio`}
+              href={`/dashboard/${workspace_id}/sabibio`}
               className="bg-card border border-border rounded-lg p-4 md:p-5 hover:border-primary hover:bg-primary/5 transition-all group"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -168,7 +170,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
             </Link>
 
             <Link
-              href={`/dashboard/${params.workspace_id}/products`}
+              href={`/dashboard/${workspace_id}/products`}
               className="bg-card border border-border rounded-lg p-4 md:p-5 hover:border-primary hover:bg-primary/5 transition-all group"
             >
               <div className="flex items-center gap-3 mb-2">
@@ -186,7 +188,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Params
             </Link>
 
             <Link
-              href={`/dashboard/${params.workspace_id}/knowledge`}
+              href={`/dashboard/${workspace_id}/knowledge`}
               className="bg-card border border-border rounded-lg p-4 md:p-5 hover:border-primary hover:bg-primary/5 transition-all group"
             >
               <div className="flex items-center gap-3 mb-2">
