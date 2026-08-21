@@ -147,6 +147,19 @@ export const processChatMessage = inngest.createFunction(
     });
     if (!inboundMessageSaved && externalMessageId) return { status: 'duplicate_skipped', externalMessageId };
 
+    // Step 2.5: PHASE 1 — Fetch conversation history (last 10-15 messages) to fix conversational amnesia
+    const chatHistory = await step.run('fetch-chat-history', async () => {
+      const { data: messages } = await db
+        .from('messages')
+        .select('sender_type, sender_name, content, created_at')
+        .eq('conversation_id', conversation.id)
+        .order('created_at', { ascending: false })
+        .limit(15);
+      
+      // Reverse to get chronological order (oldest first)
+      return messages ? messages.reverse() : [];
+    });
+
     // If usage limits are exhausted, notify the customer once and stop before calling the LLM.
     if (usageBlocked) {
       await step.run('save-limit-notice', async () => {
@@ -379,10 +392,11 @@ export const processChatMessage = inngest.createFunction(
         }
       }
 
-      // PHASE 2: Enhanced RAG grounding via pgvector semantic search with intelligent synthesis
+      // PHASE 2 & 3: Enhanced RAG grounding via pgvector semantic search with source URL support
       let kbMatched = false;
+      let citationLinks: string[] = [];
       if (intent === 'support_faq') {
-        let kbResults: Array<{ title: string; content: string }> | null = null;
+        let kbResults: Array<{ title: string; content: string; source_url?: string | null }> | null = null;
         try {
           const queryEmbedding = await generateEmbedding(messageText);
           if (queryEmbedding) {
@@ -398,7 +412,7 @@ export const processChatMessage = inngest.createFunction(
         if (!kbResults) {
           const { data } = await db
             .from('knowledge_bases')
-            .select('title, content')
+            .select('title, content, source_url')
             .eq('tenant_id', tenantId)
             .or(workspaceId ? `workspace_id.eq.${workspaceId},workspace_id.is.null` : 'workspace_id.is.null')
             .limit(3);
@@ -407,10 +421,15 @@ export const processChatMessage = inngest.createFunction(
 
         if (kbResults && kbResults.length > 0) {
           kbMatched = true;
+          // PHASE 3: Extract citation links from knowledge documents
+          citationLinks = kbResults
+            .filter(k => k.source_url && k.source_url.trim() !== '')
+            .map(k => k.source_url as string);
+          
           // PHASE 2: Improved RAG formatting with clear synthesis instructions
-          contextInfo = '\n\n=== GROUNDING KNOWLEDGE BASE DOCUMENTS ===\n' + 
+          contextInfo = '\n\n=== GROUNDING KNOWLEDGE BASE DOCUMENTS ===' + 
             kbResults.map((k, idx) =>
-              `\n[Document ${idx + 1}: ${k.title}]\n${k.content.substring(0, 400)}\n`
+              `\n[Document ${idx + 1}: ${k.title}]${k.source_url ? ` (Source: ${k.source_url})` : ''}\n${k.content.substring(0, 400)}\n`
             ).join('\n---\n') +
             '\n=== END KNOWLEDGE BASE ===\n';
         }
@@ -438,32 +457,48 @@ export const processChatMessage = inngest.createFunction(
       // Use the centrally configured provider order and failover policy.
       const ragGroundingInstructions = intent === 'support_faq'
         ? (kbMatched
-            ? '\n\n📋 INSTRUCTIONS: Synthesize the knowledge base documents above intelligently. Answer the customer\'s question using these facts while maintaining a natural, conversational tone. Do NOT copy text verbatim if it sounds robotic. Adapt the information to fit the customer\'s specific question. If the documents don\'t fully answer their question, acknowledge what you can confirm and what you cannot.'
-            : '\n\n⚠️ IMPORTANT: No matching information was found in this business\'s knowledge base for this question. Politely inform the customer that you don\'t have that specific information on hand. Offer to connect them with a team member who can provide detailed answers, or take their contact details for a callback. Do not guess, speculate, or fabricate an answer.')
+            ? `\n\n📋 INSTRUCTIONS: Synthesize the knowledge base documents above intelligently. Answer the customer's question using these facts while maintaining a natural, conversational tone. Do NOT copy text verbatim if it sounds robotic. Adapt the information to fit the customer's specific question. If the documents don't fully answer their question, acknowledge what you can confirm and what you cannot.\n\n🔗 CITATION RULE: If your answer relies on a knowledge document that contains a URL (shown in Source field), you MUST append that exact link at the end of your response formatted as: "Read more here: [Link Text](URL)". Do NOT invent links. Only use URLs that appear in the Source field above.`
+            : '\n\n⚠️ IMPORTANT: No matching information was found in this business\'s knowledge base for this question. You MUST immediately invoke the escalate_to_human tool with reason "Knowledge base lacks specific answer for customer query". Do not guess, speculate, or fabricate an answer. The customer deserves accurate information from a human expert.')
         : '';
       
       const sentimentInstructions = (sentiment.label === 'negative' || sentiment.label === 'angry')
         ? `\n\n🚨 EMPATHY REQUIRED: This customer's message shows ${sentiment.label} sentiment (score: ${sentiment.score}). Lead with empathy and acknowledge their frustration FIRST before anything else. Use phrases like "I understand this has been frustrating for you" or "I sincerely apologize for the inconvenience." Do not argue, defend company policies, or make unverified claims. Keep your tone calm, apologetic, and solution-focused. A human team member has been notified and will follow up personally.`
         : '';
 
+      // PHASE 1: Format chat history for context injection
+      const chatHistoryContext = chatHistory.length > 1 
+        ? `\n\n=== CONVERSATION HISTORY (Last ${chatHistory.length} messages) ===\n` +
+          chatHistory.slice(0, -1).map(m => 
+            `${m.sender_type === 'user' ? m.sender_name : 'You'}: ${m.content}`
+          ).join('\n') +
+          '\n=== END CONVERSATION HISTORY ==='
+        : '';
+
+      // PHASE 1: Anti-repetition directive
+      const conversationStateDirective = chatHistory.length > 2
+        ? '\n\n⚠️ CONVERSATION STATE: You are in an ongoing conversation. DO NOT repeat welcome greetings (e.g., "Hello sir/ma\'am and welcome...", "Welcome to our business...", "How may I help you today?") if the user has already been greeted. Check the conversation history above. Answer their follow-up questions directly and concisely without re-introducing yourself or the business. Focus on their CURRENT question only.'
+        : '';
+
       const systemPrompt = `You are an AI-powered customer service agent for this business.${personaInstructions}
 
 Intent classification: ${intent}
-${contextInfo}${identityContext}${categoryInstructions}${ragGroundingInstructions}${sentimentInstructions}
+${chatHistoryContext}${contextInfo}${identityContext}${categoryInstructions}${ragGroundingInstructions}${sentimentInstructions}${conversationStateDirective}
 
 Core Guidelines:
 - Respond helpfully, concisely, and professionally to the customer's message.
 - If products or services are available and relevant to their inquiry, recommend them with direct purchase/booking links.
 - Use the available tools when: (1) customer asks about order status, (2) wants to browse offerings, (3) shows clear buying/booking intent, (4) provides identity information that needs saving, or (5) needs human escalation.
 - For service bookings, ask for their preferred appointment date/time and any special requirements.
-- Maintain the business persona across all interactions, whether this is a consulting firm, salon, e-commerce store, or service provider.`;
+- Maintain the business persona across all interactions, whether this is a consulting firm, salon, e-commerce store, or service provider.
+- If you cannot answer a question with certainty from the provided context, immediately invoke the escalate_to_human tool rather than guessing.`;
 
 
       try {
+        // PHASE 3: Increase max_tokens from 500 to 800 to prevent response truncation
         const result = await executeLLMRequest({
           prompt: messageText,
           systemInstruction: systemPrompt,
-          maxTokens: 500,
+          maxTokens: 800,
           temperature: 0.7,
           ...(workspaceId ? { tools: CHAT_TOOL_DEFINITIONS } : {}),
         });
@@ -478,6 +513,7 @@ Core Guidelines:
             toolResultMessages.push({ role: 'tool' as const, tool_call_id: call.id, name: call.name, content: JSON.stringify(toolResult) });
           }
 
+          // PHASE 3: Increase max_tokens for follow-up responses as well
           const followUp = await executeLLMRequest({
             messages: [
               { role: 'system', content: systemPrompt },
@@ -485,7 +521,7 @@ Core Guidelines:
               { role: 'assistant', content: (result.rawMessage?.content as string) ?? '', tool_calls: result.rawMessage?.tool_calls as unknown[] },
               ...toolResultMessages,
             ],
-            maxTokens: 500,
+            maxTokens: 800,
             temperature: 0.7,
           });
           if (followUp.text) reply = followUp.text;
@@ -501,6 +537,14 @@ Core Guidelines:
           try { await db.rpc('increment_workspace_message_usage', { workspace_id_input: workspaceId }); } catch {}
         }
 
+        // PHASE 3: Append citation links if available
+        if (citationLinks.length > 0 && !citationLinks.some(link => reply.includes(link))) {
+          const citationText = citationLinks.length === 1
+            ? `\n\nRead more here: ${citationLinks[0]}`
+            : `\n\nRelated resources:\n${citationLinks.map((link, i) => `${i + 1}. ${link}`).join('\n')}`;
+          reply = reply + citationText;
+        }
+
         return { reply, tokensUsed };
       } catch (err) {
         const normalized = normalizeError(err);
@@ -514,7 +558,44 @@ Core Guidelines:
           tenantId,
           metadata: { platform, chatId, intent },
         });
-        return { reply: 'I apologize, I am experiencing technical difficulties. Please try again shortly.', tokensUsed: 0 };
+        
+        // PHASE 2: Graceful escalation on error with auto-pause
+        if (workspaceId && crmRecord) {
+          try {
+            // Auto-pause AI and escalate to human
+            await db.from('workspace_crm')
+              .update({ ai_status: 'paused' })
+              .eq('id', crmRecord.id);
+            
+            await db.from('conversations')
+              .update({ status: 'escalated' })
+              .eq('id', conversation.id);
+            
+            // Notify tenant admin
+            const { data: owner } = await db
+              .from('users')
+              .select('email, full_name')
+              .eq('tenant_id', tenantId)
+              .in('role', ['tenant_admin', 'super_admin'])
+              .limit(1)
+              .maybeSingle();
+            
+            if (owner?.email) {
+              await sendEmail('human_handoff_alert', owner.email, {
+                tenant_name: owner.full_name ?? 'Team',
+                customer_name: contactName,
+                message: `Technical error during AI processing. Customer message: "${messageText}"`,
+              });
+            }
+          } catch (escalationErr) {
+            console.error('Failed to auto-escalate on error:', escalationErr);
+          }
+        }
+        
+        return { 
+          reply: 'I want to ensure you get the exact details you need. Let me transfer you to a human manager who can clarify this for you. They will review our chat and reach out shortly. Thank you for your patience!', 
+          tokensUsed: 0 
+        };
       }
     });
 
