@@ -10,8 +10,8 @@ CREATE INDEX IF NOT EXISTS idx_workspace_crm_platform_user ON workspace_crm(work
 CREATE INDEX IF NOT EXISTS idx_workspace_orders_status ON workspace_orders(workspace_id, status);
 CREATE INDEX IF NOT EXISTS idx_workspace_orders_created ON workspace_orders(workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(tenant_id, updated_at DESC);
-CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON chat_messages(conversation_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_workspace ON knowledge_base(workspace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_crm ON chat_messages(crm_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_knowledge_bases_workspace ON knowledge_bases(workspace_id, created_at DESC);
 
 -- Add constraints to prevent orphaned records and ensure data integrity
 ALTER TABLE workspace_crm 
