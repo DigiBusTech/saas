@@ -14,6 +14,7 @@ import {
   BarChart3,
   Globe2,
   Scale,
+  BookOpen, // PHASE 4: Help Center icon
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -27,6 +28,7 @@ const NAV_ITEMS = [
   { href: '/super-admin/ai-providers', label: 'AI Providers', icon: Cpu },
   { href: '/super-admin/observability', label: 'Observability', icon: Activity },
   { href: '/super-admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/super-admin/help', label: 'Help Center', icon: BookOpen }, // PHASE 4
   { href: '/super-admin/settings/global', label: 'Global Branding', icon: Globe2 },
 ];
 

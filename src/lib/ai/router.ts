@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { decrypt } from '@/lib/encryption';
 import { logTelemetry } from '@/lib/telemetry';
+import { trackLLMLatency } from '@/lib/performance-metrics'; // PHASE 4: Performance tracking
 
 export interface LLMChatMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
@@ -116,6 +117,7 @@ async function executeSingleProvider(
   provider: ProviderConfig,
   options: LLMRequestOptions
 ): Promise<LLMResult> {
+  const startTime = Date.now(); // PHASE 4: Track LLM latency
   const apiKey = resolveApiKey(provider.api_key_encrypted);
   const endpoint = buildChatCompletionsUrl(provider.base_url);
   let modelName = normalizeGroqModel(provider.provider_name, provider.model_name);
@@ -175,6 +177,10 @@ async function executeSingleProvider(
     if (!text && !toolCalls?.length) {
       throw new Error(`Provider "${provider.provider_name}" returned an empty completion.`);
     }
+
+    // PHASE 4: Track LLM performance metrics
+    const durationMs = Date.now() - startTime;
+    await trackLLMLatency(durationMs, provider.provider_name, modelName).catch(() => {});
 
     return {
       text,
