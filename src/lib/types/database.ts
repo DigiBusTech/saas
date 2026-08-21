@@ -237,6 +237,13 @@ export interface WorkspaceAutomation {
   cta_link: string | null;
   is_active: boolean;
   created_at: string;
+  // PHASE 5.5: Multi-channel automation support
+  channel_filter: string[] | null; // ['whatsapp', 'telegram', 'email']
+  email_subject: string | null;
+  batch_size: number; // default 50
+  rate_limit_delay_ms: number; // default 1500 for WhatsApp, 35 for Telegram
+  execution_mode: 'instant' | 'scheduled'; // default 'scheduled'
+  last_executed_at: string | null;
 }
 
 export interface KnowledgeBase {
