@@ -251,13 +251,41 @@ export async function executeLLMRequest(options: LLMRequestOptions): Promise<LLM
   const active = (providers ?? []) as ProviderConfig[];
 
   if (active.length === 0) {
+    // Priority 1: Check for OpenAI environment key (most common)
+    const openaiKey = process.env.OPENAI_API_KEY || '';
+    if (openaiKey) {
+      const openaiProvider: ProviderConfig = {
+        id: 'env-openai',
+        provider_name: 'OpenAI (env fallback)',
+        base_url: 'https://api.openai.com/v1',
+        model_name: 'gpt-4o-mini',
+        api_key_encrypted: openaiKey,
+        priority: 1,
+        is_primary: true,
+        is_fallback: false,
+        is_active: true,
+      };
+      try {
+        return await executeSingleProvider(openaiProvider, options);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        await logTelemetry({
+          severity: 'warning',
+          source: 'llm_router',
+          message: `OpenAI env fallback failed: ${message}. Trying other fallbacks...`,
+          stackTrace: err instanceof Error ? err.stack ?? null : null,
+        });
+        // Continue to next fallback
+      }
+    }
+
+    // Priority 2: Check for Groq environment or system config key
     let configuredGroqKey = process.env.GROQ_API_KEY || '';
     const { data: groqConfig } = await db.from('system_configs').select('config_value, is_secret').eq('config_key', 'GROQ_API_KEY').maybeSingle();
     if (groqConfig?.config_value) {
       try { configuredGroqKey = groqConfig.is_secret ? decrypt(groqConfig.config_value) : groqConfig.config_value; } catch { configuredGroqKey = groqConfig.config_value; }
     }
 
-    // Graceful degradation: fall back to the Super Admin-managed Groq key or environment key.
     if (configuredGroqKey) {
       const legacyProvider: ProviderConfig = {
         id: 'env-groq',
@@ -277,7 +305,7 @@ export async function executeLLMRequest(options: LLMRequestOptions): Promise<LLM
         await logTelemetry({
           severity: 'critical',
           source: 'llm_router',
-          message: `Legacy GROQ env fallback failed: ${message}`,
+          message: `Groq env fallback failed: ${message}`,
           stackTrace: err instanceof Error ? err.stack ?? null : null,
         });
         throw err;
@@ -287,9 +315,9 @@ export async function executeLLMRequest(options: LLMRequestOptions): Promise<LLM
     await logTelemetry({
       severity: 'critical',
       source: 'llm_router',
-      message: 'No active AI providers configured. Configure providers at /super-admin/ai-providers.',
+      message: 'No active AI providers configured. Add OPENAI_API_KEY or GROQ_API_KEY to .env.local, or configure providers at /super-admin/ai-providers.',
     });
-    throw new Error('LLM Router: no active AI providers configured.');
+    throw new Error('LLM Router: no active AI providers configured. Add OPENAI_API_KEY or GROQ_API_KEY to environment, or configure at /super-admin/ai-providers.');
   }
 
   // Order: primary first, then remaining by priority.
