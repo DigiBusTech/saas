@@ -87,7 +87,7 @@ export default function OrdersPage() {
 
       {/* Quick Stats */}
       {analytics && (
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Total Orders', value: analytics.totalOrders, color: 'from-indigo-500 to-purple-600' },
             { label: 'Total Revenue', value: `$${(analytics.totalRevenue ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, color: 'from-emerald-500 to-teal-600' },
@@ -153,7 +153,8 @@ export default function OrdersPage() {
 
       {/* Orders Table */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-xs">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs min-w-[800px]">
           <thead className="border-b border-border bg-muted/50">
             <tr>
               {['Type', 'Order Code', 'Customer', 'Items', 'Total', 'Channel', 'Status', typeFilter === 'service' ? 'Service Date' : 'Action'].map((h) => (
@@ -228,6 +229,7 @@ export default function OrdersPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

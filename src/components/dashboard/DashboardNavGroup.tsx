@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import * as LucideIcons from 'lucide-react';
 
 interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  icon: string; // lucide-react icon name
 }
 
 export function DashboardNavGroup({ title, items }: { title: string; items: NavItem[] }) {
@@ -14,23 +15,29 @@ export function DashboardNavGroup({ title, items }: { title: string; items: NavI
 
   return (
     <nav className="px-3 pt-2 pb-1 space-y-0.5">
-      <p className="text-[9px] uppercase tracking-widest text-gray-600 font-semibold px-3 pb-1">{title}</p>
+      {title && (
+        <p className="text-[9px] uppercase tracking-widest text-muted-foreground font-semibold px-3 pb-1">
+          {title}
+        </p>
+      )}
       {items.map((item) => {
-        const active = pathname === item.href;
+        const active = pathname === item.href || pathname.startsWith(item.href + '/');
+        const IconComponent = (LucideIcons as any)[item.icon] || LucideIcons.Circle;
+        
         return (
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] transition-all duration-200 group ${
+            className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-[11px] transition-all duration-200 group ${
               active
-                ? 'bg-indigo-500/10 text-white border border-indigo-500/20'
-                : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+                ? 'bg-primary/10 text-primary border border-primary/20 font-medium'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted border border-transparent'
             }`}
           >
-            <svg className={`w-3.5 h-3.5 transition ${active ? 'text-indigo-400' : 'text-gray-600 group-hover:text-indigo-400'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
-            </svg>
-            {item.label}
+            <IconComponent className={`w-4 h-4 shrink-0 transition ${
+              active ? 'text-primary' : 'group-hover:text-primary'
+            }`} />
+            <span className="truncate">{item.label}</span>
           </Link>
         );
       })}

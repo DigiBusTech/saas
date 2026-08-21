@@ -50,11 +50,11 @@ export default async function DashboardLayout({
   const workspaceNavGroups = getWorkspaceNavGroups(wsPrefix);
 
   const globalNavItems = [
-    { href: '/dashboard', label: 'Overview', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1' },
-    { href: '/dashboard/onboarding', label: 'Onboarding', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-    { href: '/dashboard/insights', label: 'Insights', icon: 'M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z' },
-    { href: '/dashboard/billing', label: 'Billing', icon: 'M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM1 10h22' },
-    { href: '/dashboard/account', label: 'Account & Data', icon: 'M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0' },
+    { href: '/dashboard', label: 'Overview', icon: 'LayoutDashboard' },
+    { href: '/dashboard/onboarding', label: 'Onboarding', icon: 'Rocket' },
+    { href: '/dashboard/insights', label: 'Insights', icon: 'TrendingUp' },
+    { href: '/dashboard/billing', label: 'Billing', icon: 'CreditCard' },
+    { href: '/dashboard/account', label: 'Account & Data', icon: 'User' },
   ];
   return (
     <div className="min-h-screen bg-background text-foreground lg:flex">
