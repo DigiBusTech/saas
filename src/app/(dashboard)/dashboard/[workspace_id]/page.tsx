@@ -18,19 +18,20 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
-  const svc = createServiceClient();
-  
-  // Fetch workspace details
-  const { data: workspace } = await svc
+  // Use regular client for workspace lookup (respects RLS)
+  const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
     .select('*, subscription_plans(*)')
     .eq('id', workspace_id)
     .single();
 
-  if (!workspace) {
-    console.log('No workspace found for ID:', workspace_id);
+  if (!workspace || workspaceError) {
+    console.log('Workspace error:', workspaceError);
+    console.log('Redirecting to onboarding...');
     redirect('/dashboard/onboarding');
   }
+
+  const svc = createServiceClient();
 
   // Fetch metrics in parallel
   const [
