@@ -8,6 +8,7 @@ import { vectorizeKnowledge } from '@/inngest/functions/vectorize-knowledge';
 import { orderStatusUpdated } from '@/inngest/functions/order-status-updated';
 import { dispatchAutomation } from '@/inngest/functions/dispatch-automation';
 import { processScheduledAutomations } from '@/inngest/functions/process-scheduled-automations';
+import { processDripSequences } from '@/inngest/functions/process-drip-sequences';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -21,6 +22,7 @@ export const { GET, POST, PUT } = serve({
     orderStatusUpdated,
     dispatchAutomation, // PHASE 5.5: Multi-channel automation dispatcher
     processScheduledAutomations, // PHASE 5.5: Scheduled automation processor (cron)
+    processDripSequences, // PHASE 5.5: Drip sequence processor (cron)
   ],
 });
 

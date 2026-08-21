@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { sendInngestEvent } from '@/lib/inngest/dynamic';
 import { z } from 'zod';
+import { rateLimiters } from '@/lib/security/middleware';
 
 const whatsappWebhookSchema = z.object({
   object: z.string(),
@@ -69,7 +70,13 @@ export async function GET(request: Request) {
 }
 
 // POST: Incoming message webhook
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Rate limiting: 1000 requests per minute
+  const rateLimitResult = await rateLimiters.webhook(request);
+  if (rateLimitResult) {
+    return rateLimitResult;
+  }
+
   const raw = await request.json();
   const parsed = whatsappWebhookSchema.safeParse(raw);
 

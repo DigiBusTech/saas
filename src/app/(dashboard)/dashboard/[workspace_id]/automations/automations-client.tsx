@@ -34,6 +34,11 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
   const [automationType, setAutomationType] = useState<'trigger' | 'instant' | 'scheduled' | 'drip'>('trigger'); // PHASE 5.5
   const [sendingNow, setSendingNow] = useState<string | null>(null);
   const [leadCount, setLeadCount] = useState<Record<string, number>>({});
+  const [enrolling, setEnrolling] = useState<string | null>(null);
+  // PHASE 5.5: Drip step builder state
+  const [dripSteps, setDripSteps] = useState<Array<{ step_number: number; delay_minutes: number; delivery_time: string; message_template: string }>>([
+    { step_number: 1, delay_minutes: 0, delivery_time: '09:00', message_template: '' },
+  ]);
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -96,6 +101,44 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
     } finally {
       setSendingNow(null);
     }
+  };
+
+  const handleEnrollDrip = async (autoId: string) => {
+    if (!confirm('Enroll all eligible leads into this drip sequence?')) return;
+    setEnrolling(autoId);
+    try {
+      const res = await fetch(`/api/automations/${autoId}/enroll`, { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert(`✅ Enrolled ${data.enrolled} new leads (${data.alreadyEnrolled} already enrolled)`);
+        window.location.reload();
+      } else {
+        alert(`❌ ${data.error || 'Failed to enroll'}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('❌ Network error');
+    } finally {
+      setEnrolling(null);
+    }
+  };
+
+  const addDripStep = () => {
+    setDripSteps([...dripSteps, {
+      step_number: dripSteps.length + 1,
+      delay_minutes: 1440, // 1 day default
+      delivery_time: '09:00',
+      message_template: '',
+    }]);
+  };
+
+  const removeDripStep = (stepNumber: number) => {
+    if (dripSteps.length === 1) return; // Keep at least 1 step
+    setDripSteps(dripSteps.filter(s => s.step_number !== stepNumber).map((s, i) => ({ ...s, step_number: i + 1 })));
+  };
+
+  const updateDripStep = (stepNumber: number, field: string, value: any) => {
+    setDripSteps(dripSteps.map(s => s.step_number === stepNumber ? { ...s, [field]: value } : s));
   };
 
   return (
@@ -228,6 +271,16 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                     Send Now
                   </button>
                 )}
+                {auto.automation_type === 'drip' && auto.status !== 'processing' && (
+                  <button
+                    onClick={() => handleEnrollDrip(auto.id)}
+                    disabled={enrolling === auto.id}
+                    className="flex-1 py-1.5 rounded-lg text-[10px] font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 transition flex items-center justify-center gap-1"
+                  >
+                    {enrolling === auto.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Clock className="w-3 h-3" />}
+                    Enroll Leads
+                  </button>
+                )}
                 <button onClick={() => {
                   setEditingAutomation(auto);
                   // PHASE 5.5: Pre-populate all fields from existing automation
@@ -357,7 +410,93 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                     </div>
                   </div>
                 )}
-{/* PHASE 5.5: Multi-channel Selection */}
+
+                {/* PHASE 5.5: Drip Step Builder (only for drip type) */}
+                {automationType === 'drip' && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Drip Sequence Steps</label>
+                      <button
+                        type="button"
+                        onClick={addDripStep}
+                        className="px-2 py-1 rounded-lg text-[10px] font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 transition flex items-center gap-1"
+                      >
+                        <Plus className="w-3 h-3" /> Add Step
+                      </button>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      {dripSteps.map((step, index) => (
+                        <div key={step.step_number} className="p-3 rounded-lg bg-muted border border-input space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-foreground">Step {step.step_number}</span>
+                            {dripSteps.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => removeDripStep(step.step_number)}
+                                className="p-1 rounded text-rose-500 hover:bg-rose-500/10 transition"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[9px] uppercase tracking-wider text-muted-foreground mb-1">
+                                Delay (minutes)
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={step.delay_minutes}
+                                onChange={(e) => updateDripStep(step.step_number, 'delay_minutes', parseInt(e.target.value) || 0)}
+                                className="w-full px-2 py-1.5 rounded text-xs bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
+                                placeholder="1440 = 1 day"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] uppercase tracking-wider text-muted-foreground mb-1">
+                                Delivery Time
+                              </label>
+                              <input
+                                type="time"
+                                value={step.delivery_time}
+                                onChange={(e) => updateDripStep(step.step_number, 'delivery_time', e.target.value)}
+                                className="w-full px-2 py-1.5 rounded text-xs bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-[9px] uppercase tracking-wider text-muted-foreground mb-1">
+                              Message Template *
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={step.message_template}
+                              onChange={(e) => updateDripStep(step.step_number, 'message_template', e.target.value)}
+                              required={automationType === 'drip'}
+                              placeholder="Hi {customer_name}, this is step ${step.step_number} of our sequence..."
+                              className="w-full px-2 py-1.5 rounded text-xs bg-background border border-input focus:border-ring focus:ring-1 focus:ring-ring outline-none transition resize-none"
+                            />
+                          </div>
+                          
+                          <input type="hidden" name={`drip_step_${step.step_number}_delay`} value={step.delay_minutes} />
+                          <input type="hidden" name={`drip_step_${step.step_number}_time`} value={step.delivery_time} />
+                          <input type="hidden" name={`drip_step_${step.step_number}_message`} value={step.message_template} />
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <p className="text-[10px] text-muted-foreground">
+                      Each step sends after the specified delay. Delivery time sets preferred hour (e.g., 09:00 for 9 AM).
+                      Delay is in minutes: 60 = 1 hour, 1440 = 1 day, 10080 = 1 week.
+                    </p>
+                  </div>
+                )}
+
+                {/* PHASE 5.5: Multi-channel Selection */}
                 <div>
                   <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
                     Delivery Channels

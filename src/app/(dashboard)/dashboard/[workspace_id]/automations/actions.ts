@@ -50,7 +50,9 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
   if (automationType === 'scheduled') status = 'scheduled';
 
   const supabase = await createClient();
-  const { error } = await supabase
+  
+  // Insert automation
+  const { data: newAutomation, error } = await supabase
     .from('workspace_automations')
     .insert({
       workspace_id: workspaceId,
@@ -66,9 +68,56 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
       automation_type: automationType, // PHASE 5.5
       scheduled_at: scheduledAt ? new Date(scheduledAt).toISOString() : null, // PHASE 5.5
       status, // PHASE 5.5
-    });
+    })
+    .select()
+    .single();
 
   if (error) return { error: error.message };
+
+  // PHASE 5.5: Insert drip steps if automation type is 'drip'
+  if (automationType === 'drip' && newAutomation) {
+    const dripSteps: Array<{
+      automation_id: string;
+      workspace_id: string;
+      step_number: number;
+      delay_minutes: number;
+      delivery_time: string | null;
+      message_template: string;
+    }> = [];
+
+    // Extract drip step data from formData
+    let stepNumber = 1;
+    while (formData.has(`drip_step_${stepNumber}_message`)) {
+      const delayMinutes = parseInt(formData.get(`drip_step_${stepNumber}_delay`) as string) || 0;
+      const deliveryTime = formData.get(`drip_step_${stepNumber}_time`) as string;
+      const stepMessage = formData.get(`drip_step_${stepNumber}_message`) as string;
+
+      if (stepMessage) {
+        dripSteps.push({
+          automation_id: newAutomation.id,
+          workspace_id: workspaceId,
+          step_number: stepNumber,
+          delay_minutes: delayMinutes,
+          delivery_time: deliveryTime || null,
+          message_template: stepMessage,
+        });
+      }
+
+      stepNumber++;
+    }
+
+    if (dripSteps.length > 0) {
+      const { error: stepsError } = await supabase
+        .from('workspace_automation_steps')
+        .insert(dripSteps);
+
+      if (stepsError) {
+        // Rollback automation creation
+        await supabase.from('workspace_automations').delete().eq('id', newAutomation.id);
+        return { error: `Failed to create drip steps: ${stepsError.message}` };
+      }
+    }
+  }
 
   revalidatePath(`/dashboard/${workspaceId}/automations`);
   return { error: null };
