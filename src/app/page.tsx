@@ -6,6 +6,8 @@ import { HeroPreview } from '@/components/marketing/HeroPreview';
 import { FeatureShowcase } from '@/components/marketing/FeatureShowcase';
 import { LiveDemoChat } from '@/components/marketing/LiveDemoChat';
 import { PricingSection, PricingPlanCard } from '@/components/marketing/PricingSection';
+import { TrustBadgeMarquee } from '@/components/marketing/TrustBadgeMarquee';
+import { TestimonialsSection } from '@/components/marketing/TestimonialsSection';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,14 +41,28 @@ interface PlanRow {
 
 export default async function Home() {
   const db = createServiceClient();
-  const { data } = await db
-    .from('subscription_plans')
-    .select('id, name, slug, price_usd, max_workspaces, telegram_message_limit, whatsapp_message_limit, features, sort_order')
-    .eq('is_active', true)
-    .order('sort_order')
-    .limit(3);
+  
+  // Fetch subscription plans, reviews, and trust badges in parallel
+  const [{ data: plansData }, { data: reviews }, { data: partners }] = await Promise.all([
+    db
+      .from('subscription_plans')
+      .select('id, name, slug, price_usd, max_workspaces, telegram_message_limit, whatsapp_message_limit, features, sort_order')
+      .eq('is_active', true)
+      .order('sort_order')
+      .limit(3),
+    db
+      .from('platform_reviews')
+      .select('*')
+      .eq('is_published', true)
+      .order('display_order'),
+    db
+      .from('trusted_partners')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order'),
+  ]);
 
-  const rows = (data ?? []) as PlanRow[];
+  const rows = (plansData ?? []) as PlanRow[];
   const plans: PricingPlanCard[] = rows.map((plan) => ({
     id: plan.id,
     name: plan.name,
@@ -78,10 +94,10 @@ export default async function Home() {
               </div>
 
               <h1 className="mt-6 text-4xl font-semibold leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl">
-                Turn every customer conversation into momentum.
+                Turn conversations into revenue with AI that <span className="text-transparent bg-clip-text bg-linear-to-r from-cyan-300 to-cyan-500">never sleeps</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-7 text-slate-400 sm:text-lg">
-                SabiBio gives every business a live AI assistant, shared inbox, CRM, automation engine, public SabiBio page, and a human team that can step in at any moment.
+                Built for Nigerian businesses on WhatsApp and Telegram. Automate support, capture leads, close sales—24/7. No code required.
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -102,9 +118,9 @@ export default async function Home() {
               </div>
 
               <div className="mt-10 grid gap-6 border-t border-white/5 pt-6 sm:grid-cols-3">
-                <Metric value="24/7" label="Always-on first response" />
-                <Metric value="1 inbox" label="For every channel and handoff" />
-                <Metric value="0 guesswork" label="Answers grounded in your content" />
+                <Metric value="<5min" label="Setup time" />
+                <Metric value="24/7" label="AI availability" />
+                <Metric value="0 code" label="Technical skills needed" />
               </div>
             </div>
 
@@ -114,6 +130,9 @@ export default async function Home() {
           </div>
         </div>
       </section>
+
+      {/* Trust Badge Marquee - PHASE 5 */}
+      <TrustBadgeMarquee partners={partners || []} />
 
       <section id="features" className="border-y border-white/5 bg-[#060b1a]">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
@@ -138,6 +157,9 @@ export default async function Home() {
         <p className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-300">
           A calmer operating system
         </p>
+      {/* Customer Testimonials - PHASE 5 */}
+      <TestimonialsSection reviews={reviews || []} />
+
         <h2 className="mt-4 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
           From first message to loyal customer, with fewer loose ends.
         </h2>
