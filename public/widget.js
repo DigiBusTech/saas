@@ -58,7 +58,7 @@
       '.sb-header p { margin: 2px 0 0; font-size: 10px; color: rgba(255,255,255,0.4); }',
       '.sb-close { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; line-height: 1; }',
       '.sb-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; }',
-      '.sb-msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.5; }',
+      '.sb-msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 12px; line-height: 1.5; word-wrap: break-word; }',
       '.sb-msg.sb-user { align-self: flex-end; background: ' + buttonColor + '; color: #fff; }',
       '.sb-msg.sb-bot { align-self: flex-start; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.85); }',
       '.sb-form { padding: 16px; display: flex; flex-direction: column; gap: 10px; }',
@@ -137,7 +137,8 @@
     function appendMessage(role, content) {
       var el = document.createElement('div');
       el.className = 'sb-msg ' + (role === 'user' ? 'sb-user' : 'sb-bot');
-      el.textContent = content;
+      // PHASE 2: Fix markdown rendering - preserve line breaks
+      el.innerHTML = content.replace(/\n/g, '<br>');
       messagesEl.appendChild(el);
       messagesEl.scrollTop = messagesEl.scrollHeight;
       return el;
@@ -152,7 +153,8 @@
           .then(function (res) { return res.json(); })
           .then(function (data) {
             if (data && data.status === 'complete' && data.reply) {
-              bubble.textContent = data.reply;
+              // PHASE 2: Fix markdown rendering - preserve line breaks
+              bubble.innerHTML = data.reply.replace(/\n/g, '<br>');
               clearInterval(timer);
             }
           })
@@ -171,7 +173,15 @@
       fetch(apiBase + '/api/chat/web', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ workspaceId: workspaceId, sessionId: sessionId, content: content, visitorName: visitor.name, visitorEmail: visitor.email }),
+        body: JSON.stringify({ 
+          workspaceId: workspaceId, 
+          sessionId: sessionId, 
+          content: content, 
+          visitorName: visitor.name, 
+          visitorEmail: visitor.email,
+          // PHASE 2: Session tracking
+          userAgent: navigator.userAgent,
+        }),
       })
         .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
         .then(function (result) {

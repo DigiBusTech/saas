@@ -286,8 +286,10 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                       <p className="text-[10px] text-muted-foreground font-mono">{lead.phone_number || lead.platform_user_id}</p>
                     </td>
                     <td className="px-4 py-3">
-                      {lead.platform === 'telegram' ? (
+                      {lead.channel_type === 'telegram' ? (
                         <span className="flex items-center gap-1 text-[10px] text-sky-400"><MessageCircle className="w-3 h-3" /> Telegram</span>
+                      ) : lead.channel_type === 'web_chat' ? (
+                        <span className="flex items-center gap-1 text-[10px] text-indigo-400"><MessageCircle className="w-3 h-3" /> Web Chat</span>
                       ) : (
                         <span className="flex items-center gap-1 text-[10px] text-emerald-400"><Phone className="w-3 h-3" /> WhatsApp</span>
                       )}

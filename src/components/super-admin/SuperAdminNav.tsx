@@ -13,6 +13,7 @@ import {
   Activity,
   BarChart3,
   Globe2,
+  Scale,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { href: '/super-admin/configs', label: 'Configs', icon: KeyRound },
   { href: '/super-admin/emails', label: 'Emails', icon: Mail },
   { href: '/super-admin/cms', label: 'CMS', icon: FileText },
+  { href: '/super-admin/legal', label: 'Legal', icon: Scale },
   { href: '/super-admin/ai-providers', label: 'AI Providers', icon: Cpu },
   { href: '/super-admin/observability', label: 'Observability', icon: Activity },
   { href: '/super-admin/analytics', label: 'Analytics', icon: BarChart3 },

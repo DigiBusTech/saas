@@ -55,6 +55,8 @@ const requestSchema = z.object({
   content: z.string().trim().min(1).max(4000),
   visitorName: z.string().trim().min(2).max(120),
   visitorEmail: z.string().email(),
+  // PHASE 2: Session tracking
+  userAgent: z.string().max(500).optional(),
 });
 
 export async function POST(request: Request) {
@@ -67,7 +69,14 @@ export async function POST(request: Request) {
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return withCors(NextResponse.json({ error: 'Invalid chat request' }, { status: 400 }));
 
-  const { workspaceId, sessionId, content, visitorName, visitorEmail } = parsed.data;
+  const { workspaceId, sessionId, content, visitorName, visitorEmail, userAgent } = parsed.data;
+  
+  // PHASE 2: Extract IP address from request headers
+  const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() 
+    || request.headers.get('x-real-ip')
+    || request.headers.get('cf-connecting-ip') // Cloudflare
+    || 'unknown';
+  
   const db = createServiceClient();
   const { data: workspace } = await db
     .from('workspaces')
@@ -98,6 +107,10 @@ export async function POST(request: Request) {
         botPersona: workspace.bot_persona,
         agentMode: workspace.agent_mode,
         externalMessageId,
+        // PHASE 2: Session tracking metadata
+        ipAddress,
+        sessionId,
+        userAgent,
       },
     });
   } catch (error) {

@@ -183,16 +183,26 @@ export interface WorkspaceCRM {
   id: string;
   workspace_id: string;
   platform: Platform;
+  channel_type: Platform;
   platform_user_id: string;
   customer_name: string | null;
   phone_number: string | null;
+  email: string | null;
   category: string | null;
   lead_score: number;
+  lead_status: 'new' | 'contacted' | 'active_chat' | 'qualified' | 'converted' | 'lost';
   tags: string[];
   subscription_status: CRMSubscriptionStatus;
   subscription_expiry: string | null;
   last_interaction: string;
   ai_status: AIStatus;
+  // PHASE 2: Identity Resolution & Session Tracking
+  ip_address: string | null;
+  session_id: string | null;
+  last_seen_at: string | null;
+  first_message_at: string | null;
+  user_agent: string | null;
+  conversation_count: number;
 }
 
 export interface ChatMessage {

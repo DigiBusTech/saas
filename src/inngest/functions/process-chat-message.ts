@@ -18,6 +18,8 @@ export const processChatMessage = inngest.createFunction(
     const {
       tenantId, workspaceId, platform, chatId, contactName,
       messageText, integrationId, botPersona, agentMode, externalMessageId, visitorEmail,
+      // PHASE 2: Session tracking metadata
+      ipAddress, sessionId, userAgent,
     } = event.data;
 
     const db = createServiceClient();
@@ -192,14 +194,20 @@ export const processChatMessage = inngest.createFunction(
           const updatePayload: any = {
             last_interaction: new Date().toISOString(),
           };
-          // For web chat, inject the pre-chat metadata immediately
-          if (platform === 'web') {
-            if (contactName) updatePayload.customer_name = contactName;
-            if (visitorEmail) updatePayload.email = visitorEmail;
-          } else if (contactName && (!existingCrm.customer_name || existingCrm.customer_name === chatId)) {
-            // For social channels, update name if it was previously missing
+          
+          // PHASE 2: Always persist name/email immediately when provided
+          if (contactName) {
             updatePayload.customer_name = contactName;
           }
+          if (visitorEmail) {
+            updatePayload.email = visitorEmail;
+          }
+          
+          // PHASE 2: Update session tracking data
+          if (ipAddress) updatePayload.ip_address = ipAddress;
+          if (sessionId) updatePayload.session_id = sessionId;
+          if (userAgent) updatePayload.user_agent = userAgent;
+          updatePayload.last_seen_at = new Date().toISOString();
 
           const updateResult = await db.from('workspace_crm').update(updatePayload).eq('id', existingCrm.id);
           if (updateResult.error?.code === 'PGRST204') {
@@ -229,13 +237,16 @@ export const processChatMessage = inngest.createFunction(
             email: existingCrm.email,
           };
         }
-
-        const crmPayload: any = {
-          workspace_id: workspaceId,
-          platform,
-          platform_user_id: chatId,
-          customer_name: contactName,
+email: visitorEmail || null,
           lead_score: 10,
+          tags: ['New Lead'],
+          // PHASE 2: Session tracking data
+          ip_address: ipAddress || null,
+          session_id: sessionId || null,
+          user_agent: userAgent || null,
+          first_message_at: new Date().toISOString(),
+          last_seen_at: new Date().toISOString(),
+        }; lead_score: 10,
           tags: ['New Lead'],
         };
         // Web chat: inject email immediately

@@ -25,6 +25,10 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
   const services = (workspace.workspace_services ?? []).filter((service: { is_active: boolean }) => service.is_active);
   const articles = (workspace.workspace_articles ?? []).filter((article: { is_published: boolean; show_on_sabibio: boolean }) => article.is_published && article.show_on_sabibio);
   const legal = (workspace.sabibio_legal ?? {}) as Record<string, unknown>;
+  
+  // PHASE 1: Get verified badge from subscription plan
+  const hasVerifiedBadge = workspace.tenants?.subscription_plans?.has_verified_badge ?? false;
+  
   const primary = String(branding.primary_color);
   const isGridTemplate = ['property-grid', 'retail-drop', 'food-table', 'creative-canvas'].includes(template.id);
   const isEditorialTemplate = ['beauty-glow', 'travel-atlas', 'creator-studio', 'event-night'].includes(template.id);
@@ -56,7 +60,7 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
           <div className={`flex h-24 w-24 items-center justify-center overflow-hidden border-2 ${logoPosition === 'right' ? 'ml-auto' : logoPosition === 'left' ? 'mr-auto' : 'mx-auto'}`} style={{ borderColor: primary, background: `${primary}22`, borderRadius: logoRadius }}>
             {workspace.logo_url || branding.avatar_url ? <img src={String(workspace.logo_url || branding.avatar_url)} alt="" className="h-full w-full object-cover" /> : <span className="text-3xl font-bold" style={{ color: primary }}>{workspace.name.slice(0, 1).toUpperCase()}</span>}
           </div>
-          <div className={`mt-4 flex gap-2 ${logoPosition === 'center' ? 'justify-center' : ''}`}><h1 className="text-xl font-bold">{workspace.name}</h1>{branding.verified && <ShieldCheck className="h-5 w-5" style={{ color: primary }} />}</div>
+          <div className={`mt-4 flex gap-2 ${logoPosition === 'center' ? 'justify-center' : ''}`}><h1 className="text-xl font-bold">{workspace.name}</h1>{hasVerifiedBadge && <ShieldCheck className="h-5 w-5" style={{ color: primary }} />}</div>
           {branding.bio && <p className={`mt-3 max-w-md text-sm leading-6 text-white/65 ${logoPosition === 'center' ? 'mx-auto' : ''}`}>{String(branding.bio)}</p>}
           {socialItems.length > 0 && <div className={`mt-5 flex gap-4 text-white/60 ${logoPosition === 'center' ? 'justify-center' : ''}`}>{socialItems.map((item) => <a key={item.key} href={String(item.href)} target="_blank" rel="noreferrer" className="transition hover:text-white"><SocialIcon path={item.icon.path} title={item.key} /></a>)}</div>}
           </div>
@@ -77,8 +81,33 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
           {channels.whatsapp_enabled && phone && <a href={`https://wa.me/${phone}?text=${encodeURIComponent(String(channels.default_welcome_msg ?? 'Hi, I would like to learn more.'))}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-emerald-500 px-4 py-2.5 text-xs font-bold text-black transition hover:bg-emerald-400"><MessageCircle className="h-4 w-4" /> WhatsApp</a>}
           {channels.telegram_enabled && telegram && <a href={`https://t.me/${telegram}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-full bg-sky-400 px-4 py-2.5 text-xs font-bold text-black transition hover:bg-sky-300"><Send className="h-4 w-4" /> Telegram</a>}
         </footer>
-        <div className="mt-10 flex flex-wrap justify-center gap-3 text-[10px] text-white/40">{(['privacy_policy', 'terms_of_service', 'disclaimer', 'cookie_policy'] as const).map((key) => legal[key] ? <a key={key} href={`#${key}`} className="hover:text-white">{key.replaceAll('_', ' ')}</a> : null)}</div>
-        <div className="mt-6 space-y-4 text-left">{(['privacy_policy', 'terms_of_service', 'disclaimer', 'cookie_policy'] as const).map((key) => legal[key] ? <section key={key} id={key} className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4"><h2 className="text-xs font-semibold capitalize text-white">{key.replaceAll('_', ' ')}</h2><p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal[key])}</p></section> : null)}</div>
+        
+        {/* PHASE 1: Business Legal Footer with Workspace Name */}
+        <div className="mt-10 flex flex-wrap justify-center gap-3 text-[10px] text-white/40">
+          {legal.show_privacy && <a href="#privacy_policy" className="hover:text-white">{workspace.name} Privacy Policy</a>}
+          {legal.show_terms && <a href="#terms_of_service" className="hover:text-white">{workspace.name} Terms</a>}
+          {legal.show_disclaimer && <a href="#disclaimer" className="hover:text-white">Legal Disclaimer</a>}
+        </div>
+        <div className="mt-6 space-y-4 text-left">
+          {legal.show_privacy && String(legal.privacy_policy ?? '').trim() && (
+            <section id="privacy_policy" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+              <h2 className="text-xs font-semibold text-white">{workspace.name} Privacy Policy</h2>
+              <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.privacy_policy)}</p>
+            </section>
+          )}
+          {legal.show_terms && String(legal.terms_of_service ?? '').trim() && (
+            <section id="terms_of_service" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+              <h2 className="text-xs font-semibold text-white">{workspace.name} Terms of Service</h2>
+              <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.terms_of_service)}</p>
+            </section>
+          )}
+          {legal.show_disclaimer && String(legal.disclaimer ?? '').trim() && (
+            <section id="disclaimer" className="scroll-mt-6 rounded-lg border border-white/10 bg-white/5 p-4">
+              <h2 className="text-xs font-semibold text-white">Legal Disclaimer</h2>
+              <p className="mt-2 whitespace-pre-wrap text-[10px] leading-5 text-white/55">{String(legal.disclaimer)}</p>
+            </section>
+          )}
+        </div>
         <p className="mt-4 text-center text-[10px] text-white/30">Powered by SabiBio · Sabi AI Technologies Ltd.</p>
       </div>
     </main>
