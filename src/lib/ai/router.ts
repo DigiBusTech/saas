@@ -69,7 +69,7 @@ function resolveApiKey(encrypted: string): string {
  * Supports custom OpenAI-compatible endpoints such as:
  *   - https://api.openai.com/v1
  *   - https://api.groq.com/openai/v1
- *   - https://agentrouter.org/
+ *   - https://agentrouter.org/v1 or https://agentrouter.org/{org_id}/v1
  *   - https://api.bluesminds.com/v1
  */
 function buildChatCompletionsUrl(baseUrl: string): string {
@@ -157,12 +157,40 @@ async function executeSingleProvider(
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '');
+      // Check if the response is HTML (common when hitting wrong endpoint or auth failure)
+      const isHtml = errorBody.trim().toLowerCase().startsWith('<!doctype') || errorBody.trim().toLowerCase().startsWith('<html');
+      if (isHtml) {
+        throw new Error(
+          `Provider "${provider.provider_name}" returned HTML instead of JSON (HTTP ${response.status}). ` +
+          `Check that base URL "${provider.base_url}" is correct and points to an API endpoint, not a web page. ` +
+          `Expected endpoint: ${endpoint}`
+        );
+      }
       throw new Error(
         `Provider "${provider.provider_name}" returned HTTP ${response.status}: ${errorBody.slice(0, 500)}`
       );
     }
 
-    const data = await response.json();
+    // Try to parse JSON, but provide helpful error if response is HTML
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      const rawText = await response.text().catch(() => '');
+      const isHtml = rawText.trim().toLowerCase().startsWith('<!doctype') || rawText.trim().toLowerCase().startsWith('<html');
+      if (isHtml) {
+        throw new Error(
+          `Provider "${provider.provider_name}" returned HTML instead of JSON (HTTP ${response.status}). ` +
+          `Check that base URL "${provider.base_url}" is correct and points to an API endpoint, not a web page. ` +
+          `Expected endpoint: ${endpoint}. ` +
+          `This often happens when the base URL is missing '/v1' or points to a documentation page.`
+        );
+      }
+      throw new Error(
+        `Provider "${provider.provider_name}" returned invalid JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}. ` +
+        `Response preview: ${rawText.slice(0, 200)}`
+      );
+    }
     const message = data.choices?.[0]?.message ?? {};
     const text: string = message.content ?? '';
     const tokensUsed: number = data.usage?.total_tokens ?? 0;
