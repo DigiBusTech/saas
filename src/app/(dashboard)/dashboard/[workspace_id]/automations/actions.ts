@@ -22,9 +22,18 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
   const mediaUrl = formData.get('media_url') as string;
   const ctaButtonText = formData.get('cta_button_text') as string;
   const ctaLink = formData.get('cta_link') as string;
+  // PHASE 5.5: Multi-channel support
+  const channelFilterRaw = formData.get('channel_filter') as string;
+  const channelFilter = channelFilterRaw ? JSON.parse(channelFilterRaw) : ['whatsapp', 'telegram'];
+  const emailSubject = formData.get('email_subject') as string;
 
   if (!title || !triggerType || !messageTemplate) {
     return { error: 'Title, trigger type, and message template are required' };
+  }
+
+  // PHASE 5.5: Validate email subject if email channel selected
+  if (channelFilter.includes('email') && !emailSubject) {
+    return { error: 'Email subject is required when email channel is selected' };
   }
 
   const supabase = await createClient();
@@ -39,6 +48,8 @@ export async function createAutomation(workspaceId: string, formData: FormData) 
       media_url: mediaUrl || null,
       cta_button_text: ctaButtonText || null,
       cta_link: ctaLink || null,
+      channel_filter: channelFilter, // PHASE 5.5
+      email_subject: emailSubject || null, // PHASE 5.5
     });
 
   if (error) return { error: error.message };
@@ -55,6 +66,10 @@ export async function updateAutomation(automationId: string, workspaceId: string
   const mediaUrl = formData.get('media_url') as string;
   const ctaButtonText = formData.get('cta_button_text') as string;
   const ctaLink = formData.get('cta_link') as string;
+  // PHASE 5.5: Multi-channel support
+  const channelFilterRaw = formData.get('channel_filter') as string;
+  const channelFilter = channelFilterRaw ? JSON.parse(channelFilterRaw) : ['whatsapp', 'telegram'];
+  const emailSubject = formData.get('email_subject') as string;
 
   const supabase = await createClient();
   const { error } = await supabase
@@ -67,6 +82,8 @@ export async function updateAutomation(automationId: string, workspaceId: string
       media_url: mediaUrl || null,
       cta_button_text: ctaButtonText || null,
       cta_link: ctaLink || null,
+      channel_filter: channelFilter, // PHASE 5.5
+      email_subject: emailSubject || null, // PHASE 5.5
     })
     .eq('id', automationId);
 

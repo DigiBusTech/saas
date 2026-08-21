@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Zap, Plus, X, Loader2, Pencil, Trash2, Power, PowerOff, ImageIcon, ExternalLink,
+  Zap, Plus, X, Loader2, Pencil, Trash2, Power, PowerOff, ImageIcon, ExternalLink, Mail, MessageSquare,
 } from 'lucide-react';
 import type { Workspace, WorkspaceAutomation } from '@/lib/types/database';
 import { createAutomation, updateAutomation, toggleAutomation, deleteAutomation } from './actions';
@@ -14,9 +14,10 @@ const TRIGGER_TYPES = [
   { value: 'post_purchase', label: 'Post-Purchase Follow-up' },
   { value: 'subscription_renewal', label: 'Subscription Renewal Reminder' },
   { value: 'product_flash_sale', label: 'Product Flash Sale' },
+  { value: 'broadcast', label: 'Instant Broadcast' }, // PHASE 5.5
 ];
 
-const VARIABLE_TAGS = ['{customer_name}', '{product_name}', '{expiry_date}'];
+const VARIABLE_TAGS = ['{customer_name}', '{product_name}', '{expiry_date}', '{business_name}', '{lead_email}']; // PHASE 5.5: Added business_name, lead_email
 
 interface Props {
   workspace: Workspace;
@@ -29,6 +30,7 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
   const [editingAutomation, setEditingAutomation] = useState<WorkspaceAutomation | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [selectedChannels, setSelectedChannels] = useState<string[]>(['whatsapp', 'telegram']); // PHASE 5.5
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -199,7 +201,87 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                     <p className="text-[10px] text-muted-foreground mt-1">Only applies to &quot;Subscription Expiring&quot; trigger. Set 0 to fire on the expiry day itself.</p>
                   </div>
                 </div>
+{/* PHASE 5.5: Multi-channel Selection */}
+                <div>
+                  <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
+                    Delivery Channels
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedChannels((prev) =>
+                          prev.includes('whatsapp') ? prev.filter((c) => c !== 'whatsapp') : [...prev, 'whatsapp']
+                        );
+                      }}
+                      className={`px-3 py-2 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-2 ${
+                        selectedChannels.includes('whatsapp')
+                          ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-600 dark:text-emerald-400'
+                          : 'bg-muted border-input text-muted-foreground hover:border-ring'
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      WhatsApp
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedChannels((prev) =>
+                          prev.includes('telegram') ? prev.filter((c) => c !== 'telegram') : [...prev, 'telegram']
+                        );
+                      }}
+                      className={`px-3 py-2 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-2 ${
+                        selectedChannels.includes('telegram')
+                          ? 'bg-sky-500/10 border-sky-500/50 text-sky-600 dark:text-sky-400'
+                          : 'bg-muted border-input text-muted-foreground hover:border-ring'
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      Telegram
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedChannels((prev) =>
+                          prev.includes('email') ? prev.filter((c) => c !== 'email') : [...prev, 'email']
+                        );
+                      }}
+                      className={`px-3 py-2 rounded-lg border text-xs font-medium transition flex items-center justify-center gap-2 ${
+                        selectedChannels.includes('email')
+                          ? 'bg-indigo-500/10 border-indigo-500/50 text-indigo-600 dark:text-indigo-400'
+                          : 'bg-muted border-input text-muted-foreground hover:border-ring'
+                      }`}
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      Email
+                    </button>
+                  </div>
+                  <input type="hidden" name="channel_filter" value={JSON.stringify(selectedChannels)} />
+                  <p className="text-[10px] text-muted-foreground mt-1.5">
+                    Select which channels this automation sends to. Leads without contact info for selected channels will be skipped.
+                  </p>
+                </div>
 
+                {/* PHASE 5.5: Email Subject (conditional) */}
+                {selectedChannels.includes('email') && (
+                  <div>
+                    <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5">
+                      Email Subject Line *
+                    </label>
+                    <input
+                      name="email_subject"
+                      defaultValue={editingAutomation?.email_subject ?? ''}
+                      required={selectedChannels.includes('email')}
+                      placeholder="Your subscription expires soon, {customer_name}"
+                      className="w-full px-3 py-2.5 rounded-lg bg-muted border border-input text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-ring focus:ring-1 focus:ring-ring outline-none transition"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Subject line for email deliveries. Supports variables: {'{customer_name}'}, {'{business_name}'}.
+                    </p>
+                  </div>
+                )}
+
+                
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Message Template</label>
