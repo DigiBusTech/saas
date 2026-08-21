@@ -18,11 +18,22 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // Get user's tenant_id first
+  const { data: profile } = await supabase
+    .from('users')
+    .select('tenant_id')
+    .eq('id', user.id)
+    .single();
+
+  if (!profile?.tenant_id) redirect('/dashboard/onboarding');
+
   // Use regular client for workspace lookup (respects RLS)
+  // Must filter by tenant_id for RLS policy
   const { data: workspace, error: workspaceError } = await supabase
     .from('workspaces')
     .select('*, subscription_plans(*)')
     .eq('id', workspace_id)
+    .eq('tenant_id', profile.tenant_id)
     .single();
 
   if (!workspace || workspaceError) {
