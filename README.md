@@ -2,6 +2,16 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Prerequisites
+
+1. **Supabase** - Set up your Supabase project and update `.env.local` with credentials
+2. **AI Provider** (Optional but recommended) - Choose one:
+   - **OpenAI** (Recommended for quick start): Add `OPENAI_API_KEY=sk-...` to `.env.local`
+   - **Groq** (Free tier available): Add `GROQ_API_KEY=gsk-...` to `.env.local`
+   - **AgentRouter** or custom providers: Configure at `/super-admin/ai-providers` after login
+
+### Quick Start
+
 First, run the development server:
 
 ```bash
