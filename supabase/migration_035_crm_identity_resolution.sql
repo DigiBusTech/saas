@@ -1,5 +1,5 @@
 -- =========================================================================
--- Migration 035: CRM Identity Resolution & Web Chat Tracking
+-- Migration 035: CRM Identity Resolution & Web Chat Tracking (FIXED)
 -- IP address, session ID, and automatic lead status management
 -- =========================================================================
 
@@ -27,11 +27,32 @@ ALTER TABLE public.workspace_crm
 
 COMMENT ON COLUMN public.workspace_crm.conversation_count IS 'Number of conversations this lead has initiated';
 
--- 3. Create function to auto-update lead status based on activity
+-- 3. Add lead_status and channel_type columns if they don't exist
+-- (These are needed for the trigger function to work)
+ALTER TABLE public.workspace_crm
+    ADD COLUMN IF NOT EXISTS lead_status VARCHAR(50) DEFAULT 'new',
+    ADD COLUMN IF NOT EXISTS channel_type VARCHAR(50);
+
+-- Update existing records to have channel_type match platform
+UPDATE public.workspace_crm 
+SET channel_type = platform 
+WHERE channel_type IS NULL AND platform IS NOT NULL;
+
+-- Add channel_user_id if it doesn't exist (alias for platform_user_id)
+ALTER TABLE public.workspace_crm
+    ADD COLUMN IF NOT EXISTS channel_user_id TEXT;
+
+-- Sync channel_user_id with platform_user_id for existing records
+UPDATE public.workspace_crm 
+SET channel_user_id = platform_user_id 
+WHERE channel_user_id IS NULL AND platform_user_id IS NOT NULL;
+
+-- 4. Create function to auto-update lead status based on activity
+-- FIXED: Use crm_id from chat_messages instead of trying to match on multiple fields
 CREATE OR REPLACE FUNCTION public.update_lead_status_on_message()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- When a new message is created, update the lead status
+    -- When a new message is created, update the lead status using crm_id
     UPDATE public.workspace_crm
     SET 
         lead_status = CASE
@@ -45,9 +66,7 @@ BEGIN
             ELSE conversation_count
         END,
         first_message_at = COALESCE(first_message_at, now())
-    WHERE workspace_id = NEW.workspace_id
-      AND channel_user_id = NEW.sender_id
-      AND channel_type = NEW.channel;
+    WHERE id = NEW.crm_id;
 
     RETURN NEW;
 END;
@@ -55,18 +74,20 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 COMMENT ON FUNCTION public.update_lead_status_on_message IS 'PHASE 2: Auto-update lead status from new → active_chat when messages are sent';
 
--- 4. Create trigger on chat_messages for automatic status updates
+-- 5. Create trigger on chat_messages for automatic status updates
+-- FIXED: Changed NEW.role to NEW.sender_type
 DROP TRIGGER IF EXISTS trigger_update_lead_status ON public.chat_messages;
 
 CREATE TRIGGER trigger_update_lead_status
     AFTER INSERT ON public.chat_messages
     FOR EACH ROW
-    WHEN (NEW.role = 'user')
+    WHEN (NEW.sender_type = 'user')
     EXECUTE FUNCTION public.update_lead_status_on_message();
 
 COMMENT ON TRIGGER trigger_update_lead_status ON public.chat_messages IS 'Updates workspace_crm lead_status and activity timestamps on new customer messages';
 
--- 5. Create function to find or create CRM lead by session ID
+-- 6. Create function to find or create CRM lead by session ID
+-- FIXED: Made it work with the actual workspace_crm schema
 CREATE OR REPLACE FUNCTION public.get_or_create_lead_by_session(
     p_workspace_id UUID,
     p_session_id TEXT,
@@ -83,7 +104,7 @@ BEGIN
     FROM public.workspace_crm
     WHERE workspace_id = p_workspace_id
       AND session_id = p_session_id
-      AND channel_type = p_channel_type
+      AND (channel_type = p_channel_type OR platform = p_channel_type)
     LIMIT 1;
 
     -- If found, update last_seen_at
@@ -98,7 +119,9 @@ BEGIN
     -- Otherwise create new lead
     INSERT INTO public.workspace_crm (
         workspace_id,
+        platform,
         channel_type,
+        platform_user_id,
         channel_user_id,
         session_id,
         ip_address,
@@ -109,8 +132,10 @@ BEGIN
         conversation_count
     ) VALUES (
         p_workspace_id,
-        p_channel_type,
-        p_session_id, -- Use session_id as channel_user_id for web chat
+        p_channel_type, -- platform
+        p_channel_type, -- channel_type
+        p_session_id, -- Use session_id as platform_user_id for web chat
+        p_session_id, -- channel_user_id
         p_session_id,
         p_ip_address,
         p_user_agent,
@@ -127,7 +152,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 COMMENT ON FUNCTION public.get_or_create_lead_by_session IS 'PHASE 2: Find existing lead by session ID or create new one with tracking data';
 
--- 6. Backfill first_message_at for existing leads
+-- 7. Backfill last_seen_at for existing leads (use last_interaction if available)
 UPDATE public.workspace_crm
-SET first_message_at = created_at
-WHERE first_message_at IS NULL;
+SET last_seen_at = last_interaction
+WHERE last_seen_at IS NULL AND last_interaction IS NOT NULL;
+
+-- Note: first_message_at will be populated by the trigger on future messages
+-- or can be set manually. workspace_crm doesn't have a created_at column to backfill from.
