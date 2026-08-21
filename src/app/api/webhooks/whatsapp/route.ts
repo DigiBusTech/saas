@@ -90,6 +90,7 @@ export async function POST(request: Request) {
 
   const phoneNumberId = value.metadata.phone_number_id;
   const senderPhone = messageData.from;
+  const waId = value.contacts?.[0]?.wa_id ?? senderPhone; // WhatsApp ID (normalized phone)
   const contactName = value.contacts?.[0]?.profile?.name ?? 'WhatsApp User';
   const messageText = messageData.text.body.trim();
 
@@ -119,9 +120,12 @@ export async function POST(request: Request) {
       tenantId: integration.tenant_id,
       platform: 'whatsapp',
       chatId: senderPhone,
+      waId, // PHASE 5.5: WhatsApp normalized ID for identity resolution
       contactName,
       messageText,
-      integrationId: integration.id,      externalMessageId: messageData.id,    },
+      integrationId: integration.id,
+      externalMessageId: messageData.id,
+    },
   });
 
   return NextResponse.json({ status: 'ok' }, { status: 200 });

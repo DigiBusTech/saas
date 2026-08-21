@@ -1,10 +1,10 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 import { HelpArticlesClient } from './help-client';
 
 export const dynamic = 'force-dynamic';
 
 export default async function HelpCenterPage() {
-  const supabase = createClient();
+  const supabase = createServiceClient();
   
   const { data: articles } = await supabase
     .from('help_articles')

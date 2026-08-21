@@ -20,6 +20,8 @@ export const processChatMessage = inngest.createFunction(
       messageText, integrationId, botPersona, agentMode, externalMessageId, visitorEmail,
       // PHASE 2: Session tracking metadata
       ipAddress, sessionId, userAgent,
+      // PHASE 5.5: WhatsApp identity resolution
+      waId, // WhatsApp normalized phone (wa_id)
     } = event.data;
 
     const db = createServiceClient();
@@ -182,22 +184,30 @@ export const processChatMessage = inngest.createFunction(
     let crmRecord: { id: string; ai_status: string; customer_name: string | null; email: string | null } | null = null;
     if (workspaceId) {
       crmRecord = await step.run('upsert-crm-record', async () => {
+        // PHASE 5.5: For WhatsApp, use wa_id for lookup (normalized phone)
+        const lookupId = platform === 'whatsapp' && waId ? waId : chatId;
+        
         const { data: existingCrm } = await db
           .from('workspace_crm')
           .select('id, lead_score, ai_status, customer_name, email')
           .eq('workspace_id', workspaceId)
           .eq('platform', platform)
-          .eq('platform_user_id', chatId)
+          .eq('platform_user_id', lookupId)
           .single();
 
         if (existingCrm) {
           const updatePayload: any = {
-            last_interaction: new Date().toISOString(),
-          };
-          
-          // PHASE 2: Always persist name/email immediately when provided
-          if (contactName) {
+            last_in5.5: Always persist WhatsApp profile.name when provided
+          if (contactName && (!existingCrm.customer_name || existingCrm.customer_name === 'WhatsApp User')) {
             updatePayload.customer_name = contactName;
+          }
+          if (visitorEmail) {
+            updatePayload.email = visitorEmail;
+          }
+          
+          // PHASE 5.5: For WhatsApp, store phone if not already present
+          if (platform === 'whatsapp' && waId && !existingCrm.phone) {
+            updatePayload.phone = waId.replace(/\D/g, ''); // Store clean phone numberctName;
           }
           if (visitorEmail) {
             updatePayload.email = visitorEmail;
