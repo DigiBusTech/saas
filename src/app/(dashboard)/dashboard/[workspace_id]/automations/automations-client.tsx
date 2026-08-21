@@ -74,7 +74,13 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
           </p>
         </div>
         <button
-          onClick={() => { setEditingAutomation(null); setError(''); setShowModal(true); }}
+          onClick={() => {
+            setEditingAutomation(null);
+            // PHASE 5.5: Reset to default channels when creating new automation
+            setSelectedChannels(['whatsapp', 'telegram']);
+            setError('');
+            setShowModal(true);
+          }}
           className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600
             hover:from-indigo-400 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
         >
@@ -136,8 +142,36 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                 )}
               </div>
 
+              {/* PHASE 5.5: Channel badges */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {auto.channel_filter && Array.isArray(auto.channel_filter) && auto.channel_filter.map((channel) => {
+                  const colors = {
+                    whatsapp: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10',
+                    telegram: 'text-sky-600 dark:text-sky-400 bg-sky-500/10',
+                    email: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10',
+                  };
+                  const icons = {
+                    whatsapp: <MessageSquare className="w-2.5 h-2.5" />,
+                    telegram: <MessageSquare className="w-2.5 h-2.5" />,
+                    email: <Mail className="w-2.5 h-2.5" />,
+                  };
+                  return (
+                    <span key={channel} className={`flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-medium ${colors[channel as keyof typeof colors]}`}>
+                      {icons[channel as keyof typeof icons]}
+                      {channel}
+                    </span>
+                  );
+                })}
+              </div>
+
               <div className="flex gap-2 pt-1 border-t border-border">
-                <button onClick={() => { setEditingAutomation(auto); setError(''); setShowModal(true); }}
+                <button onClick={() => {
+                  setEditingAutomation(auto);
+                  // PHASE 5.5: Pre-populate channel selection from existing automation
+                  setSelectedChannels(auto.channel_filter && Array.isArray(auto.channel_filter) ? auto.channel_filter : ['whatsapp', 'telegram']);
+                  setError('');
+                  setShowModal(true);
+                }}
                   className="flex-1 py-1.5 rounded-lg text-[10px] text-muted-foreground hover:text-foreground hover:bg-muted transition flex items-center justify-center gap-1">
                   <Pencil className="w-3 h-3" /> Edit
                 </button>
