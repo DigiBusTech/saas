@@ -5,9 +5,9 @@
 
 -- Add indexes for performance and query optimization
 CREATE INDEX IF NOT EXISTS idx_workspace_crm_lead_status ON workspace_crm(workspace_id, lead_status);
-CREATE INDEX IF NOT EXISTS idx_workspace_crm_phone ON workspace_crm(workspace_id, phone) WHERE phone IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_workspace_crm_email ON workspace_crm(workspace_id, email) WHERE email IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_workspace_orders_status ON workspace_orders(workspace_id, order_status);
+CREATE INDEX IF NOT EXISTS idx_workspace_crm_phone ON workspace_crm(workspace_id, phone_number) WHERE phone_number IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_workspace_crm_platform_user ON workspace_crm(workspace_id, platform_user_id);
+CREATE INDEX IF NOT EXISTS idx_workspace_orders_status ON workspace_orders(workspace_id, status);
 CREATE INDEX IF NOT EXISTS idx_workspace_orders_created ON workspace_orders(workspace_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_updated ON conversations(tenant_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation ON chat_messages(conversation_id, created_at DESC);
@@ -16,31 +16,31 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_base_workspace ON knowledge_base(worksp
 -- Add constraints to prevent orphaned records and ensure data integrity
 ALTER TABLE workspace_crm 
 ADD CONSTRAINT check_workspace_crm_channel 
-CHECK (preferred_channel IN ('whatsapp', 'telegram', 'email', 'web'));
+CHECK (preferred_channel IN ('whatsapp', 'telegram', 'email', 'web_chat'));
 
 ALTER TABLE workspace_orders 
 ADD CONSTRAINT check_workspace_orders_status 
-CHECK (order_status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'));
+CHECK (status IN ('pending_review', 'approved', 'rejected', 'paid', 'cancelled'));
 
 ALTER TABLE workspace_automation_logs 
 ADD CONSTRAINT check_automation_logs_status 
 CHECK (status IN ('pending', 'sent', 'failed', 'rate_limited', 'skipped'));
 
--- Add data validation triggers
-CREATE OR REPLACE FUNCTION validate_email_format()
+-- Add data validation triggers for customer_email in workspace_orders
+CREATE OR REPLACE FUNCTION validate_customer_email_format()
 RETURNS TRIGGER AS $$
 BEGIN
-  IF NEW.email IS NOT NULL AND NEW.email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$' THEN
-    RAISE EXCEPTION 'Invalid email format: %', NEW.email;
+  IF NEW.customer_email IS NOT NULL AND NEW.customer_email !~ '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}$' THEN
+    RAISE EXCEPTION 'Invalid email format: %', NEW.customer_email;
   END IF;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER validate_workspace_crm_email
-  BEFORE INSERT OR UPDATE ON workspace_crm
+CREATE TRIGGER validate_order_customer_email
+  BEFORE INSERT OR UPDATE ON workspace_orders
   FOR EACH ROW
-  EXECUTE FUNCTION validate_email_format();
+  EXECUTE FUNCTION validate_customer_email_format();
 
 -- Prevent SQL injection in custom fields
 CREATE OR REPLACE FUNCTION sanitize_custom_fields()
