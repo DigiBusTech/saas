@@ -31,7 +31,7 @@ export default function OnboardingPage() {
     {
       id: 'welcome',
       role: 'assistant',
-      content: `Welcome! 🚀 I'm your AI setup assistant. Let's get your first business up and running in under 2 minutes.\n\n**What's the name of your business?** (e.g. "Lagos Style Boutique", "TechFix Solutions")`,
+      content: `Welcome! ðŸš€ I'm your AI setup assistant. Let's get your first business up and running in under 2 minutes.\n\n**What's the name of your business?** (e.g. "Lagos Style Boutique", "TechFix Solutions")`,
     },
   ]);
 
@@ -135,7 +135,7 @@ export default function OnboardingPage() {
     if (result.error) {
       setMessages((prev) => [
         ...prev,
-        { id: `error-${Date.now()}`, role: 'assistant', content: `⚠️ Workspace creation failed: ${result.error}` },
+        { id: `error-${Date.now()}`, role: 'assistant', content: `âš ï¸ Workspace creation failed: ${result.error}` },
       ]);
       setCreating(false);
       return;
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
               >
                 <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold
                   ${step > s.id ? 'bg-emerald-500 text-white' : step === s.id ? 'bg-indigo-500 text-white' : 'bg-zinc-800 text-gray-600'}`}>
-                  {step > s.id ? '✓' : s.id}
+                  {step > s.id ? 'âœ“' : s.id}
                 </div>
                 <span className={`text-[10px] font-medium hidden sm:inline
                   ${step === s.id ? 'text-indigo-400' : step > s.id ? 'text-emerald-400' : 'text-gray-600'}`}>
@@ -202,7 +202,7 @@ export default function OnboardingPage() {
         {/* Chat Interface */}
         <div className="rounded-2xl bg-zinc-900/60 backdrop-blur-md border border-white/10 overflow-hidden shadow-2xl">
           {/* Messages */}
-          <div ref={scrollRef} className="h-[400px] overflow-y-auto p-5 space-y-4">
+          <div ref={scrollRef} className="h-100 overflow-y-auto p-5 space-y-4">
             <AnimatePresence>
               {messages.map((msg) => (
                 <motion.div
@@ -214,7 +214,7 @@ export default function OnboardingPage() {
                 >
                   <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-xs leading-relaxed
                     ${msg.role === 'user'
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
+                      ? 'bg-linear-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20'
                       : 'bg-zinc-800/80 backdrop-blur-sm border border-white/5 text-gray-300'}`}
                   >
                     {msg.role === 'assistant' && (
@@ -258,7 +258,7 @@ export default function OnboardingPage() {
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
-                className="px-5 py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600
+                className="px-5 py-3 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600
                   hover:from-indigo-400 hover:to-purple-500 disabled:opacity-40 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -267,7 +267,7 @@ export default function OnboardingPage() {
           ) : (
             /* Step 3: Create Workspace Button */
             <div className="border-t border-white/5 p-5">
-              <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-xl border border-indigo-500/20 p-4 space-y-3">
+              <div className="bg-linear-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 rounded-xl border border-indigo-500/20 p-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Rocket className="w-4 h-4 text-indigo-400" />
                   <h3 className="text-xs font-semibold text-white">Ready to Launch!</h3>
@@ -279,7 +279,7 @@ export default function OnboardingPage() {
                 <button
                   onClick={handleCreateWorkspace}
                   disabled={creating || !businessName}
-                  className="w-full py-3 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600
+                  className="w-full py-3 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600
                     hover:from-indigo-400 hover:to-purple-500 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center justify-center gap-2"
                 >
                   {creating ? (

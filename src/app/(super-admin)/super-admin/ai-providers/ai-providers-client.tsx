@@ -72,7 +72,7 @@ export function AiProvidersClient({ providers }: Props) {
 
   async function handleTest(p: Provider) {
     setTesting(p.id);
-    setTestResults((prev) => ({ ...prev, [p.id]: { ok: false, text: 'Testing…' } }));
+    setTestResults((prev) => ({ ...prev, [p.id]: { ok: false, text: 'Testingâ€¦' } }));
     const res = await testProvider({ id: p.id, base_url: p.base_url, model_name: p.model_name });
     setTestResults((prev) => ({
       ...prev,
@@ -105,7 +105,7 @@ export function AiProvidersClient({ providers }: Props) {
           >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">{editing.id ? 'Edit' : 'Add'} AI Provider</h3>
-              <button type="button" onClick={() => setEditing(null)} className="text-gray-500 hover:text-white text-lg leading-none">×</button>
+              <button type="button" onClick={() => setEditing(null)} className="text-gray-500 hover:text-white text-lg leading-none">Ã—</button>
             </div>
 
             {editing.id && <input type="hidden" name="id" value={editing.id} />}
@@ -139,7 +139,7 @@ export function AiProvidersClient({ providers }: Props) {
               <label className="block text-[10px] uppercase font-bold tracking-wider text-gray-500 mb-1.5">
                 API Key {editing.id && <span className="text-gray-600 normal-case font-normal">(leave blank to keep existing)</span>}
               </label>
-              <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} type="password" placeholder={editing.id ? editing.display_key : 'sk-…'}
+              <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} type="password" placeholder={editing.id ? editing.display_key : 'sk-â€¦'}
                 className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-white font-mono outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
 
@@ -186,10 +186,10 @@ export function AiProvidersClient({ providers }: Props) {
               </tr>
             ) : (
               providers.map((p) => (
-                <tr key={p.id} className="border-b border-gray-800/50 hover:bg-white/[0.02]">
+                <tr key={p.id} className="border-b border-gray-800/50 hover:bg-white/2">
                   <td className="px-4 py-3 font-semibold text-white">{p.provider_name}</td>
                   <td className="px-4 py-3 text-gray-400 font-mono">{p.model_name}</td>
-                  <td className="px-4 py-3 text-gray-500 font-mono truncate max-w-[180px]">{p.base_url}</td>
+                  <td className="px-4 py-3 text-gray-500 font-mono truncate max-w-45">{p.base_url}</td>
                   <td className="px-4 py-3 text-gray-500 font-mono">{p.display_key}</td>
                   <td className="px-4 py-3 text-center text-gray-400">{p.priority}</td>
                   <td className="px-4 py-3">
@@ -210,7 +210,7 @@ export function AiProvidersClient({ providers }: Props) {
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => handleTest(p)} disabled={testing === p.id}
                         className="text-[10px] px-2 py-1 border border-gray-800 rounded text-sky-400 hover:text-sky-300 transition disabled:opacity-50">
-                        {testing === p.id ? 'Testing…' : 'Test'}
+                        {testing === p.id ? 'Testingâ€¦' : 'Test'}
                       </button>
                       <button onClick={() => openEdit(p)}
                         className="text-[10px] px-2 py-1 border border-gray-800 rounded text-indigo-400 hover:text-indigo-300 transition">

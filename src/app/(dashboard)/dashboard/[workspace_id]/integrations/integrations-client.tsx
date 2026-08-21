@@ -190,7 +190,7 @@ export function WorkspaceIntegrationsClient({ workspace, integrationStatus, publ
               saving={saving}
               handleSave={handleSave}
               webhookStatus={webhookStatus}
-              verifyWebhook={async () => { const result = await verifyTelegramWebhook(workspace.id); setWebhookStatus(result.error ? result.error : `Webhook: ${result.data?.url || 'not registered'}${result.data?.last_error_message ? ` — ${result.data.last_error_message}` : ''}`); }}
+              verifyWebhook={async () => { const result = await verifyTelegramWebhook(workspace.id); setWebhookStatus(result.error ? result.error : `Webhook: ${result.data?.url || 'not registered'}${result.data?.last_error_message ? ` â€” ${result.data.last_error_message}` : ''}`); }}
             />
           ) : (
             <WhatsAppConfig
@@ -277,7 +277,7 @@ function TelegramConfig({
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-sky-500 to-blue-600
+          className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-sky-500 to-blue-600
             hover:from-sky-400 hover:to-blue-500 disabled:opacity-50 shadow-lg shadow-sky-500/25 transition-all flex items-center gap-2"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
@@ -305,7 +305,7 @@ function TelegramConfig({
             <li>Open Telegram and search for <code className="text-sky-400">@BotFather</code></li>
             <li>Send <code className="text-sky-400">/newbot</code> command</li>
             <li>Choose a name and username for your bot</li>
-            <li>BotFather will give you a <strong className="text-white">Bot Token</strong> — copy it</li>
+            <li>BotFather will give you a <strong className="text-white">Bot Token</strong> â€” copy it</li>
             <li>Paste it in the field above and click &quot;Encrypt &amp; Save&quot;</li>
           </ol>
         </SetupAccordion>
@@ -365,7 +365,7 @@ function TelegramConfig({
           <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
             <li>In your chat with <code className="text-sky-400">@BotFather</code>, send <code className="text-sky-400">/setuserpic</code></li>
             <li>Select your bot from the list</li>
-            <li>Upload your <strong className="text-white">business logo</strong> as a photo (square, at least 512×512px recommended)</li>
+            <li>Upload your <strong className="text-white">business logo</strong> as a photo (square, at least 512Ã—512px recommended)</li>
             <li>BotFather will confirm the profile photo has been set</li>
             <li>Your bot will now display your brand logo in chats and search results</li>
           </ol>
@@ -477,7 +477,7 @@ function WhatsAppConfig({
         <button
           type="submit"
           disabled={saving}
-          className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-green-600
+          className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-green-600
             hover:from-emerald-400 hover:to-green-500 disabled:opacity-50 shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Shield className="w-3.5 h-3.5" />}
@@ -495,10 +495,10 @@ function WhatsAppConfig({
         >
           <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
             <li>Go to <a href="https://developers.facebook.com" target="_blank" className="text-emerald-400 underline inline-flex items-center gap-1">developers.facebook.com <ExternalLink className="w-3 h-3" /></a></li>
-            <li>Click <strong className="text-white">Create App</strong> → select the <strong className="text-white">&quot;Other&quot;</strong> use case, then select <strong className="text-white">&quot;Business&quot;</strong> as the app type</li>
+            <li>Click <strong className="text-white">Create App</strong> â†’ select the <strong className="text-white">&quot;Other&quot;</strong> use case, then select <strong className="text-white">&quot;Business&quot;</strong> as the app type</li>
             <li>Give your app a name and connect it to your Meta Business Account</li>
             <li>Once created, click <strong className="text-white">Add Product</strong> on the left sidebar and select <strong className="text-white">WhatsApp</strong></li>
-            <li>Navigate to <strong className="text-white">WhatsApp → API Setup</strong> to find your <strong className="text-white">Phone Number ID</strong> and <strong className="text-white">Temporary Access Token</strong></li>
+            <li>Navigate to <strong className="text-white">WhatsApp â†’ API Setup</strong> to find your <strong className="text-white">Phone Number ID</strong> and <strong className="text-white">Temporary Access Token</strong></li>
           </ol>
         </SetupAccordion>
 
@@ -509,7 +509,7 @@ function WhatsAppConfig({
           setOpenAccordion={setOpenAccordion}
         >
           <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-            <li>In your Meta App, go to <strong className="text-white">WhatsApp → Configuration</strong></li>
+            <li>In your Meta App, go to <strong className="text-white">WhatsApp â†’ Configuration</strong></li>
             <li>Click <strong className="text-white">Edit</strong> under Webhook</li>
             <li>Paste your webhook URL from above as the <strong className="text-white">Callback URL</strong></li>
             <li>Enter your chosen <strong className="text-white">Verify Token</strong> (same as the one you saved above)</li>
@@ -525,7 +525,7 @@ function WhatsAppConfig({
         >
           <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
             <li>By default, your app is in <strong className="text-white">Development</strong> mode and can only send messages to <strong className="text-amber-400">5 verified test numbers</strong></li>
-            <li>Add test numbers in <strong className="text-white">WhatsApp → API Setup → &quot;To&quot;</strong> field — each must verify via SMS code</li>
+            <li>Add test numbers in <strong className="text-white">WhatsApp â†’ API Setup â†’ &quot;To&quot;</strong> field â€” each must verify via SMS code</li>
             <li>To go live for production, you must:
               <ul className="list-disc list-inside ml-4 mt-1 space-y-1 text-gray-500">
                 <li>Complete <strong className="text-white">Meta Business Verification</strong> (upload business documents)</li>
@@ -544,14 +544,14 @@ function WhatsAppConfig({
         >
           <div className="space-y-3">
             <div className="bg-amber-950/30 border border-amber-500/20 rounded-lg px-3 py-2">
-              <p className="text-[10px] text-amber-400">⚠️ The default token from API Setup expires in <strong>24 hours</strong>. Follow these steps to create a permanent one.</p>
+              <p className="text-[10px] text-amber-400">âš ï¸ The default token from API Setup expires in <strong>24 hours</strong>. Follow these steps to create a permanent one.</p>
             </div>
             <ol className="list-decimal list-inside space-y-2 text-xs text-gray-400">
-              <li>Go to <a href="https://business.facebook.com/settings/system-users" target="_blank" className="text-emerald-400 underline inline-flex items-center gap-1">Meta Business Settings → System Users <ExternalLink className="w-3 h-3" /></a></li>
+              <li>Go to <a href="https://business.facebook.com/settings/system-users" target="_blank" className="text-emerald-400 underline inline-flex items-center gap-1">Meta Business Settings â†’ System Users <ExternalLink className="w-3 h-3" /></a></li>
               <li>Click <strong className="text-white">Add</strong> to create a new System User (name it e.g. &quot;WhatsApp API Bot&quot;)</li>
               <li>Set the role to <strong className="text-white">Admin</strong></li>
-              <li>Click <strong className="text-white">Add Assets</strong> → select <strong className="text-white">Apps</strong> → choose your WhatsApp app → grant <strong className="text-white">Full Control</strong></li>
-              <li>Click <strong className="text-white">Generate New Token</strong> → select your app → check the <code className="text-emerald-400">whatsapp_business_messaging</code> and <code className="text-emerald-400">whatsapp_business_management</code> permissions</li>
+              <li>Click <strong className="text-white">Add Assets</strong> â†’ select <strong className="text-white">Apps</strong> â†’ choose your WhatsApp app â†’ grant <strong className="text-white">Full Control</strong></li>
+              <li>Click <strong className="text-white">Generate New Token</strong> â†’ select your app â†’ check the <code className="text-emerald-400">whatsapp_business_messaging</code> and <code className="text-emerald-400">whatsapp_business_management</code> permissions</li>
               <li>Copy the generated token and paste it in the <strong className="text-white">Access Token</strong> field above</li>
               <li>This token <strong className="text-emerald-400">does not expire</strong> and is safe for production use</li>
             </ol>

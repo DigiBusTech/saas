@@ -175,9 +175,9 @@ export function ProductsClient({ workspace, initialProducts }: Props) {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+              className="flex max-h-[90vh] w-full max-w-lg flex-col mx-4 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden"
             >
-              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5 shrink-0">
                 <h3 className="text-sm font-semibold text-white">
                   {editingProduct ? 'Edit Product' : 'Add Product'}
                 </h3>
@@ -186,7 +186,8 @@ export function ProductsClient({ workspace, initialProducts }: Props) {
                 </button>
               </div>
 
-              <form onSubmit={handleSave} className="p-6 space-y-4">
+              <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {error && (
                   <div className="px-3 py-2 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs">{error}</div>
                 )}
@@ -205,7 +206,7 @@ export function ProductsClient({ workspace, initialProducts }: Props) {
                   <p className="text-[10px] text-gray-600 mt-1">A brief summary the AI uses to describe this product to leads. Keep it concise and benefit-focused.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Price</label>
                     <input name="price" type="number" step="0.01" defaultValue={editingProduct?.price} required
@@ -239,7 +240,7 @@ export function ProductsClient({ workspace, initialProducts }: Props) {
                   <p className="text-[10px] text-gray-600 mt-1">Paste your Stripe/Flutterwave payment link. The AI includes this as a CTA button in product cards.</p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Product Code</label>
                     <input name="code" defaultValue={editingProduct?.code ?? ''} placeholder="PRD-101"
@@ -258,8 +259,9 @@ export function ProductsClient({ workspace, initialProducts }: Props) {
                   <input type="checkbox" name="is_active" value="true" defaultChecked={editingProduct?.is_active ?? true} className="accent-indigo-500" />
                   Active (visible to the AI and customers)
                 </label>
+                </div>
 
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex justify-end gap-3 px-6 py-4 border-t border-white/5 bg-zinc-900/95 shrink-0">
                   <button type="button" onClick={() => setShowModal(false)}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">
                     Cancel

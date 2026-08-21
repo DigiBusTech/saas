@@ -4,6 +4,9 @@ import { useState } from 'react';
 import { login } from '../actions';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { AlertCircle } from 'lucide-react';
+import { AuthShell } from '@/components/auth/AuthShell';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
@@ -20,86 +23,73 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#081018] flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background glow effects */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none" />
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm bg-zinc-900/60 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 relative z-10"
-      >
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
-            Welcome back
-          </h2>
-          <p className="text-xs text-slate-400">
-            Log in to manage your SabiBio workspaces
-          </p>
+    <AuthShell
+      variant="login"
+      title="Welcome back"
+      subtitle="Sign in to manage conversations, orders, and your SabiBio page."
+      footer={<span>Powered by Sabi AI Technologies Ltd.</span>}
+    >
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6 flex items-start gap-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <span>{error}</span>
+        </motion.div>
+      )}
+
+      <form action={handleSubmit} className="space-y-5">
+        <div>
+          <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            Email address
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="you@company.com"
+            autoComplete="email"
+            className="w-full rounded-lg border border-slate-700/50 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 transition-all focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20"
+            required
+            autoFocus
+          />
         </div>
 
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }} 
-            animate={{ opacity: 1, height: 'auto' }} 
-            className="mb-6 p-3 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs rounded-lg flex items-center gap-2"
-          >
-            <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span>{error}</span>
-          </motion.div>
-        )}
+        <PasswordInput
+          label="Password"
+          name="password"
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          required
+        />
 
-        <form action={handleSubmit} className="space-y-5">
-          <div>
-            <label className="block text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">
-              Email Address
-            </label>
-            <input
-              type="email"
-              name="email"
-              placeholder="you@company.com"
-              className="w-full bg-black/40 border border-slate-700/50 rounded-lg px-4 py-3 text-sm focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 outline-none text-white font-mono transition-all placeholder:text-slate-600"
-              required
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="block text-[11px] uppercase font-bold tracking-wider text-slate-500 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              placeholder="••••••••"
-              className="w-full bg-black/40 border border-slate-700/50 rounded-lg px-4 py-3 text-sm focus:border-cyan-400/50 focus:ring-1 focus:ring-cyan-400/20 outline-none text-white transition-all placeholder:text-slate-600"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full mt-2 bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 disabled:opacity-50 transition-all text-slate-950 py-3 rounded-lg font-bold text-sm tracking-wide shadow-lg shadow-cyan-500/20"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="mt-8 pt-6 border-t border-slate-700/50 text-center">
-          <p className="text-xs text-slate-400 mb-3">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="text-cyan-400 hover:text-cyan-300 font-medium ml-1 transition-colors">
-              Create one →
-            </Link>
-          </p>
-          <p className="text-[10px] text-slate-600">
-            Powered by Sabi AI Technologies Ltd.
-          </p>
+        <div className="flex items-center justify-between text-xs">
+          <label className="flex items-center gap-2 text-slate-400">
+            <input type="checkbox" name="remember" className="h-3.5 w-3.5 accent-cyan-400" />
+            Remember me
+          </label>
+          <Link href="/forgot-password" className="text-cyan-300 hover:text-cyan-200">
+            Forgot password?
+          </Link>
         </div>
-      </motion.div>
-    </div>
+
+        <motion.button
+          type="submit"
+          disabled={loading}
+          whileTap={{ scale: 0.98 }}
+          className="w-full rounded-lg bg-linear-to-r from-cyan-400 to-blue-500 py-3 text-sm font-bold tracking-wide text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:from-cyan-300 hover:to-blue-400 disabled:opacity-50"
+        >
+          {loading ? 'Signing in...' : 'Sign in'}
+        </motion.button>
+      </form>
+
+      <div className="mt-6 border-t border-white/10 pt-6 text-center text-xs text-slate-400">
+        Don&apos;t have an account?{' '}
+        <Link href="/signup" className="ml-1 font-medium text-cyan-300 hover:text-cyan-200">
+          Start a free trial →
+        </Link>
+      </div>
+    </AuthShell>
   );
 }

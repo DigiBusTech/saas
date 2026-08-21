@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { getWorkspaceById } from '../../workspaces/actions';
 import { ConversationsClient } from './conversations-client';
+import { MessageSquare } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function WorkspaceConversationsPage({
   params,
@@ -20,7 +22,6 @@ export default async function WorkspaceConversationsPage({
 
   const supabase = await createClient();
 
-  // Fetch conversations with message counts
   const { data: conversations } = await supabase
     .from('conversations')
     .select('*, messages(id, sender_type, content, approval_status, created_at)')
@@ -29,9 +30,25 @@ export default async function WorkspaceConversationsPage({
     .limit(50);
 
   return (
-    <ConversationsClient
-      workspace={workspace}
-      initialConversations={conversations ?? []}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="All Conversations"
+        subtitle="Full chat history across every channel. Review AI performance, sentiment trends, and handoffs."
+        icon={<MessageSquare className="h-5 w-5" />}
+        guide={{
+          what: 'This is the archive of every conversation across WhatsApp, Telegram, and web chat. Filter by channel, AI mode, or status.',
+          how: 'Open a thread to see the full message log with sender, timestamps, and approval status for Copilot drafts.',
+          tips: [
+            'For active conversations, use the Unified Inbox instead — it updates in real time.',
+            'Paused threads mean the AI is off and waiting for a human.',
+            'Message-approval status shows Copilot drafts that were approved, edited, or rejected.',
+          ],
+        }}
+      />
+      <ConversationsClient
+        workspace={workspace}
+        initialConversations={conversations ?? []}
+      />
+    </div>
   );
 }

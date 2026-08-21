@@ -4,6 +4,8 @@ import { signOut } from '../(auth)/actions';
 import { ThemeToggle } from '../theme-toggle';
 import { SuperAdminNav } from '@/components/super-admin/SuperAdminNav';
 import { SuperAdminTopbar } from '@/components/super-admin/SuperAdminTopbar';
+import { SuperAdminMobileNav } from '@/components/super-admin/SuperAdminMobileNav';
+import { BrandMark } from '@/components/ui/BrandMark';
 
 export default async function SuperAdminLayout({
   children,
@@ -26,14 +28,12 @@ export default async function SuperAdminLayout({
   if (profile?.role !== 'super_admin') redirect('/dashboard');
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-gray-300 flex">
-      {/* Sidebar */}
-      <aside className="w-60 bg-zinc-950/80 backdrop-blur-md border-r border-white/5 flex flex-col shrink-0">
+    <div className="min-h-screen bg-zinc-950 text-gray-300 lg:flex">
+      {/* Desktop sidebar */}
+      <aside className="hidden w-60 bg-zinc-950/80 backdrop-blur-md border-r border-white/5 lg:flex lg:flex-col lg:shrink-0">
         {/* Brand */}
         <div className="h-14 border-b border-white/5 flex items-center px-4 gap-2.5">
-          <div className="bg-gradient-to-br from-rose-500 to-rose-700 h-7 w-7 rounded-sm flex items-center justify-center font-bold text-white shadow-lg shadow-rose-600/30 text-[10px]">
-            SA
-          </div>
+          <BrandMark fallbackText="SA" gradient="from-rose-500 to-rose-700" size="sm" />
           <div className="min-w-0">
             <p className="text-xs font-semibold text-white truncate">SabiBio Admin</p>
             <span className="text-[8px] text-rose-400 bg-rose-950/40 px-1.5 py-0.5 border border-rose-900/30 rounded-full font-bold uppercase">
@@ -47,7 +47,7 @@ export default async function SuperAdminLayout({
         {/* User Footer */}
         <div className="border-t border-white/5 p-3 space-y-2">
           <div className="flex items-center gap-2 px-2">
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-rose-500/20 to-rose-700/20 border border-rose-500/20 flex items-center justify-center text-[9px] font-bold text-rose-400">
+            <div className="w-6 h-6 rounded-full bg-linear-to-br from-rose-500/20 to-rose-700/20 border border-rose-500/20 flex items-center justify-center text-[9px] font-bold text-rose-400">
               {(profile?.full_name ?? user.email ?? 'U')[0].toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
@@ -66,11 +66,15 @@ export default async function SuperAdminLayout({
         </div>
       </aside>
 
+      <SuperAdminMobileNav />
+
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex min-h-screen flex-1 flex-col overflow-hidden">
         <SuperAdminTopbar />
         <main className="flex-1 overflow-auto">
-          {children}
+          <div className="px-4 py-6 pt-20 sm:px-6 lg:p-8 lg:pt-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>

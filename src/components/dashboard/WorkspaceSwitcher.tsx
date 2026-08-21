@@ -121,7 +121,7 @@ export function WorkspaceSwitcher({
           {activeWorkspace?.logo_url ? (
             <img src={activeWorkspace.logo_url} alt="" className="w-7 h-7 rounded-md object-cover" />
           ) : (
-            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+            <div className="w-7 h-7 rounded-md bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
               <Building2 className="w-3.5 h-3.5 text-white" />
             </div>
           )}
@@ -164,7 +164,7 @@ export function WorkspaceSwitcher({
                     {ws.logo_url ? (
                       <img src={ws.logo_url} alt="" className="w-6 h-6 rounded-md object-cover" />
                     ) : (
-                      <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center">
+                      <div className="w-6 h-6 rounded-md bg-linear-to-br from-indigo-500/20 to-purple-600/20 border border-indigo-500/20 flex items-center justify-center">
                         <Building2 className="w-3 h-3 text-indigo-400" />
                       </div>
                     )}
@@ -202,7 +202,7 @@ export function WorkspaceSwitcher({
                   {limitReached ? (
                     <Lock className="w-4 h-4 text-amber-400" />
                   ) : (
-                    <div className="w-6 h-6 rounded-md bg-gradient-to-br from-indigo-500/10 to-pink-500/10 border border-dashed border-indigo-500/30 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-md bg-linear-to-br from-indigo-500/10 to-pink-500/10 border border-dashed border-indigo-500/30 flex items-center justify-center">
                       <Plus className="w-3 h-3 text-indigo-400" />
                     </div>
                   )}
@@ -223,7 +223,7 @@ export function WorkspaceSwitcher({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setShowCreateModal(false)}
           >
             <motion.div
@@ -237,7 +237,7 @@ export function WorkspaceSwitcher({
               {/* Header */}
               <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/5">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
@@ -323,7 +323,7 @@ export function WorkspaceSwitcher({
                   onClick={handleCreate}
                   disabled={creating || !name || !slug}
                   className="px-5 py-2 rounded-lg text-xs font-semibold text-white
-                    bg-gradient-to-r from-indigo-500 to-purple-600
+                    bg-linear-to-r from-indigo-500 to-purple-600
                     hover:from-indigo-400 hover:to-purple-500
                     disabled:opacity-50 disabled:cursor-not-allowed
                     shadow-lg shadow-indigo-500/25 transition-all duration-300

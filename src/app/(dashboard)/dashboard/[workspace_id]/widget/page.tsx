@@ -93,7 +93,7 @@ export default function WidgetPage() {
       <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-6 space-y-4">
         <h3 className="text-sm font-semibold text-white">Live Preview</h3>
         <p className="text-xs text-gray-500">The widget appears as a floating button on the bottom-right of your pages:</p>
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg p-8 min-h-64 relative">
+        <div className="bg-linear-to-br from-slate-800 to-slate-900 rounded-lg p-8 min-h-64 relative">
           <div className="text-center text-gray-500 text-xs mb-4">Your website content goes here...</div>
           {/* Floating Button Preview */}
           <div className="absolute bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center shadow-lg" style={{ backgroundColor: buttonColor }}>

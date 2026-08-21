@@ -1,6 +1,8 @@
 import { getWorkspaceById } from '../../workspaces/actions';
 import { getWorkspaceCRM, getCRMMetrics, getWorkspaceCategories } from './actions';
 import { CRMClient } from './crm-client';
+import { Users } from 'lucide-react';
+import { PageHeader } from '@/components/ui/PageHeader';
 
 export default async function WorkspaceCRMPage({
   params,
@@ -25,11 +27,27 @@ export default async function WorkspaceCRMPage({
   ]);
 
   return (
-    <CRMClient
-      workspace={workspace}
-      initialLeads={leads}
-      metrics={metrics}
-      categories={categories}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        title="Contacts & Leads CRM"
+        subtitle="Every customer who has ever messaged you, organized with tags, sentiment, and lifecycle stage."
+        icon={<Users className="h-5 w-5" />}
+        guide={{
+          what: 'The CRM auto-populates from every channel. Each contact holds message history, sentiment score, tags, order history, and lifecycle stage.',
+          how: 'Use the filters to segment. Tag contacts to power broadcasts. Click any lead to see full history and add internal notes your team can share.',
+          tips: [
+            'Tags drive segmentation for flash sales and broadcasts.',
+            'Angry-sentiment contacts are highlighted so you can follow up personally.',
+            'Export a segment to CSV to import into other tools.',
+          ],
+        }}
+      />
+      <CRMClient
+        workspace={workspace}
+        initialLeads={leads}
+        metrics={metrics}
+        categories={categories}
+      />
+    </div>
   );
 }

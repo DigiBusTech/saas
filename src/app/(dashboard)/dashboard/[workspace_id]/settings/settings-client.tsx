@@ -19,7 +19,7 @@ const BOT_PERSONAS = [
 const AGENT_MODES: { value: AgentMode; label: string; desc: string; icon: typeof Bot }[] = [
   { value: 'autopilot', label: 'Autopilot', desc: 'AI handles all queries and sends responses automatically.', icon: Bot },
   { value: 'copilot', label: 'Copilot (Human-in-Loop)', desc: 'AI drafts responses & CRM updates, waits for human approval.', icon: User },
-  { value: 'manual', label: 'Manual', desc: 'AI paused — human handles all operator chat directly.', icon: Headphones },
+  { value: 'manual', label: 'Manual', desc: 'AI paused â€” human handles all operator chat directly.', icon: Headphones },
 ];
 
 interface Props {
@@ -151,7 +151,7 @@ export function SettingsClient({ workspace }: Props) {
               whileTap={{ scale: 0.98 }}
               className={`text-left px-4 py-4 rounded-xl border transition-all duration-300
                 ${agentMode === mode.value
-                  ? 'bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-indigo-500/30 shadow-lg'
+                  ? 'bg-linear-to-br from-indigo-500/10 via-purple-500/10 to-pink-500/10 border-indigo-500/30 shadow-lg'
                   : 'bg-zinc-800/30 border-white/5 hover:border-white/10'}`}
             >
               <div className="flex items-center gap-2 mb-2">
@@ -175,7 +175,7 @@ export function SettingsClient({ workspace }: Props) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600
+          className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600
             hover:from-indigo-400 hover:to-purple-500 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}

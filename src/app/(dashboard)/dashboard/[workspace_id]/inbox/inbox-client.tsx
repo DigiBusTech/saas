@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, useTransition } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getChatMessages, getInboxConversations, setAIStatus, sendManualMessage } from './actions';
 import type { WorkspaceCRM, ChatMessage } from '@/lib/types/database';
-import { Send, Bot, User, Loader2, MessageSquare, Search } from 'lucide-react';
+import { Send, Bot, User, Loader2, MessageSquare, Search, ArrowLeft } from 'lucide-react';
 
 interface Props {
   workspaceId: string;
@@ -54,18 +54,19 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
   const [isSending, startSending] = useTransition();
   const [isToggling, startToggling] = useTransition();
   const [unreadCount, setUnreadCount] = useState(0);
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>('default');
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'unsupported'>(
+    // Read synchronously on first render — safe because state initialiser only runs once.
+    () => (typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported')
+  );
 
   const supabase = useRef(createClient());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef<string | null>(null);
-  activeIdRef.current = activeId;
+
+  // Keep ref in sync with state without causing a render (written in useEffect)
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
 
   const activeContact = conversations.find((c) => c.id === activeId) ?? null;
-
-  useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) setNotificationPermission(Notification.permission);
-  }, []);
 
   const enableNotifications = async () => {
     if (!('Notification' in window)) return;
@@ -188,9 +189,9 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
   const aiActive = activeContact?.ai_status !== 'paused';
 
   return (
-    <div className="flex h-[calc(100vh-6rem)] rounded-xl overflow-hidden border border-white/10 bg-zinc-900/40 backdrop-blur-md">
+    <div className="flex h-[calc(100dvh-14rem)] min-h-120 rounded-xl overflow-hidden border border-white/10 bg-zinc-900/40 backdrop-blur-md">
       {/* ---------- Left Pane: Conversation list ---------- */}
-      <div className="w-full max-w-xs border-r border-white/10 flex flex-col">
+      <div className={`${activeId ? 'hidden md:flex' : 'flex'} w-full md:max-w-xs border-r border-white/10 flex-col`}>
         <div className="p-4 border-b border-white/10">
           <h1 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
             <MessageSquare className="w-4 h-4 text-indigo-400" /> Unified Inbox
@@ -254,7 +255,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
       </div>
 
       {/* ---------- Right Pane: Active chat window ---------- */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`${activeId ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
         {!activeContact ? (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-600">
             <MessageSquare className="w-10 h-10 mb-3 text-gray-700" />
@@ -263,15 +264,23 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 sm:px-5 py-3 border-b border-white/10">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setActiveId(null)}
+                  className="md:hidden shrink-0 flex h-9 w-9 items-center justify-center rounded-lg text-gray-400 hover:bg-white/5 hover:text-white"
+                  aria-label="Back to conversations"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                </button>
+                <div className="w-8 h-8 rounded-full bg-linear-to-br from-indigo-500/30 to-purple-500/30 flex items-center justify-center text-xs font-semibold text-white shrink-0">
                   {(activeContact.customer_name ?? activeContact.platform_user_id ?? '?').charAt(0).toUpperCase()}
                 </div>
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <PlatformIcon platform={activeContact.platform} />
-                    <span className="text-sm font-medium text-white">
+                    <span className="text-sm font-medium text-white truncate">
                       {activeContact.customer_name ?? activeContact.platform_user_id}
                     </span>
                   </div>
@@ -285,7 +294,7 @@ export function InboxClient({ workspaceId, initialConversations }: Props) {
               </div>
 
               {/* AI Agent Active toggle */}
-              <label className="flex items-center gap-2 cursor-pointer select-none">
+              <label className="flex items-center gap-2 cursor-pointer select-none shrink-0">
                 <span className={`text-[11px] font-medium ${aiActive ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {aiActive ? 'AI Agent Active' : 'Human Override'}
                 </span>

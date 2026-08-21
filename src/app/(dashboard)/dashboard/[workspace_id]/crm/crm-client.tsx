@@ -192,7 +192,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
           </button>
           <button
             onClick={() => { setCreatePlatform('whatsapp'); setShowAddModal(true); }}
-            className="px-3 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition flex items-center gap-2"
+            className="px-3 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition flex items-center gap-2"
           >
             <Plus className="w-3.5 h-3.5" /> Add Lead
           </button>
@@ -213,7 +213,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 30 }}
-            className={`rounded-xl bg-gradient-to-br ${card.bg} to-transparent backdrop-blur-md border border-white/10 p-4
+            className={`rounded-xl bg-linear-to-br ${card.bg} to-transparent backdrop-blur-md border border-white/10 p-4
               hover:border-indigo-500/40 transition-all duration-300`}
           >
             <card.icon className={`w-5 h-5 ${card.color} mb-2`} />
@@ -280,7 +280,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
               </thead>
               <tbody>
                 {filtered.map((lead) => (
-                  <tr key={lead.id} className="border-b border-white/5 hover:bg-white/[0.02] transition">
+                  <tr key={lead.id} className="border-b border-white/5 hover:bg-white/2 transition">
                     <td className="px-4 py-3">
                       <p className="text-xs text-white font-medium">{lead.customer_name || 'Unknown'}</p>
                       <p className="text-[10px] text-gray-600 font-mono">{lead.phone_number || lead.platform_user_id}</p>
@@ -296,7 +296,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                       {lead.category ? (
                         <span className="px-1.5 py-0.5 rounded text-[9px] bg-purple-500/10 text-purple-300 border border-purple-500/20">{lead.category}</span>
                       ) : (
-                        <span className="text-[10px] text-gray-600">—</span>
+                        <span className="text-[10px] text-gray-600">â€”</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -317,7 +317,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[10px] text-gray-500">
-                      {lead.subscription_expiry ? new Date(lead.subscription_expiry).toLocaleDateString() : '—'}
+                      {lead.subscription_expiry ? new Date(lead.subscription_expiry).toLocaleDateString() : 'â€”'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -346,7 +346,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
         {showAddModal && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setShowAddModal(false)}
           >
             <motion.div
@@ -385,7 +385,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Category / Tag</label>
                   <select name="category"
                     className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="" className="bg-zinc-900">— None —</option>
+                    <option value="" className="bg-zinc-900">â€” None â€”</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.name} className="bg-zinc-900">{c.name}</option>
                     ))}
@@ -393,7 +393,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   {categories.length === 0 && <p className="text-[10px] text-gray-600 mt-1">Define categories in workspace Settings.</p>}
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0–100)</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0â€“100)</label>
                   <input name="lead_score" type="number" min="0" max="100" defaultValue={10}
                     className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
                 </div>
@@ -401,7 +401,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   <button type="button" onClick={() => setShowAddModal(false)}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
                   <button type="submit" disabled={creating}
-                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
+                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
                     {creating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Create Lead
                   </button>
                 </div>
@@ -416,7 +416,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
         {editingLead && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setEditingLead(null)}
           >
             <motion.div
@@ -444,7 +444,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Category</label>
                   <select name="category" defaultValue={editingLead.category ?? ''}
                     className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition appearance-none">
-                    <option value="" className="bg-zinc-900">— None —</option>
+                    <option value="" className="bg-zinc-900">â€” None â€”</option>
                     {categories.map((c) => (
                       <option key={c.id} value={c.name} className="bg-zinc-900">{c.name}</option>
                     ))}
@@ -454,7 +454,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0–100)</label>
+                  <label className="block text-[10px] uppercase tracking-wider text-gray-500 mb-1.5">Lead Score (0â€“100)</label>
                   <input name="lead_score" type="number" min="0" max="100" defaultValue={editingLead.lead_score}
                     className="w-full px-3 py-2.5 rounded-lg bg-zinc-800/50 border border-white/10 text-sm text-white focus:border-indigo-500/40 outline-none transition" />
                 </div>
@@ -482,7 +482,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   <button type="button" onClick={() => setEditingLead(null)}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
                   <button type="submit" disabled={saving}
-                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
+                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
                   </button>
                 </div>
@@ -497,7 +497,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
         {deletingLead && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setDeletingLead(null)}
           >
             <motion.div
@@ -533,7 +533,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
         {showImportModal && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={resetImport}
           >
             <motion.div
@@ -600,9 +600,9 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                         <tbody>
                           {parsedContacts.slice(0, 50).map((c, i) => (
                             <tr key={i} className="border-b border-white/5">
-                              <td className="px-3 py-1.5 text-[10px] text-white">{c.name || '—'}</td>
+                              <td className="px-3 py-1.5 text-[10px] text-white">{c.name || 'â€”'}</td>
                               <td className="px-3 py-1.5 text-[10px] text-gray-400 font-mono">{c.phone_number}</td>
-                              <td className="px-3 py-1.5 text-[10px] text-purple-300">{c.category || '—'}</td>
+                              <td className="px-3 py-1.5 text-[10px] text-purple-300">{c.category || 'â€”'}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -621,7 +621,7 @@ export function CRMClient({ workspace, initialLeads, metrics, categories }: Prop
                   <button type="button" onClick={resetImport}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
                   <button onClick={handleImport} disabled={importing || parsedContacts.length === 0}
-                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-emerald-500 to-teal-600 disabled:opacity-40 shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2">
+                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-emerald-500 to-teal-600 disabled:opacity-40 shadow-lg shadow-emerald-500/25 transition-all flex items-center gap-2">
                     {importing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                     Import {parsedContacts.length > 0 ? `(${parsedContacts.length})` : ''}
                   </button>

@@ -70,7 +70,7 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
         </div>
         <button
           onClick={() => { setSelectedColor(PRESET_COLORS[0]); setShowAdd(true); }}
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 transition flex items-center gap-1.5"
+          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 transition flex items-center gap-1.5"
         >
           <Plus className="w-3.5 h-3.5" /> Add Category
         </button>
@@ -115,7 +115,7 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
         {(showAdd || editing) && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => { setShowAdd(false); setEditing(null); }}
           >
             <motion.div
@@ -151,7 +151,7 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
                   <button type="button" onClick={() => { setShowAdd(false); setEditing(null); }}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
                   <button type="submit" disabled={busy}
-                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-500 to-indigo-600 disabled:opacity-50 transition flex items-center gap-2">
+                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-purple-500 to-indigo-600 disabled:opacity-50 transition flex items-center gap-2">
                     {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />} Save
                   </button>
                 </div>
@@ -166,7 +166,7 @@ export function CategoryManager({ workspaceId, initialCategories }: Props) {
         {deleting && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setDeleting(null)}
           >
             <motion.div

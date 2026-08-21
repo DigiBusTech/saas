@@ -12,6 +12,7 @@ import {
   Cpu,
   Activity,
   BarChart3,
+  Globe2,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -24,6 +25,7 @@ const NAV_ITEMS = [
   { href: '/super-admin/ai-providers', label: 'AI Providers', icon: Cpu },
   { href: '/super-admin/observability', label: 'Observability', icon: Activity },
   { href: '/super-admin/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/super-admin/settings/global', label: 'Global Branding', icon: Globe2 },
 ];
 
 export function SuperAdminNav() {
@@ -39,7 +41,7 @@ export function SuperAdminNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] transition-all duration-200 group ${
+            className={`flex min-h-11 items-center gap-2.5 px-3 py-1.5 rounded-lg text-[11px] transition-all duration-200 group ${
               active
                 ? 'bg-rose-500/10 text-white border border-rose-500/20'
                 : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'

@@ -1,5 +1,6 @@
 // Jest setup file
 // Add any global test configuration here
+import { expect } from '@jest/globals';
 
 // Mock environment variables
 process.env.NEXT_PUBLIC_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://mock.supabase.co';

@@ -73,7 +73,7 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
         </div>
         <button
           onClick={() => { setEditingAutomation(null); setError(''); setShowModal(true); }}
-          className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600
+          className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600
             hover:from-indigo-400 hover:to-purple-500 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2"
         >
           <Plus className="w-3.5 h-3.5" /> New Automation
@@ -153,7 +153,7 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
       <AnimatePresence>
         {showModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={() => setShowModal(false)}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -250,7 +250,7 @@ export function AutomationsClient({ workspace, initialAutomations }: Props) {
                   <button type="button" onClick={() => setShowModal(false)}
                     className="px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-white hover:bg-white/5 transition">Cancel</button>
                   <button type="submit" disabled={saving}
-                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
+                    className="px-5 py-2 rounded-lg text-xs font-semibold text-white bg-linear-to-r from-indigo-500 to-purple-600 disabled:opacity-50 shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2">
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
                     {editingAutomation ? 'Update' : 'Create'}
                   </button>

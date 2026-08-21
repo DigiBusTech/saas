@@ -90,7 +90,7 @@ export function TenantsClient({ tenants, plans, loadError }: Props) {
         <div>
           <h1 className="text-lg font-bold text-white">Tenant Management</h1>
           <p className="text-xs text-gray-500 mt-1">
-            Manage all registered tenants — override plans, usage, and suspension status.
+            Manage all registered tenants â€” override plans, usage, and suspension status.
           </p>
         </div>
         <div className="text-[10px] px-3 py-1.5 bg-indigo-950/40 border border-indigo-900/30 rounded-full text-indigo-400 font-bold">
@@ -131,7 +131,7 @@ export function TenantsClient({ tenants, plans, loadError }: Props) {
             </thead>
             <tbody>
               {filtered.map((tenant) => (
-                <tr key={tenant.id} className="border-b border-gray-800/50 hover:bg-white/[0.02] transition">
+                <tr key={tenant.id} className="border-b border-gray-800/50 hover:bg-white/2 transition">
                   <td className="px-4 py-3">
                     <p className="text-white font-medium">{tenant.name}</p>
                     <p className="text-[9px] text-gray-600 mt-0.5 font-mono">{tenant.id.slice(0, 8)}...</p>
@@ -208,7 +208,7 @@ export function TenantsClient({ tenants, plans, loadError }: Props) {
           <div className="bg-[#0F1219] border border-gray-800 rounded-xl w-full max-w-md p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-white">Edit Tenant: {editingTenant.name}</h3>
-              <button onClick={() => setEditingTenant(null)} className="text-gray-500 hover:text-white text-lg">×</button>
+              <button onClick={() => setEditingTenant(null)} className="text-gray-500 hover:text-white text-lg">Ã—</button>
             </div>
 
             <form action={handleUpdate} className="space-y-4">
@@ -222,7 +222,7 @@ export function TenantsClient({ tenants, plans, loadError }: Props) {
                   defaultValue={editingTenant.plan_id ?? ''}
                   className="w-full bg-[#0B0E14] border border-gray-800 rounded px-3 py-2 text-xs text-white focus:ring-1 focus:ring-indigo-500 outline-none"
                 >
-                  <option value="">— No Change —</option>
+                  <option value="">â€” No Change â€”</option>
                   {plans.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name} ({p.max_workspaces} workspaces)

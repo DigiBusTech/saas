@@ -176,8 +176,8 @@ export function ObservabilityClient({ initialLogs, initialOverview }: Props) {
                       </span>
                     </td>
                     <td className="px-3 py-2 align-top text-gray-400">{sourceLabel(log.source)}</td>
-                    <td className="px-3 py-2 align-top text-gray-500 font-mono max-w-[140px] truncate">
-                      {log.endpoint ?? '—'}
+                    <td className="px-3 py-2 align-top text-gray-500 font-mono max-w-35 truncate">
+                      {log.endpoint ?? 'â€”'}
                     </td>
                     <td className="px-3 py-2 align-top text-gray-300 max-w-md">
                       <div className="truncate">{log.message}</div>
@@ -186,7 +186,7 @@ export function ObservabilityClient({ initialLogs, initialOverview }: Props) {
                           onClick={() => toggle(log.id)}
                           className="text-[10px] text-indigo-400 hover:text-indigo-300 mt-1"
                         >
-                          {isOpen ? '▲ Hide details' : '▼ Show details'}
+                          {isOpen ? 'â–² Hide details' : 'â–¼ Show details'}
                         </button>
                       )}
                     </td>
@@ -199,7 +199,7 @@ export function ObservabilityClient({ initialLogs, initialOverview }: Props) {
                         disabled={diagnosing === log.id}
                         className="px-2 py-1 rounded bg-indigo-950/50 text-indigo-300 border border-indigo-800/50 hover:bg-indigo-900/50 transition text-[10px] disabled:opacity-50"
                       >
-                        {diagnosing === log.id ? 'Analyzing…' : 'Run AI Diagnosis'}
+                        {diagnosing === log.id ? 'Analyzingâ€¦' : 'Run AI Diagnosis'}
                       </button>
                       <button
                         onClick={() => handleResolve(log.id, !log.is_resolved)}

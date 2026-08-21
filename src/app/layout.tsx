@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { AppPreloader } from "@/components/app-preloader";
+import { getGlobalSiteSettings } from "@/lib/global-settings";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,10 +15,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "SabiBio | AI customer operations",
-  description: "AI-assisted customer conversations, CRM, and automation for WhatsApp and Telegram.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getGlobalSiteSettings();
+  
+  return {
+    title: settings?.site_title || "SabiBio | AI customer operations",
+    description: settings?.meta_description || "AI-assisted customer conversations, CRM, and automation for WhatsApp and Telegram.",
+    keywords: settings?.seo_keywords || [],
+    openGraph: {
+      title: settings?.site_title,
+      description: settings?.meta_description,
+      images: settings?.og_image_url ? [{ url: settings.og_image_url }] : [],
+      siteName: "SabiBio",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings?.site_title,
+      description: settings?.meta_description,
+      images: settings?.og_image_url ? [settings.og_image_url] : [],
+    },
+    icons: {
+      icon: settings?.universal_favicon_url || "/favicon.ico",
+      apple: settings?.universal_favicon_url || "/favicon.ico",
+    },
+  };
+}
 
 export default function RootLayout({
   children,
