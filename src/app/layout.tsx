@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { AppPreloader } from "@/components/app-preloader";
 import { getGlobalSiteSettings } from "@/lib/global-settings";
+import { Toaster } from "@/components/ui/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,7 +55,11 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
-        <Providers><AppPreloader />{children}</Providers>
+        <Providers>
+          <AppPreloader />
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

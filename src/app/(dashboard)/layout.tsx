@@ -10,6 +10,7 @@ import { DashboardTopbar } from '@/components/dashboard/DashboardTopbar';
 import { getWorkspaces, getWorkspacePlanLimit } from './dashboard/workspaces/actions';
 import { getWorkspaceNavGroups } from '@/lib/dashboard-nav-config';
 import { BrandMark } from '@/components/ui/BrandMark';
+import { NotificationProvider } from '@/components/notifications/NotificationProvider';
 
 export default async function DashboardLayout({
   children,
@@ -132,6 +133,9 @@ export default async function DashboardLayout({
           </div>
         </main>
       </div>
+      
+      {/* PHASE 3: Real-time notifications */}
+      <NotificationProvider userId={user.id} workspaceId={firstWs?.id} />
     </div>
   );
 }

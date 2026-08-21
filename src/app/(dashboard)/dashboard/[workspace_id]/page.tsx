@@ -48,18 +48,22 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
 
   const svc = createServiceClient();
 
-  // Fetch metrics in parallel
+  // PHASE 3: Use optimized RPC for metrics (single query instead of 6 parallel queries)
+  const { data: metrics } = await svc.rpc('get_workspace_metrics', { 
+    p_workspace_id: workspace_id 
+  }).single();
+
+  const totalLeads = Number(metrics?.total_leads || 0);
+  const totalMessages = Number(metrics?.total_messages || 0);
+  const totalOrders = Number(metrics?.total_orders || 0);
+  const pageViewsToday = Number(metrics?.page_views_today || 0);
+
+  // Fallback to old queries if RPC fails
   const [
-    { count: totalLeads },
-    { count: totalMessages },
-    { count: totalOrders },
     { count: productCount },
     { count: serviceCount },
     { count: knowledgeDocs }
   ] = await Promise.all([
-    svc.from('workspace_crm').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
-    svc.from('chat_messages').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id).eq('is_ai', true),
-    svc.from('workspace_orders').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
     svc.from('workspace_products').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
     svc.from('workspace_services').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id),
     svc.from('workspace_knowledge').select('*', { count: 'exact', head: true }).eq('workspace_id', workspace_id)
@@ -67,7 +71,7 @@ export default async function WorkspaceOverviewPage({ params }: { params: Promis
 
   // Calculate AI usage based on total message limits
   const aiMessageLimit = (plan?.telegram_message_limit || 50) + (plan?.whatsapp_message_limit || 50);
-  const aiUsagePercent = Math.min(((totalMessages || 0) / aiMessageLimit) * 100, 100);
+  const aiUsagePercent = aiMessageLimit > 0 ? Math.min((totalMessages / aiMessageLimit) * 100, 100) : 0;
 
   // Determine greeting based on time of day
   const hour = new Date().getHours();

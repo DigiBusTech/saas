@@ -3,6 +3,7 @@ import { siFacebook, siInstagram, siTiktok, siX, siYoutube } from 'simple-icons/
 import { getTemplateLogoDefaults, type SabiBioTemplate, type SabiBioLink } from '@/lib/sabibio/templates';
 import { WebChatDrawer } from './WebChatDrawer';
 import { ProductCollection } from './ProductCollection';
+import { AnalyticsTracker } from './AnalyticsTracker';
 
 interface Props {
   workspace: any;
@@ -53,6 +54,9 @@ export function PublicSabiBioPage({ workspace, template }: Props) {
 
   return (
     <main className="min-h-screen px-4 py-8 text-white" style={{ background: String(branding.background_color), fontFamily: branding.font_family === 'mono' || template.font === 'mono' ? 'monospace' : branding.font_family === 'serif' || template.font === 'serif' ? 'Georgia, serif' : 'inherit' }}>
+      {/* PHASE 3: Track page views */}
+      <AnalyticsTracker workspaceId={workspace.id} />
+      
       <div className={`mx-auto ${isGridTemplate ? 'max-w-2xl' : isCompactTemplate ? 'max-w-md' : 'max-w-xl'}`}>
         <header className={`relative flex flex-col overflow-hidden ${logoAlign}`} style={{ borderRadius: template.radius, boxShadow: template.shadow }}>
           {branding.cover_url && <div className="h-32 w-full bg-cover bg-center" style={{ backgroundImage: `url(${String(branding.cover_url)})` }} />}
